@@ -1,10 +1,9 @@
 from django.db import models
 from django.core.validators import MaxValueValidator
 
-class User(models.Model):
-    EMPLOYEE_ID_MAX = 9990
-    USERNAME_LENGTH_MAX = 9
-    ROLE_CHOICES = (
+EMPLOYEE_ID_MAX = 9990
+USERNAME_LENGTH_MAX = 9
+ROLE_CHOICES = (
         (1, 'employee'),
         (2, 'hr_staff'),
         (3, 'hr_admin'),
@@ -12,6 +11,8 @@ class User(models.Model):
         (5, 'developer'),
     )
 
+class User(models.Model):
+    
     employee_id = models.PositiveSmallIntegerField(unique=True, validators=[MaxValueValidator(EMPLOYEE_ID_MAX)])
     username = models.CharField(max_length=USERNAME_LENGTH_MAX)
     password = models.CharField(max_length=128)
@@ -23,7 +24,7 @@ class User(models.Model):
 
     failed_login_attempts = models.PositiveSmallIntegerField(default=0)
     
-    old_password = models.CharField(max_length=128, blank=True)
+    old_password = models.CharField(max_length=128, blank=True, default=0)
     date_password_change = models.DateTimeField(blank=True, null=True)
     role = models.PositiveSmallIntegerField(choices=ROLE_CHOICES)
 
