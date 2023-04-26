@@ -25,7 +25,7 @@ class User(models.Model):
 
     failed_login_attempts = models.PositiveSmallIntegerField(default=0)
     
-    old_password = models.CharField(max_length=128, blank=True, default="")
+    old_password = models.CharField(max_length=128, default="Fb1786a206@")
     date_password_change = models.DateTimeField(blank=True, null=True)
     role = models.PositiveSmallIntegerField(choices=ROLE_CHOICES)
     last_login = models.DateTimeField(default=datetime.datetime(2001, 1, 1))
