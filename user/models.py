@@ -1,8 +1,9 @@
+import datetime
 from django.db import models
 from django.core.validators import MaxValueValidator
 
 EMPLOYEE_ID_MAX = 9990
-USERNAME_LENGTH_MAX = 9
+USERNAME_LENGTH_MAX = 8
 ROLE_CHOICES = (
         (1, 'employee'),
         (2, 'hr_staff'),
@@ -24,19 +25,28 @@ class User(models.Model):
 
     failed_login_attempts = models.PositiveSmallIntegerField(default=0)
     
-    old_password = models.CharField(max_length=128, blank=True, default=0)
+    old_password = models.CharField(max_length=128, blank=True, default="")
     date_password_change = models.DateTimeField(blank=True, null=True)
     role = models.PositiveSmallIntegerField(choices=ROLE_CHOICES)
+    last_login = models.DateTimeField(default=datetime.datetime(2001, 1, 1))
 
     def __str__(self):
         return self.username
+    
+    class Meta:
+        db_table = 'TBL_USER'
     
 
 
 
 
 
-
+# {
+#     'employee_id': [ErrorDetail(string='Ensure this value is less than or equal to 9990.', 
+#     code='max_value')], 
+#     'password': [ErrorDetail(string='This 
+# field is required.', code='required')], 
+# 'old_password': [ErrorDetail(string='This field may not be blank.', code='blank')]}
 
 
 
