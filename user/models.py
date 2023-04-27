@@ -4,15 +4,9 @@ from django.core.validators import MaxValueValidator
 import secret
 from .choices import *
 
+# Constants
 EMPLOYEE_ID_MAX = 9990
 USERNAME_LENGTH_MAX = 8
-ROLE_CHOICES = (
-        (1, 'employee'),
-        (2, 'hr_staff'),
-        (3, 'hr_admin'),
-        (4, 'hr_superadmin'),
-        (5, 'developer'),
-    )
 
 class User(models.Model):
     
@@ -29,7 +23,7 @@ class User(models.Model):
     
     old_password = models.CharField(max_length=128, default=secret.DEF_PASS)
     date_password_change = models.DateTimeField(blank=True, null=True)
-    role = models.PositiveSmallIntegerField(choices=ROLE_CHOICES)
+    role = models.PositiveSmallIntegerField(choices=ROLE_CHOICES, default=1)
     last_login = models.DateTimeField(default=datetime.datetime(2001, 1, 1))
 
     def __str__(self):
@@ -50,7 +44,7 @@ class Employee(models.Model):
     suffix = models.CharField(max_length=4, null=True, blank=True)
     
     birthday = models.DateField()
-    gender = models.BooleanField(choices=((0, 'Female'), (1, 'Male')))
+    gender = models.CharField(max_length=1, choices=GENDER)
     
     address = models.CharField(max_length=50)
     
@@ -64,16 +58,16 @@ class Employee(models.Model):
     date_hired = models.DateField()
     date_resigned = models.DateField(null=True, blank=True)
 
-    department_code = models.PositiveSmallIntegerField(choices=DEPT)
-    division_code = models.PositiveSmallIntegerField(choices=DIV)
-    position_code = models.PositiveSmallIntegerField(choices=POS)
-    rank_code = models.PositiveSmallIntegerField(choices=RANK)
-    city_code = models.PositiveSmallIntegerField(CITY)
+    department_code = models.PositiveSmallIntegerField(choices=DEPT, default=1)
+    division_code = models.PositiveSmallIntegerField(choices=DIV, default=1)
+    position_code = models.PositiveSmallIntegerField(choices=POS, default=1)
+    rank_code = models.PositiveSmallIntegerField(choices=RANK, default=1)
+    city_code = models.PositiveSmallIntegerField(CITY, default=1)
 
-    payroll_group_code = models.PositiveSmallIntegerField(choices=PAYROLL)
-    tax_code = models.PositiveSmallIntegerField(choices=TAX)
-    sssid_code = models.PositiveSmallIntegerField(choices=SSS)
-    philhealth_code = models.PositiveSmallIntegerField(choices=PHILHEALTH)
+    payroll_group_code = models.PositiveSmallIntegerField(choices=PAYROLL, default=1)
+    tax_code = models.PositiveSmallIntegerField(choices=TAX, default=1)
+    sssid_code = models.PositiveSmallIntegerField(choices=SSS, default=1)
+    philhealth_code = models.PositiveSmallIntegerField(choices=PHILHEALTH, default=1)
 
     date_added = models.DateTimeField(auto_now_add=True)
     date_deleted = models.DateTimeField(blank=True, null=True)

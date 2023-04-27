@@ -1,3 +1,16 @@
+ROLE_CHOICES = (
+    (1, 'employee'),
+    (2, 'hr_staff'),
+    (3, 'hr_admin'),
+    (4, 'hr_superadmin'),
+    (5, 'developer'),
+)
+
+GENDER = (
+    ('f', 'Female'), 
+    ('m', 'Male')
+)
+
 DEPT = (
     (1, "Administration"),
     (2, "Accounting Department"),
