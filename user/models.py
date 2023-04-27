@@ -1,6 +1,8 @@
 import datetime
 from django.db import models
 from django.core.validators import MaxValueValidator
+import secret
+from .choices import *
 
 EMPLOYEE_ID_MAX = 9990
 USERNAME_LENGTH_MAX = 8
@@ -25,7 +27,7 @@ class User(models.Model):
 
     failed_login_attempts = models.PositiveSmallIntegerField(default=0)
     
-    old_password = models.CharField(max_length=128, default="Fb1786a206@")
+    old_password = models.CharField(max_length=128, default=secret.DEF_PASS)
     date_password_change = models.DateTimeField(blank=True, null=True)
     role = models.PositiveSmallIntegerField(choices=ROLE_CHOICES)
     last_login = models.DateTimeField(default=datetime.datetime(2001, 1, 1))
@@ -35,94 +37,52 @@ class User(models.Model):
     
     class Meta:
         db_table = 'TBL_USER'
+
+
+
+class Employee(models.Model):
+
+    employee_id = models.ForeignKey(User, to_field='employee_id', on_delete=models.CASCADE)
     
-
-
-
-
-
-# {
-#     'employee_id': [ErrorDetail(string='Ensure this value is less than or equal to 9990.', 
-#     code='max_value')], 
-#     'password': [ErrorDetail(string='This 
-# field is required.', code='required')], 
-# 'old_password': [ErrorDetail(string='This field may not be blank.', code='blank')]}
-
-
-
-
-
-
-
-
-
-
-
-
-# from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
-# from django.utils import timezone
-# from django.core.validators import MinValueValidator, MaxValueValidator
-# class Roles(models.TextChoices):
-#     employee = 1,
-#     hr_staff = 2,
-#     hr_admin = 3,
-#     hr_superadmin = 4,
-#     developer = 5
-
-# class UserManager(BaseUserManager):
-#     def create_user(self, username, password=None):
-#         if not username:
-#             raise ValueError("User must have a username")
-        
-#         user = self.model(username=username)
-#         user.set_password(password)
-#         user.save(using=self._db)
-
-#         return user
+    first_name = models.CharField(max_length=25)
+    middle_name = models.CharField(max_length=25, null=True, blank=True)
+    last_name = models.CharField(max_length=25)
+    suffix = models.CharField(max_length=4, null=True, blank=True)
     
-#     def create_staff(self, username, password, **extra_fields):
-#         extra_fields.setdefault("role", Roles.employee)
-#         extra_fields.setdefault("is_active", True)
-
-#         if extra_fields.get("role") != Roles.employee:
-#             raise ValueError(_("Staff must have role=staff"))
-        
-#         return self.create_user(username=username, password=password, **extra_fields)
-
-# class CustomUser(AbstractBaseUser):
-#     employee_no = models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(100)], verbose_name="employee number")
-#     username = models.CharField(max_length=8, unique=True)
-#     password = models.CharField(max_length=64)
-#     old_password = models.CharField(max_length=64)
-
-#     date_added = models.DateField(default=timezone.now)
-#     date_deleted = models.DateField()
-#     date_pw_change = models.DateField(verbose_name="date password change")
-#     login_attempts = models.PositiveSmallIntegerField()
-
-#     is_active = models.BooleanField(default=True)
-#     is_locked = models.BooleanField(default=False)
-#     role = models.IntegerField(choices=Roles.choices, default=Roles.employee)
+    birthday = models.DateField()
+    gender = models.BooleanField(choices=((0, 'Female'), (1, 'Male')))
     
-    # 1 = Developer everything all
-    # 2 = HR SuperAdmin data maintenance 
-    # 3 = HR Admin approver, hr staff hr admin, employee edit request
-    # 4 = HR Staff file leave for other employee
-    # 5 = Employee view edit profile
+    address = models.CharField(max_length=50)
+    
+    provincial_address = models.CharField(max_length=50, null=True, blank=True)
+    
+    mobile_phone = models.CharField(max_length=15)
+    email = models.EmailField()
+    
+    approver = models.BooleanField(default=False)
+    
+    date_hired = models.DateField()
+    date_resigned = models.DateField(null=True, blank=True)
 
-    # USERNAME_FIELD = "username"
-    # REQUIRED_FIELDS = []
-    # objects = UserManager()
+    department_code = models.PositiveSmallIntegerField(choices=DEPT)
+    division_code = models.PositiveSmallIntegerField(choices=DIV)
+    position_code = models.PositiveSmallIntegerField(choices=POS)
+    rank_code = models.PositiveSmallIntegerField(choices=RANK)
+    city_code = models.PositiveSmallIntegerField(CITY)
 
-    # def __str__(self):
-    #     return self.username
+    payroll_group_code = models.PositiveSmallIntegerField(choices=PAYROLL)
+    tax_code = models.PositiveSmallIntegerField(choices=TAX)
+    sssid_code = models.PositiveSmallIntegerField(choices=SSS)
+    philhealth_code = models.PositiveSmallIntegerField(choices=PHILHEALTH)
+
+    date_added = models.DateTimeField(auto_now_add=True)
+    date_deleted = models.DateTimeField(blank=True, null=True)
+
+
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name}"
     
-    # def has_perm(self, perm, obj=None):
-    #     return True
+    class Meta:
+        db_table = 'TBL_EMPLOYEE_PROFILE'
     
-    # def has_module_perms(self, app_label):
-    #     return True
-    
-    # @property
-    # def _role(self):
-    #     return self.role
