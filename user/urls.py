@@ -6,4 +6,6 @@ urlpatterns = [
     path('user/<int:pk>/', views.user_detail),
     path('employees/', views.employee_list),
     path('employee/<int:employee_id>', views.employee_detail),
+    path('audittrails/', views.audittrail_list),
+    path('audittrail/<int:pk>', views.audittrail_detail),
 ]

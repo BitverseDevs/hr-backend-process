@@ -21,4 +21,5 @@ class EmployeeSerializer(serializers.ModelSerializer):
 class AuditTrailSerializer(serializers.ModelSerializer):
     class Meta:
         model = AuditTrail
-        fields = ['id', 'employee_id', 'transaction_type', 'table_affected', 'action_remarks', 'date_added']
+        fields = ['id', 'employee_id', 'transaction_type', 'table_affected', 
+                  'action_remarks', 'date_added']

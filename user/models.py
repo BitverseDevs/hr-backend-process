@@ -55,21 +55,21 @@ class Employee(models.Model):
     mobile_phone = models.CharField(max_length=15)
     email = models.EmailField()
     
-    approver = models.BooleanField(default=False)
+    approver = models.CharField(max_length=4)
     
     date_hired = models.DateField()
     date_resigned = models.DateField(null=True, blank=True)
 
-    department_code = models.PositiveSmallIntegerField(choices=DEPT, default=1)
-    division_code = models.PositiveSmallIntegerField(choices=DIV, default=1)
-    position_code = models.PositiveSmallIntegerField(choices=POS, default=1)
-    rank_code = models.PositiveSmallIntegerField(choices=RANK, default=1)
-    city_code = models.PositiveSmallIntegerField(CITY, default=1)
+    department_code = models.PositiveSmallIntegerField(choices=DEPT, null=True, blank=True)
+    division_code = models.PositiveSmallIntegerField(choices=DIV, null=True, blank=True)
+    position_code = models.PositiveSmallIntegerField(choices=POS, null=True, blank=True)
+    rank_code = models.PositiveSmallIntegerField(choices=RANK, null=True, blank=True)
+    city_code = models.PositiveSmallIntegerField(choices=CITY, null=True, blank=True)
 
-    payroll_group_code = models.PositiveSmallIntegerField(choices=PAYROLL, default=1)
-    tax_code = models.PositiveSmallIntegerField(choices=TAX, default=1)
-    sssid_code = models.PositiveSmallIntegerField(choices=SSS, default=1)
-    philhealth_code = models.PositiveSmallIntegerField(choices=PHILHEALTH, default=1)
+    payroll_group_code = models.PositiveSmallIntegerField(choices=PAYROLL, null=True, blank=True)
+    tax_code = models.PositiveSmallIntegerField(choices=TAX, null=True, blank=True)
+    sssid_code = models.PositiveSmallIntegerField(choices=SSS, null=True, blank=True)
+    philhealth_code = models.PositiveSmallIntegerField(choices=PHILHEALTH, null=True, blank=True)
 
     date_added = models.DateTimeField(auto_now_add=True)
     date_deleted = models.DateTimeField(blank=True, null=True)
