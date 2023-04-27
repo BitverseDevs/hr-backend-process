@@ -44,6 +44,8 @@ class Employee(models.Model):
     suffix = models.CharField(max_length=4, null=True, blank=True)
     
     birthday = models.DateField()
+    birth_place = models.CharField(max_length=25, default="NCR")
+    civil_status = models.PositiveSmallIntegerField(choices=CIVIL_STATUS, default=1)
     gender = models.CharField(max_length=1, choices=GENDER)
     
     address = models.CharField(max_length=50)
@@ -79,4 +81,18 @@ class Employee(models.Model):
     
     class Meta:
         db_table = 'TBL_EMPLOYEE_PROFILE'
-    
+
+
+
+class AuditTrail(models.Model):
+
+    employee_id = models.ForeignKey(User, to_field='employee_id', on_delete=models.CASCADE)
+    transaction_type = models.PositiveSmallIntegerField(choices=TRANS_TYPE)
+    table_affected = models.CharField(max_length=100)
+    action_remarks = models.CharField(max_length=100)
+    date_added = models.DateTimeField(auto_now_add=True)
+
+
+
+    class Meta:
+        db_table = "TBL_AUDTRAIL"

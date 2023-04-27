@@ -6,6 +6,14 @@ ROLE_CHOICES = (
     (5, 'developer'),
 )
 
+CIVIL_STATUS = (
+    (1, "Single"),
+    (2, "Married"),
+    (3, "Annulled"),
+    (4, "Widowed"),
+    (5, "Separated"),
+)
+
 GENDER = (
     ('f', 'Female'), 
     ('m', 'Male')
@@ -96,4 +104,10 @@ PHILHEALTH = (
     (1, "30%"),
     (2, "50%"),
     (3, "70%"),
+)
+
+TRANS_TYPE = (
+    (1, "Create"),
+    (2, "Modify"),
+    (3, "Delete"),
 )
