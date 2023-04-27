@@ -19,6 +19,12 @@ GENDER = (
     ('m', 'Male')
 )
 
+BRANCH = (
+    ("main", "Main Branch"),
+    ("sub", "Sub Branch"),
+    ("international", "International Branch"),
+)
+
 DEPT = (
     (1, "Administration"),
     (2, "Accounting Department"),

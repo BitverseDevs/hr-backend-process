@@ -11,7 +11,7 @@ USERNAME_LENGTH_MAX = 8
 class User(models.Model):
     
     employee_id = models.PositiveSmallIntegerField(unique=True, validators=[MaxValueValidator(EMPLOYEE_ID_MAX)])
-    username = models.CharField(max_length=USERNAME_LENGTH_MAX)
+    username = models.CharField(max_length=USERNAME_LENGTH_MAX, unique=True)
     password = models.CharField(max_length=128)
     date_added = models.DateTimeField(auto_now_add=True)
 
@@ -20,11 +20,12 @@ class User(models.Model):
     is_locked = models.BooleanField(default=False)
 
     failed_login_attempts = models.PositiveSmallIntegerField(default=0)
-    
+    last_login = models.DateTimeField(default=datetime.datetime(2001, 1, 1))
+
     old_password = models.CharField(max_length=128, default=secret.DEF_PASS)
     date_password_change = models.DateTimeField(blank=True, null=True)
     role = models.PositiveSmallIntegerField(choices=ROLE_CHOICES, default=1)
-    last_login = models.DateTimeField(default=datetime.datetime(2001, 1, 1))
+    
 
     def __str__(self):
         return self.username
@@ -60,6 +61,7 @@ class Employee(models.Model):
     date_hired = models.DateField()
     date_resigned = models.DateField(null=True, blank=True)
 
+    branch_code = models.CharField(max_length=15, choices=BRANCH, default="main")
     department_code = models.PositiveSmallIntegerField(choices=DEPT, null=True, blank=True)
     division_code = models.PositiveSmallIntegerField(choices=DIV, null=True, blank=True)
     position_code = models.PositiveSmallIntegerField(choices=POS, null=True, blank=True)
@@ -86,6 +88,7 @@ class Employee(models.Model):
 
 class AuditTrail(models.Model):
 
+    # transaction_id = models.AutoField(primary_key=True)
     employee_id = models.ForeignKey(User, to_field='employee_id', on_delete=models.CASCADE)
     transaction_type = models.PositiveSmallIntegerField(choices=TRANS_TYPE)
     table_affected = models.CharField(max_length=100)
