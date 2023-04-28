@@ -42,10 +42,10 @@ class Employee(models.Model):
     first_name = models.CharField(max_length=25)
     middle_name = models.CharField(max_length=25, null=True, blank=True)
     last_name = models.CharField(max_length=25)
-    suffix = models.CharField(max_length=4, null=True, blank=True)
+    suffix = models.CharField(max_length=4, null=True, blank=True, choices=SUFFIX)
     
     birthday = models.DateField()
-    birth_place = models.CharField(max_length=25, default="NCR")
+    birth_place = models.CharField(max_length=25, null=True, blank=True)
     civil_status = models.PositiveSmallIntegerField(choices=CIVIL_STATUS, default=1)
     gender = models.CharField(max_length=1, choices=GENDER)
     
@@ -61,6 +61,9 @@ class Employee(models.Model):
     date_hired = models.DateField()
     date_resigned = models.DateField(null=True, blank=True)
 
+    date_added = models.DateTimeField(auto_now_add=True)
+    date_deleted = models.DateTimeField(blank=True, null=True)
+
     branch_code = models.CharField(max_length=15, choices=BRANCH, default="main")
     department_code = models.PositiveSmallIntegerField(choices=DEPT, null=True, blank=True)
     division_code = models.PositiveSmallIntegerField(choices=DIV, null=True, blank=True)
@@ -70,11 +73,9 @@ class Employee(models.Model):
 
     payroll_group_code = models.PositiveSmallIntegerField(choices=PAYROLL, null=True, blank=True)
     tax_code = models.PositiveSmallIntegerField(choices=TAX, null=True, blank=True)
+    pagibig_code = models.PositiveSmallIntegerField(choices=PAGIBIG, null=True, blank=True)
     sssid_code = models.PositiveSmallIntegerField(choices=SSS, null=True, blank=True)
     philhealth_code = models.PositiveSmallIntegerField(choices=PHILHEALTH, null=True, blank=True)
-
-    date_added = models.DateTimeField(auto_now_add=True)
-    date_deleted = models.DateTimeField(blank=True, null=True)
 
 
 
@@ -96,6 +97,9 @@ class AuditTrail(models.Model):
     date_added = models.DateTimeField(auto_now_add=True)
 
 
+
+    def __str__(self):
+        return f"{self.id}: {self.transaction_type}"
 
     class Meta:
         db_table = "TBL_AUDTRAIL"
