@@ -93,7 +93,7 @@ class AuditTrail(models.Model):
     employee_id = models.ForeignKey(User, to_field='employee_id', on_delete=models.CASCADE)
     transaction_type = models.PositiveSmallIntegerField(choices=TRANS_TYPE)
     table_affected = models.CharField(max_length=100)
-    action_remarks = models.CharField(max_length=100)
+    action_remarks = models.TextField(max_length=100)
     date_added = models.DateTimeField(auto_now_add=True)
 
 
@@ -130,12 +130,73 @@ class DTR(models.Model):
 
 
 
-# class City(models.Model):
+class CityMunicipality(models.Model):
 
-#     name = models.CharField(max_length=50)
-#     province = models.CharField(max_length=50)
-#     name_type = models.CharField(max_length=12, choices=NAME_TYPE)
+    name = models.CharField(max_length=30)
+    province = models.CharField(max_length=30)
 
 
-#     class Meta:
-#         db_table = "TBL_CITY"
+    class Meta:
+        db_table = "TBL_CITYMUNICIPALITY"
+
+
+# class Branch(models.Model):
+
+#     name = models.CharField(max_length=25)
+#     address = models.CharField(max_length=50)
+#     phone_number = models.CharField(max_length=15)
+#     email = models.EmailField()
+#     parent_branch = models.CharField(max_length=15, blank=True, null=True) # foreign to branch
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField()
+
+# class Department(models.Model):
+
+#     name = models.CharField(max_length=25)
+#     description = models.TextField(max_length=100)
+#     manager = models.CharField(max_length=25) # foreign to employee
+#     parent_department = models.CharField(max_length=25, null=True, blank=True) # foreign to department
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField()
+
+# class Division(models.Model):
+
+#     name = models.CharField(max_length=25)
+#     description = models.TextField(max_length=100)
+#     manager = models.CharField(max_length=25) # foreign to employee
+#     parent_department = models.CharField(max_length=25, null=True, blank=True) # foreign to department
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField()
+
+# class PayrollGroup(models.Model):
+
+#     name = models.CharField(max_length=15)
+#     description = models.TextField(max_length=100)
+#     pay_frequency = models.CharField(max_length=15, choices=FREQUENCY)
+#     pay_day = models.PositiveSmallIntegerField()
+#     is_default = models.BooleanField()
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField()
+
+# class Position(models.Model):
+
+#     title = models.CharField(max_length=25)
+#     description = models.TextField(max_length=100)
+#     department = models.ForeignKey(Department, on_delete=models.CASCADE)
+#     payroll_group = models.ForeignKey(PayrollGroup, on_delete=models.CASCADE)
+#     minimum_qualifications = models.TextField(max_length=100)
+#     is_active = models.BooleanField(default=True)
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField()
+
+# class Rank(models.Model):
+
+#     name = models.CharField(max_length=25, choices=RANK)
+#     description = models.TextField(max_length=100)
+#     rate = models.DecimalField()
+#     start_date = models.DateTimeField()
+#     end_date = models.DateTimeField()
+#     is_active = models.BooleanField(default=True)
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField()
+

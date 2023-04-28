@@ -1,12 +1,17 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+
 from rest_framework.parsers import JSONParser
 from rest_framework import  status
+from rest_framework.decorators import api_view
+from rest_framework.views import APIView
+
 from user.models import User, Employee, AuditTrail, DTR
 from user.serializers import UserSerializer, EmployeeSerializer, AuditTrailSerializer, DTRSerializer
 
 # @csrf_exempt
+@api_view(['GET', 'POST'])
 def user_list(request):
     if request.method == 'GET':
         user = User.objects.all()
@@ -21,7 +26,8 @@ def user_list(request):
             serializer.save()
             return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
+@api_view(['GET', 'PUT', 'DELETE'])
 def user_detail(request, pk):
     try:
         user = User.objects.get(pk=pk)
@@ -47,6 +53,7 @@ def user_detail(request, pk):
 
 
 
+@api_view(['GET', 'POST'])
 def employee_list(request):
     if request.method == 'GET':
         employee = Employee.objects.all()
@@ -61,7 +68,8 @@ def employee_list(request):
             serializer.save()
             return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
+@api_view(['GET', 'PUT', 'DELETE'])   
 def employee_detail(request, employee_id):
     try:
         employee = Employee.objects.get(employee_id=employee_id)
@@ -87,6 +95,7 @@ def employee_detail(request, employee_id):
     
 
 
+@api_view(['GET', 'POST'])
 def audittrail_list(request):
     if request.method == 'GET':
         audittrail = AuditTrail.objects.all()
@@ -101,7 +110,8 @@ def audittrail_list(request):
             serializer.save()
             return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
+@api_view(['GET'])
 def audittrail_detail(request, pk):
     try:
         audittrail = AuditTrail.objects.get(pk=pk)
@@ -114,6 +124,7 @@ def audittrail_detail(request, pk):
     
 
 
+@api_view(['GET', 'POST'])
 def dtr_list(request):
     if request.method == 'GET':
         dtr = DTR.objects.all()
@@ -128,7 +139,8 @@ def dtr_list(request):
             serializer.save()
             return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
+@api_view(['GET', 'PUT', 'DELETE'])
 def dtr_detail(request, pk):
     try:
         dtr = DTR.objects.get(pk=pk)
