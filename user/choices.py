@@ -162,3 +162,13 @@ ENTRY = (
     ("lin", "Lunch In"),
     ("lout", "Lunch Out"),
 )
+
+
+
+
+
+# City Model
+NAME_TYPE = (
+    ("muni", "Municipality"),
+    ("city", "City"),
+)

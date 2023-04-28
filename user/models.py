@@ -127,3 +127,15 @@ class DTR(models.Model):
 
     class Meta:
         db_table = "TBL_DTR"
+
+
+
+# class City(models.Model):
+
+#     name = models.CharField(max_length=50)
+#     province = models.CharField(max_length=50)
+#     name_type = models.CharField(max_length=12, choices=NAME_TYPE)
+
+
+#     class Meta:
+#         db_table = "TBL_CITY"
