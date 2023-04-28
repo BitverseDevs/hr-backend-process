@@ -1,3 +1,5 @@
+# User Model
+
 ROLE_CHOICES = (
     (1, 'employee'),
     (2, 'hr_staff'),
@@ -5,6 +7,12 @@ ROLE_CHOICES = (
     (4, 'hr_superadmin'),
     (5, 'developer'),
 )
+
+
+
+
+
+# Employee Model
 
 CIVIL_STATUS = (
     (1, "Single"),
@@ -125,8 +133,32 @@ PHILHEALTH = (
     (3, "70%"),
 )
 
+
+
+
+
+# AuditTrail Model
+
 TRANS_TYPE = (
     (1, "Create"),
     (2, "Modify"),
     (3, "Delete"),
+)
+
+
+
+
+
+# DTR Model
+
+FLAG = (
+    (True, "DOUT"),
+    (False, "DIN"),
+)
+
+ENTRY = (
+    ("din", "Duty In"),
+    ("dout", "Duty Out"),
+    ("lin", "Lunch In"),
+    ("lout", "Lunch Out"),
 )

@@ -103,3 +103,26 @@ class AuditTrail(models.Model):
 
     class Meta:
         db_table = "TBL_AUDTRAIL"
+
+
+
+class DTR(models.Model):
+
+    # bio_id = 
+    date_time = models.DateTimeField()
+    flag1_in_out = models.BooleanField(choices=FLAG)
+    flag2_lout_lin = models.BooleanField(choices=FLAG, null=True, blank=True)
+
+    entry_type = models.CharField(max_length=4, choices=ENTRY)
+    date_uploaded = models.DateTimeField(auto_now_add=True)
+    employee_id = models.ForeignKey(User, to_field='employee_id', on_delete=models.CASCADE)
+    processed = models.BooleanField()
+    
+    sched_timein = models.DateTimeField()
+    sched_timeout = models.DateTimeField()
+    business_datetime = models.DateTimeField()
+    branch_code =models.CharField(max_length=15, choices=BRANCH, default="main")
+
+
+    class Meta:
+        db_table = "TBL_DTR"
