@@ -108,7 +108,7 @@ class AuditTrail(models.Model):
 
 class DTR(models.Model):
 
-    # bio_id = 
+    bio_id = models.PositiveSmallIntegerField(unique=True, validators=[MaxValueValidator(9990)])
     date_time = models.DateTimeField()
     flag1_in_out = models.BooleanField(choices=FLAG)
     flag2_lout_lin = models.BooleanField(choices=FLAG, null=True, blank=True)
@@ -122,6 +122,7 @@ class DTR(models.Model):
     sched_timeout = models.DateTimeField()
     business_datetime = models.DateTimeField()
     branch_code =models.CharField(max_length=15, choices=BRANCH, default="main")
+
 
 
     class Meta:

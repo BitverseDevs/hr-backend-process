@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from user.models import User, Employee, AuditTrail
+from user.models import User, Employee, AuditTrail, DTR
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -23,3 +23,10 @@ class AuditTrailSerializer(serializers.ModelSerializer):
         model = AuditTrail
         fields = ['id', 'employee_id', 'transaction_type', 'table_affected', 
                   'action_remarks', 'date_added']
+        
+class DTRSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DTR
+        fields = ['id', 'bio_id', 'date_time', 'flag1_in_out', 'flag2_lout_lin', 
+                  'entry_type', 'date_uploaded', 'employee_id', 'processed', 
+                  'sched_timein', 'sched_timeout', 'business_datetime', 'branch_code']
