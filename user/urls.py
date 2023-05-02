@@ -5,7 +5,7 @@ urlpatterns = [
     path('users/', views.user_list),
     path('user/<int:pk>/', views.user_detail),
     path('employees/', views.employee_list),
-    path('employee/<int:employee_id>', views.employee_detail),
+    path('employee/<int:employee_number>', views.employee_detail),
     path('audittrails/', views.audittrail_list),
     path('audittrail/<int:pk>', views.audittrail_detail),
     path('dtrs/', views.dtr_list),

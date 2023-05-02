@@ -70,9 +70,9 @@ def employee_list(request):
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET', 'PUT', 'DELETE'])   
-def employee_detail(request, employee_id):
+def employee_detail(request, employee_number):
     try:
-        employee = Employee.objects.get(employee_id=employee_id)
+        employee = Employee.objects.get(employee_number=employee_number)
     except User.DoesNotExist:
         return HttpResponse(status=status.HTTP_404_NOT_FOUND)
     

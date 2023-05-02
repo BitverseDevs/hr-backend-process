@@ -5,12 +5,12 @@ import secret
 from .choices import *
 
 # Constants
-EMPLOYEE_ID_MAX = 9990
+EMPLOYEE_NUMBER_MAX = 9990
 USERNAME_LENGTH_MAX = 8
 
 class User(models.Model):
     
-    employee_id = models.PositiveSmallIntegerField(unique=True, validators=[MaxValueValidator(EMPLOYEE_ID_MAX)])
+    employee_number = models.PositiveSmallIntegerField(unique=True, validators=[MaxValueValidator(EMPLOYEE_NUMBER_MAX)])
     username = models.CharField(max_length=USERNAME_LENGTH_MAX, unique=True)
     password = models.CharField(max_length=128)
     date_added = models.DateTimeField(auto_now_add=True)
@@ -19,7 +19,7 @@ class User(models.Model):
     date_deleted = models.DateTimeField(blank=True, null=True)
     is_locked = models.BooleanField(default=False)
 
-    failed_login_attempts = models.PositiveSmallIntegerField(default=0)
+    failed_login_attempts = models.PositiveSmallIntegerField(null=True, blank=True)
     last_login = models.DateTimeField(default=datetime.datetime(2001, 1, 1))
 
     old_password = models.CharField(max_length=128, default=secret.DEF_PASS)
@@ -37,7 +37,7 @@ class User(models.Model):
 
 class Employee(models.Model):
 
-    employee_id = models.ForeignKey(User, to_field='employee_id', on_delete=models.CASCADE)
+    employee_number = models.ForeignKey(User, to_field='employee_number', on_delete=models.CASCADE)
     
     first_name = models.CharField(max_length=25)
     middle_name = models.CharField(max_length=25, null=True, blank=True)
@@ -50,7 +50,6 @@ class Employee(models.Model):
     gender = models.CharField(max_length=1, choices=GENDER)
     
     address = models.CharField(max_length=50)
-    
     provincial_address = models.CharField(max_length=50, null=True, blank=True)
     
     mobile_phone = models.CharField(max_length=15)
@@ -90,7 +89,7 @@ class Employee(models.Model):
 class AuditTrail(models.Model):
 
     # transaction_id = models.AutoField(primary_key=True)
-    employee_id = models.ForeignKey(User, to_field='employee_id', on_delete=models.CASCADE)
+    employee_number = models.ForeignKey(User, to_field='employee_number', on_delete=models.CASCADE)
     transaction_type = models.PositiveSmallIntegerField(choices=TRANS_TYPE)
     table_affected = models.CharField(max_length=100)
     action_remarks = models.TextField(max_length=100)
@@ -108,14 +107,14 @@ class AuditTrail(models.Model):
 
 class DTR(models.Model):
 
-    bio_id = models.PositiveSmallIntegerField(unique=True, validators=[MaxValueValidator(9990)])
-    date_time = models.DateTimeField()
+    bio_id = models.PositiveSmallIntegerField(unique=True, validators=[MaxValueValidator(9990)], null=True, blank=True)
+    date_time_bio = models.DateTimeField()
     flag1_in_out = models.BooleanField(choices=FLAG)
     flag2_lout_lin = models.BooleanField(choices=FLAG, null=True, blank=True)
 
     entry_type = models.CharField(max_length=4, choices=ENTRY)
     date_uploaded = models.DateTimeField(auto_now_add=True)
-    employee_id = models.ForeignKey(User, to_field='employee_id', on_delete=models.CASCADE)
+    employee_number = models.ForeignKey(User, to_field='employee_number', on_delete=models.CASCADE)
     processed = models.BooleanField()
     
     sched_timein = models.DateTimeField()
