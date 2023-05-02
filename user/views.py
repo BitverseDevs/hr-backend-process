@@ -7,8 +7,8 @@ from rest_framework import  status
 from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 
-from user.models import User, Employee, AuditTrail, DTR
-from user.serializers import UserSerializer, EmployeeSerializer, AuditTrailSerializer, DTRSerializer
+from user.models import User, Employee, AuditTrail, DTR, CityMunicipality
+from user.serializers import UserSerializer, EmployeeSerializer, AuditTrailSerializer, DTRSerializer, CityMunicipalitySerializer
 
 # @csrf_exempt
 @api_view(['GET', 'POST'])
@@ -163,3 +163,23 @@ def dtr_detail(request, pk):
     elif request.method == 'DELETE':
         dtr.delete()
         return HttpResponse(status=status.HTTP_204_NO_CONTENT)
+    
+
+
+@api_view(['GET'])
+def citymunicipality_list(request):
+    if request.method == 'GET':
+        citymunicipality = CityMunicipality.objects.all()
+        serializer = CityMunicipalitySerializer(citymunicipality, many=True)
+        return JsonResponse(serializer.data, safe=False)
+
+@api_view(['GET'])
+def citymunicipality_detail(request, pk):
+    try:
+        citymunicipality = CityMunicipality.objects.get(pk=pk)
+    except User.DoesNotExist:
+        return HttpResponse(status=status.HTTP_404_NOT_FOUND)
+    
+    if request.method == 'GET':
+        serializer = CityMunicipalitySerializer(citymunicipality)
+        return JsonResponse(serializer.data)

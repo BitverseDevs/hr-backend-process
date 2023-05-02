@@ -132,8 +132,8 @@ class DTR(models.Model):
 
 class CityMunicipality(models.Model):
 
-    name = models.CharField(max_length=30)
-    province = models.CharField(max_length=30)
+    name = models.CharField(max_length=40)
+    province = models.CharField(max_length=40)
 
 
     class Meta:

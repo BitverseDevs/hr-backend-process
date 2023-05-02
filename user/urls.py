@@ -10,4 +10,6 @@ urlpatterns = [
     path('audittrail/<int:pk>', views.audittrail_detail),
     path('dtrs/', views.dtr_list),
     path('dtr/<int:pk>', views.dtr_detail),
+    path('citiesmunicipalities/', views.citymunicipality_list),
+    path('citiesmunicipalities/<int:pk>', views.citymunicipality_detail),
 ]
