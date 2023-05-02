@@ -31,7 +31,6 @@ def user_list(request):
         serializer = UserSerializer(data=data)
 
         if serializer.is_valid():
-            print("heheehhe")
             serializer.save()
             return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
