@@ -7,8 +7,8 @@ from rest_framework import  status
 from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 
-from user.models import User, Employee, AuditTrail, DTR, CityMunicipality
-from user.serializers import UserSerializer, EmployeeSerializer, AuditTrailSerializer, DTRSerializer, CityMunicipalitySerializer
+from user.models import User, Employee, AuditTrail, DTR, DTRSummary, CityMunicipality
+from user.serializers import UserSerializer, EmployeeSerializer, AuditTrailSerializer, DTRSerializer, DTRSummarySerializer, CityMunicipalitySerializer
 
 import secret
 from .hash import *
@@ -172,6 +172,48 @@ def dtr_detail(request, pk):
         dtr.delete()
         return HttpResponse(status=status.HTTP_204_NO_CONTENT)
     
+
+
+@api_view(['GET', 'POST'])
+def dtrsummary_list(request):
+    if request.method == 'GET':
+        dtrsummary = DTRSummary.objects.all()
+        serializer = DTRSummarySerializer(dtrsummary, many=True)
+        return JsonResponse(serializer.data, safe=False)
+    
+    elif request.method == 'POST':
+        data = JSONParser().parse(request)
+        serializer = DTRSummarySerializer(data=data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def dtrsummary_detail(request, pk):
+    try:
+        dtrsummary = DTRSummary.objects.get(pk=pk)
+    except User.DoesNotExist:
+        return HttpResponse(status=status.HTTP_404_NOT_FOUND)
+    
+    if request.method == 'GET':
+        serializer = DTRSummarySerializer(dtrsummary)
+        return JsonResponse(serializer.data)
+    
+    elif request.method == 'PUT':
+        data = JSONParser().parse(request)
+        serializer = DTRSummarySerializer(dtrsummary, data=data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    elif request.method == 'DELETE':
+        dtrsummary.delete()
+        return HttpResponse(status=status.HTTP_204_NO_CONTENT)
+
 
 
 @api_view(['GET'])

@@ -129,6 +129,37 @@ class DTR(models.Model):
 
 
 
+class DTRSummary(models.Model):
+
+    cutoff_id = models.PositiveSmallIntegerField()
+    business_datetime = models.DateTimeField()
+    shift_time = models.CharField(max_length=7, choices=SHIFTS)
+    date_in = models.DateTimeField()
+    date_out = models.DateTimeField()
+    employee_number = models.ForeignKey(User, to_field="employee_number", on_delete=models.CASCADE)
+    sched_timein = models.DateTimeField()
+    sched_timeout = models.DateTimeField()
+    sched_restday = models.BooleanField()
+    lunch_out = models.DateTimeField()
+    lunch_in = models.DateTimeField()
+    overbreak = models.PositiveSmallIntegerField()
+    lates = models.PositiveSmallIntegerField()
+    adjusted_time_in = models.DateTimeField()
+    adjusted_time_out = models.DateTimeField()
+    total_hours = models.PositiveSmallIntegerField()
+    paid_leave = models.BooleanField(default=False)
+    paid_leave_reason = models.CharField(max_length=15, choices=LEAVES, blank=True, null=True)
+    reg_ot_total = models.PositiveSmallIntegerField()
+    nd_ot_total = models.PositiveSmallIntegerField()
+    ot_approved = models.BooleanField(default=False)
+    pay_period = models.DateTimeField()
+    is_computed = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = "TBL_DTR_SUMMARY"
+
+
+
 class CityMunicipality(models.Model):
 
     name = models.CharField(max_length=40)
@@ -198,4 +229,3 @@ class CityMunicipality(models.Model):
 #     is_active = models.BooleanField(default=True)
 #     created_at = models.DateTimeField(auto_now_add=True)
 #     updated_at = models.DateTimeField()
-

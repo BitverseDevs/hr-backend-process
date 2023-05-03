@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from user.models import User, Employee, AuditTrail, DTR, CityMunicipality
+from user.models import User, Employee, AuditTrail, DTR, DTRSummary, CityMunicipality
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -19,6 +19,11 @@ class AuditTrailSerializer(serializers.ModelSerializer):
 class DTRSerializer(serializers.ModelSerializer):
     class Meta:
         model = DTR
+        fields = "__all__"
+
+class DTRSummarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DTRSummary
         fields = "__all__"
 
 class CityMunicipalitySerializer(serializers.ModelSerializer):

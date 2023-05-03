@@ -8,10 +8,6 @@ ROLE_CHOICES = (
     (5, 'developer'),
 )
 
-
-
-
-
 # Employee Model
 
 CIVIL_STATUS = (
@@ -133,10 +129,6 @@ PHILHEALTH = (
     (3, "70%"),
 )
 
-
-
-
-
 # AuditTrail Model
 
 TRANS_TYPE = (
@@ -144,10 +136,6 @@ TRANS_TYPE = (
     (2, "Modify"),
     (3, "Delete"),
 )
-
-
-
-
 
 # DTR Model
 
@@ -163,9 +151,21 @@ ENTRY = (
     ("lout", "Lunch Out"),
 )
 
+# DTR Summary
 
+SHIFTS = (
+    ("morning", "Morning Shift"),
+    ("mid", "Mid Shift"),
+    ("night", "Night Shift"),
+)
 
-
+LEAVES = (
+    (1, "Absent"),
+    (2, "Vacation Leave"),
+    (3, "Sick Leave"),
+    (4, "Maternity Leave"),
+    (5, "Emergency Leave"),
+)
 
 # City Model
 NAME_TYPE = (
