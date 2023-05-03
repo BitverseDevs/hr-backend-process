@@ -167,6 +167,19 @@ LEAVES = (
     (5, "Emergency Leave"),
 )
 
+# Holiday
+
+HOLIDAY = (
+    ("SH", "Special Non-Working Holiday"),
+    ("LH", "Legal Non-Working Holiday"),
+)
+
+LOCATION = (
+    ("city", "City"),
+    ("province", "Province"),
+    ("national", "National"),
+)
+
 # City Model
 NAME_TYPE = (
     ("muni", "Municipality"),

@@ -155,8 +155,24 @@ class DTRSummary(models.Model):
     pay_period = models.DateTimeField()
     is_computed = models.BooleanField(default=False)
 
+
+
     class Meta:
         db_table = "TBL_DTR_SUMMARY"
+
+
+
+
+class Holiday(models.Model):
+    date = models.DateField()
+    description = models.TextField(max_length=100)
+    holiday_type = models.CharField(max_length=2, choices=HOLIDAY)
+    location = models.CharField(max_length=10, choices=LOCATION)
+
+
+
+    class Meta:
+        db_table = "TBL_HOLIDAY_TYPE"
 
 
 
@@ -164,6 +180,7 @@ class CityMunicipality(models.Model):
 
     name = models.CharField(max_length=40)
     province = models.CharField(max_length=40)
+
 
 
     class Meta:

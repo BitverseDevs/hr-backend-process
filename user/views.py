@@ -9,12 +9,14 @@ from rest_framework.views import APIView
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
 
-from user.models import User, Employee, AuditTrail, DTR, DTRSummary, CityMunicipality
-from user.serializers import UserSerializer, EmployeeSerializer, AuditTrailSerializer, DTRSerializer, DTRSummarySerializer, CityMunicipalitySerializer
+from user.models import User, Employee, AuditTrail, DTR, DTRSummary, Holiday, CityMunicipality
+from user.serializers import UserSerializer, EmployeeSerializer, AuditTrailSerializer, DTRSerializer, DTRSummarySerializer, HolidaySerializer, CityMunicipalitySerializer
 
 import secret
 from .hash import *
 import jwt, datetime
+
+# Start Token with Login and User View
 
 class LoginView(APIView):
     def post(self, request):
@@ -65,6 +67,8 @@ class UserView(APIView):
 
 
         return Response(serializer.data)
+
+# End Token with Login and User View
 
 # @csrf_exempt
 @api_view(['GET', 'POST'])
@@ -263,6 +267,48 @@ def dtrsummary_detail(request, pk):
     
     elif request.method == 'DELETE':
         dtrsummary.delete()
+        return HttpResponse(status=status.HTTP_204_NO_CONTENT)
+
+
+
+@api_view(['GET', 'POST'])
+def holiday_list(request):
+    if request.method == 'GET':
+        holiday = Holiday.objects.all()
+        serializer = HolidaySerializer(holiday, many=True)
+        return JsonResponse(serializer.data, safe=False)
+    
+    elif request.method == 'POST':
+        data = JSONParser().parse(request)
+        serializer = HolidaySerializer(data=data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def holiday_detail(request, pk):
+    try:
+        holiday = Holiday.objects.get(pk=pk)
+    except User.DoesNotExist:
+        return HttpResponse(status=status.HTTP_404_NOT_FOUND)
+    
+    if request.method == 'GET':
+        serializer = HolidaySerializer(holiday)
+        return JsonResponse(serializer.data)
+    
+    elif request.method == 'PUT':
+        data = JSONParser().parse(request)
+        serializer = HolidaySerializer(holiday, data=data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    elif request.method == 'DELETE':
+        holiday.delete()
         return HttpResponse(status=status.HTTP_204_NO_CONTENT)
 
 
