@@ -6,12 +6,65 @@ from rest_framework.parsers import JSONParser
 from rest_framework import  status
 from rest_framework.decorators import api_view
 from rest_framework.views import APIView
+from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.response import Response
 
 from user.models import User, Employee, AuditTrail, DTR, DTRSummary, CityMunicipality
 from user.serializers import UserSerializer, EmployeeSerializer, AuditTrailSerializer, DTRSerializer, DTRSummarySerializer, CityMunicipalitySerializer
 
 import secret
 from .hash import *
+import jwt, datetime
+
+class LoginView(APIView):
+    def post(self, request):
+        username = request.data["username"]
+        password = request.data["password"]
+
+        user = User.objects.get(username=username)
+
+        if user is None:
+            raise AuthenticationFailed("User not found!")
+        
+        if not user.password == hashing(password=password):
+            raise AuthenticationFailed("Incorrect password!")
+        
+        # JWT
+        payload = {
+            "id": user.id,
+            "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
+            "iat": datetime.datetime.utcnow()
+        }
+
+        token = jwt.encode(payload, key=secret.JWT_SECRET, algorithm="HS256")
+
+        response = Response()
+
+        response.set_cookie(key="jwt", value=token, httponly=True)
+        response.data = {
+            "jwt": token
+        }
+
+        return response
+    
+class UserView(APIView):
+    
+    def get(self, request):
+        token = request.COOKIES.get('jwt')
+
+        if not token:
+            raise AuthenticationFailed("Unauthenticated!!!")
+        
+        try:
+            payload = jwt.decode(token, secret.JWT_SECRET, algorithms=["HS256"])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed("Unauthenticated")
+        
+        user = User.objects.get(id=payload['id'])
+        serializer = UserSerializer(user)
+
+
+        return Response(serializer.data)
 
 # @csrf_exempt
 @api_view(['GET', 'POST'])
@@ -27,8 +80,6 @@ def user_list(request):
         hash_password = hashing(password=data["password"])
         data["password"] = hash_password
         serializer = UserSerializer(data=data)
-
-        print(data["password"])
 
         if serializer.is_valid():
             serializer.save()

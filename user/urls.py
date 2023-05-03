@@ -1,5 +1,6 @@
 from django.urls import path
 from user import views
+from .views import LoginView, UserView
 
 urlpatterns = [
     path('users/', views.user_list),
@@ -14,4 +15,6 @@ urlpatterns = [
     path('dtrsummary/<int:pk>', views.dtrsummary_detail),
     path('citiesmunicipalities/', views.citymunicipality_list),
     path('citiesmunicipalities/<int:pk>', views.citymunicipality_detail),
+    path('login/', LoginView.as_view()),
+    path('userview/', UserView.as_view()),
 ]
