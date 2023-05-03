@@ -10,14 +10,12 @@ from rest_framework.views import APIView
 from user.models import User, Employee, AuditTrail, DTR, CityMunicipality
 from user.serializers import UserSerializer, EmployeeSerializer, AuditTrailSerializer, DTRSerializer, CityMunicipalitySerializer
 
-from .hash import Hash
 import secret
+from .hash import *
 
 # @csrf_exempt
 @api_view(['GET', 'POST'])
 def user_list(request):
-
-    hash = Hash(key_code=secret.SECRET_PASSWORD_KEY)
 
     if request.method == 'GET':
         user = User.objects.all()
@@ -26,9 +24,11 @@ def user_list(request):
     
     elif request.method == 'POST':
         data = JSONParser().parse(request)
-        hash_password = hash.encrypt(password=data["password"])
+        hash_password = hashing(password=data["password"])
         data["password"] = hash_password
         serializer = UserSerializer(data=data)
+
+        print(data["password"])
 
         if serializer.is_valid():
             serializer.save()
