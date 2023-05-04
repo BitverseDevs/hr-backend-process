@@ -162,7 +162,6 @@ class DTRSummary(models.Model):
 
 
 
-
 class Holiday(models.Model):
     date = models.DateField()
     description = models.TextField(max_length=100)
@@ -176,15 +175,39 @@ class Holiday(models.Model):
 
 
 
+class OBT(models.Model):
+    date = models.DateField()
+    description = models.TextField(max_length=100)
+    obt_type = models.CharField(max_length=25, choices=OBT)
+    location = models.CharField(max_length=50)
+    remarks = models.TextField(max_length=100)
+
+    class Meta:
+        db_table = "TBL_OBT"
+
+
+
+class Province(models.Model):
+
+    name = models.CharField(max_length=50)
+
+
+
+    class Meta:
+        db_table = "TBL_PROVINCE"
+
+
+
 class CityMunicipality(models.Model):
 
     name = models.CharField(max_length=40)
-    province = models.CharField(max_length=40)
+    province = models.ForeignKey(Province, on_delete=models.CASCADE)
 
 
 
     class Meta:
         db_table = "TBL_CITYMUNICIPALITY"
+
 
 
 # class Branch(models.Model):

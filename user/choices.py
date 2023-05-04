@@ -171,13 +171,20 @@ LEAVES = (
 
 HOLIDAY = (
     ("SH", "Special Non-Working Holiday"),
-    ("LH", "Legal Non-Working Holiday"),
+    ("LH", "Legal Working Holiday"),
 )
 
 LOCATION = (
     ("city", "City"),
     ("province", "Province"),
     ("national", "National"),
+)
+
+# OBT
+OBT = (
+    ("client meeting", "On Client Mettting"),
+    ("on-site", "On-Site Project"),
+    ("others", "Others"),
 )
 
 # City Model

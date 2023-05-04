@@ -9,8 +9,8 @@ from rest_framework.views import APIView
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
 
-from user.models import User, Employee, AuditTrail, DTR, DTRSummary, Holiday, CityMunicipality
-from user.serializers import UserSerializer, EmployeeSerializer, AuditTrailSerializer, DTRSerializer, DTRSummarySerializer, HolidaySerializer, CityMunicipalitySerializer
+from user.models import User, Employee, AuditTrail, DTR, DTRSummary, Holiday, OBT, Province, CityMunicipality
+from user.serializers import UserSerializer, EmployeeSerializer, AuditTrailSerializer, DTRSerializer, DTRSummarySerializer, HolidaySerializer, OBTSerializer, ProvinceSerializer, CityMunicipalitySerializer
 
 import secret
 from .hash import *
@@ -310,6 +310,68 @@ def holiday_detail(request, pk):
     elif request.method == 'DELETE':
         holiday.delete()
         return HttpResponse(status=status.HTTP_204_NO_CONTENT)
+    
+
+
+@api_view(['GET', 'POST'])
+def obt_list(request):
+    if request.method == 'GET':
+        obt = OBT.objects.all()
+        serializer = OBTSerializer(obt, many=True)
+        return JsonResponse(serializer.data, safe=False)
+    
+    elif request.method == 'POST':
+        data = JSONParser().parse(request)
+        serializer = OBTSerializer(data=data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def obt_detail(request, pk):
+    try:
+        obt = OBT.objects.get(pk=pk)
+    except User.DoesNotExist:
+        return HttpResponse(status=status.HTTP_404_NOT_FOUND)
+    
+    if request.method == 'GET':
+        serializer = OBTSerializer(obt)
+        return JsonResponse(serializer.data)
+    
+    elif request.method == 'PUT':
+        data = JSONParser().parse(request)
+        serializer = OBTSerializer(obt, data=data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    elif request.method == 'DELETE':
+        obt.delete()
+        return HttpResponse(status=status.HTTP_204_NO_CONTENT)
+
+
+
+@api_view(['GET'])
+def province_list(request):
+    if request.method == 'GET':
+        province = Province.objects.all()
+        serializer = ProvinceSerializer(province, many=True)
+        return JsonResponse(serializer.data, safe=False)
+
+@api_view(['GET'])
+def province_detail(request, pk):
+    try:
+        province = Province.objects.get(pk=pk)
+    except User.DoesNotExist:
+        return HttpResponse(status=status.HTTP_404_NOT_FOUND)
+    
+    if request.method == 'GET':
+        serializer = ProvinceSerializer(province)
+        return JsonResponse(serializer.data)
 
 
 
@@ -330,3 +392,4 @@ def citymunicipality_detail(request, pk):
     if request.method == 'GET':
         serializer = CityMunicipalitySerializer(citymunicipality)
         return JsonResponse(serializer.data)
+    

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from user.models import User, Employee, AuditTrail, DTR, DTRSummary, Holiday, CityMunicipality
+from user.models import User, Employee, AuditTrail, DTR, DTRSummary, Holiday, OBT, Province, CityMunicipality
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -47,6 +47,21 @@ class HolidaySerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class CityMunicipalitySerializer(serializers.ModelSerializer):
+    # Include the code below to access the fields you want to add in your API
+    province_name = serializers.CharField(source="province.name")
     class Meta:
         model = CityMunicipality
+        fields = ("id", "name", "province", "province_name")
+
+class ProvinceSerializer(serializers.ModelSerializer):
+    # Include code below if you want to enable the parent model to access the data on the child model
+    citymunicipality_set = CityMunicipalitySerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Province
+        fields = ("id", "name", "citymunicipality_set")
+
+class OBTSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OBT
         fields = "__all__"
