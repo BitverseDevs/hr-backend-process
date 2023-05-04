@@ -188,10 +188,10 @@ OBT_TYPE = (
 )
 
 APPROVAL = (
-    (0, "Pending"),
-    (1, "Pending"),
-    (2, "Approved"),
-    (3, "Disapproved"),
+    ("P1", "Pending"),
+    ("P2", "Pending2"),
+    ("APD", "Approved"),
+    ("DIS", "Disapproved"),
 )
 
 # City Model

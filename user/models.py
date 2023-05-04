@@ -164,8 +164,8 @@ class OBT(models.Model):
     location = models.CharField(max_length=50)
     remarks = models.TextField(max_length=100)
     date_from = models.DateTimeField()
-    date_until = models.DateTimeField()
-    approval_status = models.PositiveSmallIntegerField(choices=APPROVAL)
+    date_to = models.DateTimeField()
+    approval_status = models.CharField(max_length=15, choices=APPROVAL)
     reason_disapproval = models.TextField(max_length=100, null=True, blank=True)
     total_hour = models.PositiveSmallIntegerField()
     cutoff_id = models.PositiveSmallIntegerField(default=0)
@@ -174,7 +174,7 @@ class OBT(models.Model):
     employee_number = models.ForeignKey(User, to_field="employee_number", on_delete=models.CASCADE)
 
     class Meta:
-        db_table = "TBL_OBT_ENTRY"
+        db_table = "TBL_OBT_APP"
 
 
 
@@ -195,12 +195,12 @@ class CityMunicipality(models.Model):
 
 
 
-class OvertimeEntry(models.Model):
+class OvertimeApp(models.Model):
     date_filed = models.DateTimeField(auto_now_add=True)
     overtime_type = models.CharField(max_length=15, choices=OT_TYPE)
     remarks = models.TextField(max_length=100)
     date_from = models.DateTimeField()
-    date_until = models.DateTimeField()
+    date_to = models.DateTimeField()
     approval_status = models.PositiveSmallIntegerField(choices=APPROVAL)
     reason_disapproval = models.TextField(max_length=100)
     total_hours = models.PositiveSmallIntegerField()
@@ -208,6 +208,9 @@ class OvertimeEntry(models.Model):
     date_approved1 = models.DateTimeField(null=True, blank=True)
     date_approved2 = models.DateTimeField(null=True, blank=True)
     employee_number = models.ForeignKey(User, to_field="employee_number", on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = "TBL_OVERTIME_APP"
 
 # class Branch(models.Model):
 
