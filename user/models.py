@@ -9,7 +9,6 @@ EMPLOYEE_NUMBER_MAX = 9990
 USERNAME_LENGTH_MAX = 8
 
 class User(models.Model):
-    
     employee_number = models.PositiveSmallIntegerField(unique=True, validators=[MaxValueValidator(EMPLOYEE_NUMBER_MAX)])
     username = models.CharField(max_length=USERNAME_LENGTH_MAX, unique=True)
     password = models.CharField(max_length=128)
@@ -26,17 +25,15 @@ class User(models.Model):
     date_password_change = models.DateTimeField(blank=True, null=True)
     role = models.PositiveSmallIntegerField(choices=ROLE_CHOICES, default=1)
     
-
     def __str__(self):
         return self.username
-    
+
     class Meta:
         db_table = 'TBL_USER'
 
 
 
 class Employee(models.Model):
-
     employee_number = models.ForeignKey(User, to_field='employee_number', on_delete=models.CASCADE)
     
     first_name = models.CharField(max_length=25)
@@ -76,8 +73,6 @@ class Employee(models.Model):
     sssid_code = models.PositiveSmallIntegerField(choices=SSS, null=True, blank=True)
     philhealth_code = models.PositiveSmallIntegerField(choices=PHILHEALTH, null=True, blank=True)
 
-
-
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
     
@@ -87,15 +82,11 @@ class Employee(models.Model):
 
 
 class AuditTrail(models.Model):
-
-    # transaction_id = models.AutoField(primary_key=True)
     employee_number = models.ForeignKey(User, to_field='employee_number', on_delete=models.CASCADE)
     transaction_type = models.PositiveSmallIntegerField(choices=TRANS_TYPE)
     table_affected = models.CharField(max_length=100)
     action_remarks = models.TextField(max_length=100)
     date_added = models.DateTimeField(auto_now_add=True)
-
-
 
     def __str__(self):
         return f"{self.id}: {self.transaction_type}"
@@ -106,7 +97,6 @@ class AuditTrail(models.Model):
 
 
 class DTR(models.Model):
-
     bio_id = models.PositiveSmallIntegerField(unique=True, validators=[MaxValueValidator(9990)], null=True, blank=True)
     date_time_bio = models.DateTimeField()
     flag1_in_out = models.BooleanField(choices=FLAG)
@@ -122,15 +112,12 @@ class DTR(models.Model):
     business_datetime = models.DateTimeField()
     branch_code =models.CharField(max_length=15, choices=BRANCH, default="main")
 
-
-
     class Meta:
         db_table = "TBL_DTR"
 
 
 
 class DTRSummary(models.Model):
-
     cutoff_id = models.PositiveSmallIntegerField()
     business_datetime = models.DateTimeField()
     shift_time = models.CharField(max_length=7, choices=SHIFTS)
@@ -155,8 +142,6 @@ class DTRSummary(models.Model):
     pay_period = models.DateTimeField()
     is_computed = models.BooleanField(default=False)
 
-
-
     class Meta:
         db_table = "TBL_DTR_SUMMARY"
 
@@ -168,30 +153,33 @@ class Holiday(models.Model):
     holiday_type = models.CharField(max_length=2, choices=HOLIDAY)
     location = models.CharField(max_length=10, choices=LOCATION)
 
-
-
     class Meta:
         db_table = "TBL_HOLIDAY_TYPE"
 
 
 
 class OBT(models.Model):
-    date = models.DateField()
-    description = models.TextField(max_length=100)
-    obt_type = models.CharField(max_length=25, choices=OBT)
+    date_filed = models.DateField(auto_now_add=True)
+    obt_type = models.CharField(max_length=25, choices=OBT_TYPE)
     location = models.CharField(max_length=50)
     remarks = models.TextField(max_length=100)
+    date_from = models.DateTimeField()
+    date_until = models.DateTimeField()
+    approval_status = models.PositiveSmallIntegerField(choices=APPROVAL)
+    reason_disapproval = models.TextField(max_length=100, null=True, blank=True)
+    total_hour = models.PositiveSmallIntegerField()
+    cutoff_id = models.PositiveSmallIntegerField(default=0)
+    date_approved1 = models.DateTimeField(null=True, blank=True)
+    date_approved2 = models.DateTimeField(null=True, blank=True)
+    employee_number = models.ForeignKey(User, to_field="employee_number", on_delete=models.CASCADE)
 
     class Meta:
-        db_table = "TBL_OBT"
+        db_table = "TBL_OBT_ENTRY"
 
 
 
 class Province(models.Model):
-
     name = models.CharField(max_length=50)
-
-
 
     class Meta:
         db_table = "TBL_PROVINCE"
@@ -199,16 +187,27 @@ class Province(models.Model):
 
 
 class CityMunicipality(models.Model):
-
     name = models.CharField(max_length=40)
     province = models.ForeignKey(Province, on_delete=models.CASCADE)
-
-
 
     class Meta:
         db_table = "TBL_CITYMUNICIPALITY"
 
 
+
+class OvertimeEntry(models.Model):
+    date_filed = models.DateTimeField(auto_now_add=True)
+    overtime_type = models.CharField(max_length=15, choices=OT_TYPE)
+    remarks = models.TextField(max_length=100)
+    date_from = models.DateTimeField()
+    date_until = models.DateTimeField()
+    approval_status = models.PositiveSmallIntegerField(choices=APPROVAL)
+    reason_disapproval = models.TextField(max_length=100)
+    total_hours = models.PositiveSmallIntegerField()
+    cutoff_id = models.PositiveSmallIntegerField(default=0)
+    date_approved1 = models.DateTimeField(null=True, blank=True)
+    date_approved2 = models.DateTimeField(null=True, blank=True)
+    employee_number = models.ForeignKey(User, to_field="employee_number", on_delete=models.CASCADE)
 
 # class Branch(models.Model):
 

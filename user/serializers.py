@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from user.models import User, Employee, AuditTrail, DTR, DTRSummary, Holiday, OBT, Province, CityMunicipality
+from user.models import User, Employee, AuditTrail, DTR, DTRSummary, Holiday, OBT, Province, CityMunicipality, OvertimeEntry
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -46,12 +46,22 @@ class HolidaySerializer(serializers.ModelSerializer):
         model = Holiday
         fields = "__all__"
 
+class OBTSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OBT
+        fields = "__all__"
+
 class CityMunicipalitySerializer(serializers.ModelSerializer):
     # Include the code below to access the fields you want to add in your API
-    province_name = serializers.CharField(source="province.name")
+    # province_name = serializers.CharField(source="province.name", read_only=True)
+    data = serializers.SerializerMethodField()
+    
     class Meta:
         model = CityMunicipality
-        fields = ("id", "name", "province", "province_name")
+        fields = ["id", "name", "province", "data"]
+
+    def get_data(self, obj):
+        return {'province': obj.province.id, "province_name":obj.province.name}
 
 class ProvinceSerializer(serializers.ModelSerializer):
     # Include code below if you want to enable the parent model to access the data on the child model
@@ -61,7 +71,7 @@ class ProvinceSerializer(serializers.ModelSerializer):
         model = Province
         fields = ("id", "name", "citymunicipality_set")
 
-class OBTSerializer(serializers.ModelSerializer):
+class OvertimeEntrySerializer(serializers.ModelSerializer):
     class Meta:
-        model = OBT
+        model = OvertimeEntry
         fields = "__all__"

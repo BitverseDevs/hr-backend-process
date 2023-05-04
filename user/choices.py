@@ -181,14 +181,28 @@ LOCATION = (
 )
 
 # OBT
-OBT = (
+OBT_TYPE = (
     ("client meeting", "On Client Mettting"),
     ("on-site", "On-Site Project"),
     ("others", "Others"),
+)
+
+APPROVAL = (
+    (0, "Pending"),
+    (1, "Pending"),
+    (2, "Approved"),
+    (3, "Disapproved"),
 )
 
 # City Model
 NAME_TYPE = (
     ("muni", "Municipality"),
     ("city", "City"),
+)
+
+# Overtime Entry
+OT_TYPE = (
+    ("whole day", "Whole Day Overtime"),
+    ("before duty", "Before Duty-in"),
+    ("after duty", "After Duty-in"),
 )

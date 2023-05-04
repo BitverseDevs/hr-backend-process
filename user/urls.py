@@ -17,6 +17,8 @@ urlpatterns = [
     path('holiday/<int:pk>', views.holiday_detail),
     path('obts/', views.obt_list),
     path('obt/<int:pk>', views.obt_detail),
+    path('ots/', views.ot_list),
+    path('ot/<int:pk>', views.ot_detail),
 
     path('provinces/', views.province_list),
     path('province/<int:pk>', views.province_detail),
