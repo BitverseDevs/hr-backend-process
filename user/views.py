@@ -412,7 +412,7 @@ def ot_list(request):
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET', 'PUT', 'DELETE'])
-def obt_detail(request, pk):
+def ot_detail(request, pk):
     try:
         ot = OvertimeEntry.objects.get(pk=pk)
     except User.DoesNotExist:
