@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
@@ -13,7 +13,6 @@ from user.models import User, Employee, AuditTrail, DTR, DTRSummary, Holiday, OB
 from user.serializers import UserSerializer, EmployeeSerializer, AuditTrailSerializer, DTRSerializer, DTRSummarySerializer, HolidaySerializer, OBTSerializer, ProvinceSerializer, CityMunicipalitySerializer, OvertimeSerializer, LeavesSerializer
 
 import secret
-from .hash import *
 import jwt, datetime
 
 # Start Token with Login and User View
@@ -24,12 +23,12 @@ class LoginView(APIView):
         password = request.data["password"]
         response = Response()
 
-        user = User.objects.get(username=username)
-
-        if user is None:
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
             raise AuthenticationFailed("User not found!")
         
-        if not user.password == hashing(password=password):
+        if not user.check_password(password):
             user.failed_login_attempts += 1
             user.save()
             raise AuthenticationFailed("Incorrect password!")
@@ -45,11 +44,11 @@ class LoginView(APIView):
         user.save()
         serializer = UserSerializer(user)
 
-        employee = Employee.objects.get(employee_number=serializer.data["employee_number"])
+        employee = get_object_or_404(Employee, employee_number=serializer.data["employee_number"])
         serializer1 = EmployeeSerializer(employee)
 
         token = jwt.encode(payload, key=secret.JWT_SECRET, algorithm="HS256")
-        response.set_cookie(key="jwt", value=token, httponly=True)
+        # response.set_cookie(key="jwt", value=token, httponly=True)
         response.data = {
             "jwt": token,
             "user": serializer.data,
