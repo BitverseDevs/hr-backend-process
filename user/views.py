@@ -22,6 +22,7 @@ class LoginView(APIView):
     def post(self, request):
         username = request.data["username"]
         password = request.data["password"]
+        response = Response()
 
         user = User.objects.get(username=username)
 
@@ -29,6 +30,8 @@ class LoginView(APIView):
             raise AuthenticationFailed("User not found!")
         
         if not user.password == hashing(password=password):
+            user.failed_login_attempts += 1
+            user.save()
             raise AuthenticationFailed("Incorrect password!")
         
         # JWT
@@ -38,17 +41,19 @@ class LoginView(APIView):
             "iat": datetime.datetime.utcnow()
         }
 
-        token = jwt.encode(payload, key=secret.JWT_SECRET, algorithm="HS256")
-
-        response = Response()
-
+        user.last_login = datetime.datetime.now()
+        user.save()
         serializer = UserSerializer(user)
+        
+        employee = Employee.objects.get(employee_number=serializer.data["employee_number"])
+        serializer1 = EmployeeSerializer(employee)
 
-
+        token = jwt.encode(payload, key=secret.JWT_SECRET, algorithm="HS256")
         response.set_cookie(key="jwt", value=token, httponly=True)
         response.data = {
             "jwt": token,
-            "data": serializer.data
+            "user": serializer.data,
+            "employee_details": serializer1.data
         }
 
         return response
