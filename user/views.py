@@ -44,7 +44,7 @@ class LoginView(APIView):
         user.last_login = datetime.datetime.now()
         user.save()
         serializer = UserSerializer(user)
-        
+
         employee = Employee.objects.get(employee_number=serializer.data["employee_number"])
         serializer1 = EmployeeSerializer(employee)
 
@@ -90,8 +90,6 @@ def user_list(request):
     
     elif request.method == 'POST':
         data = JSONParser().parse(request)
-        hash_password = hashing(password=data["password"])
-        data["password"] = hash_password
         serializer = UserSerializer(data=data)
 
         if serializer.is_valid():
