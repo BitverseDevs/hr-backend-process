@@ -143,3 +143,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ORIGIN_ALLOW_ALL = True # Allow FE to access API from other PL
 CORS_ALLOW_CREDENTIALS = True # Allow FE to fetch cookies
+
+AUTH_USER_MODEL = "user.User"

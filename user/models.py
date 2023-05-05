@@ -1,6 +1,6 @@
 from django.db import models
-
 from django.core.validators import MaxValueValidator
+from django.contrib.auth.models import AbstractUser
 
 # from .choices import *
 import secret
@@ -56,14 +56,14 @@ class Employee(models.Model):
     class Meta:
         db_table = "TBL_EMPLOYEE_PROFILE"
 
-class User(models.Model):
+class User(AbstractUser):
     employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE)
     username = models.CharField(unique=True, max_length=8)
     password = models.CharField(max_length=128)
     role = models.PositiveSmallIntegerField() # choice
 
-    is_active = models.BooleanField(default=1)
-    is_locked = models.BooleanField(default=0)
+    is_active = models.BooleanField(default=True)
+    is_locked = models.BooleanField(default=False)
     
     date_added = models.DateField(auto_now_add=True)
     date_deleted = models.DateField(null=True, blank=True)
@@ -71,8 +71,11 @@ class User(models.Model):
     failed_login_attempts = models.PositiveSmallIntegerField(null=True, blank=True)
     last_login = models.DateTimeField(default=datetime.datetime(2023, 1, 1))
 
-    old_password = models.CharField(max_length=128, default="")
+    old_password = models.CharField(max_length=128, default="N/A")
     date_password_changed = models.DateField(null=True, blank=True)
+
+    USERNAME_FIELD = "username"
+    REQUIRED_FIELDS = ["password", "role", "is_active", "is_locked"]
 
     class Meta:
         db_table = "TBL_USER"
@@ -88,7 +91,7 @@ class AuditTrail(models.Model):
         db_table = "TBL_AUDITTRAIL"
 
 class DTR(models.Model):
-    employe_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE)
+    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE)
     bio_id = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
     datetime_bio = models.DateTimeField()
     
@@ -134,12 +137,12 @@ class DTRSummary(models.Model):
     is_computed = models.BooleanField(default=False)
 
     class Meta:
-        bd_table = "TBL_DTR_SUMMARY"
+        db_table = "TBL_DTR_SUMMARY"
 
 class Holiday(models.Model):
     holiday_date = models.DateField()
     holiday_description = models.TextField(max_length=100)
-    holiday_type = models.CharField(max_length=15) # choice
+    holiday_type = models.CharField(unique=True, max_length=5) # choice
     holiday_location = models.CharField(max_length=15) # choice
 
     class Meta:
@@ -205,7 +208,7 @@ class Leaves(models.Model):
     leave_date_from = models.DateTimeField()
     leave_date_to = models.DateTimeField()
     leave_approval_status = models.CharField(max_length=3) # choice
-    leave_reason_disapproval = models.TextField(max_length=100)
+    leave_reason_disapproval = models.TextField(max_length=100, null=True, blank=True)
     leave_total_hours = models.PositiveSmallIntegerField()
     leave_date_approved1 = models.DateTimeField(null=True, blank=True)
     leave_date_approved2 = models.DateTimeField(null=True, blank=True)

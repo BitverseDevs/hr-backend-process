@@ -19,6 +19,8 @@ urlpatterns = [
     path('obt/<int:pk>', views.obt_detail),
     path('ots/', views.ot_list),
     path('ot/<int:pk>', views.ot_detail),
+    path('leaves/', views.leave_list),
+    path('leave/<int:pk>', views.leave_detail),
 
     path('provinces/', views.province_list),
     path('province/<int:pk>', views.province_detail),

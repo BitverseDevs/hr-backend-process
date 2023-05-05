@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from user.models import User, Employee, AuditTrail, DTR, DTRSummary, Holiday, OBT, Province, CityMunicipality, OvertimeApp
+from user.models import User, Employee, AuditTrail, DTR, DTRSummary, Holiday, OBT, Province, CityMunicipality, Overtime, Leaves
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -71,7 +71,12 @@ class ProvinceSerializer(serializers.ModelSerializer):
         model = Province
         fields = ("id", "name", "citymunicipality_set")
 
-class OvertimeAppSerializer(serializers.ModelSerializer):
+class OvertimeSerializer(serializers.ModelSerializer):
     class Meta:
-        model = OvertimeApp
+        model = Overtime
+        fields = "__all__"
+
+class LeavesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Leaves
         fields = "__all__"

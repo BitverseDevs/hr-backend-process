@@ -9,8 +9,8 @@ from rest_framework.views import APIView
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
 
-from user.models import User, Employee, AuditTrail, DTR, DTRSummary, Holiday, OBT, Province, CityMunicipality, OvertimeApp 
-from user.serializers import UserSerializer, EmployeeSerializer, AuditTrailSerializer, DTRSerializer, DTRSummarySerializer, HolidaySerializer, OBTSerializer, ProvinceSerializer, CityMunicipalitySerializer, OvertimeAppSerializer
+from user.models import User, Employee, AuditTrail, DTR, DTRSummary, Holiday, OBT, Province, CityMunicipality, Overtime, Leaves 
+from user.serializers import UserSerializer, EmployeeSerializer, AuditTrailSerializer, DTRSerializer, DTRSummarySerializer, HolidaySerializer, OBTSerializer, ProvinceSerializer, CityMunicipalitySerializer, OvertimeSerializer, LeavesSerializer
 
 import secret
 from .hash import *
@@ -42,9 +42,13 @@ class LoginView(APIView):
 
         response = Response()
 
+        serializer = UserSerializer(user)
+
+
         response.set_cookie(key="jwt", value=token, httponly=True)
         response.data = {
-            "jwt": token
+            "jwt": token,
+            "data": serializer.data
         }
 
         return response
@@ -398,13 +402,13 @@ def citymunicipality_detail(request, pk):
 @api_view(['GET', 'POST'])
 def ot_list(request):
     if request.method == 'GET':
-        ot = OvertimeEntry.objects.all()
-        serializer = OvertimeEntrySerializer(ot, many=True)
+        ot = Overtime.objects.all()
+        serializer = OvertimeSerializer(ot, many=True)
         return JsonResponse(serializer.data, safe=False)
     
     elif request.method == 'POST':
         data = JSONParser().parse(request)
-        serializer = OvertimeEntrySerializer(data=data)
+        serializer = OvertimeSerializer(data=data)
 
         if serializer.is_valid():
             serializer.save()
@@ -414,17 +418,17 @@ def ot_list(request):
 @api_view(['GET', 'PUT', 'DELETE'])
 def ot_detail(request, pk):
     try:
-        ot = OvertimeEntry.objects.get(pk=pk)
+        ot = Overtime.objects.get(pk=pk)
     except User.DoesNotExist:
         return HttpResponse(status=status.HTTP_404_NOT_FOUND)
     
     if request.method == 'GET':
-        serializer = OvertimeEntrySerializer(ot)
+        serializer = OvertimeSerializer(ot)
         return JsonResponse(serializer.data)
     
     elif request.method == 'PUT':
         data = JSONParser().parse(request)
-        serializer = OvertimeEntrySerializer(ot, data=data)
+        serializer = OvertimeSerializer(ot, data=data)
 
         if serializer.is_valid():
             serializer.save()
@@ -433,4 +437,46 @@ def ot_detail(request, pk):
     
     elif request.method == 'DELETE':
         ot.delete()
-        return HttpResponse(status=status.HTTP_204_NO_CONTENT)    
+        return HttpResponse(status=status.HTTP_204_NO_CONTENT)
+    
+
+
+@api_view(['GET', 'POST'])
+def leave_list(request):
+    if request.method == 'GET':
+        leave = Leaves.objects.all()
+        serializer = LeavesSerializer(leave, many=True)
+        return JsonResponse(serializer.data, safe=False)
+    
+    elif request.method == 'POST':
+        data = JSONParser().parse(request)
+        serializer = LeavesSerializer(data=data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def leave_detail(request, pk):
+    try:
+        leave = Leaves.objects.get(pk=pk)
+    except User.DoesNotExist:
+        return HttpResponse(status=status.HTTP_404_NOT_FOUND)
+    
+    if request.method == 'GET':
+        serializer = LeavesSerializer(leave)
+        return JsonResponse(serializer.data)
+    
+    elif request.method == 'PUT':
+        data = JSONParser().parse(request)
+        serializer = LeavesSerializer(leave, data=data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    elif request.method == 'DELETE':
+        leave.delete()
+        return HttpResponse(status=status.HTTP_204_NO_CONTENT)   
