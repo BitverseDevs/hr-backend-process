@@ -1,129 +1,119 @@
-import datetime
 from django.db import models
+
 from django.core.validators import MaxValueValidator
+
+# from .choices import *
 import secret
-from .choices import *
+import datetime
 
-# Constants
-EMPLOYEE_NUMBER_MAX = 9990
-USERNAME_LENGTH_MAX = 8
 
-class User(models.Model):
-    employee_number = models.PositiveSmallIntegerField(unique=True, validators=[MaxValueValidator(EMPLOYEE_NUMBER_MAX)])
-    username = models.CharField(max_length=USERNAME_LENGTH_MAX, unique=True)
-    password = models.CharField(max_length=128)
-    date_added = models.DateTimeField(auto_now_add=True)
-
-    is_active = models.BooleanField(default=True)
-    date_deleted = models.DateTimeField(blank=True, null=True)
-    is_locked = models.BooleanField(default=False)
-
-    failed_login_attempts = models.PositiveSmallIntegerField(null=True, blank=True)
-    last_login = models.DateTimeField(default=datetime.datetime(2001, 1, 1))
-
-    old_password = models.CharField(max_length=128, default=secret.DEF_PASS)
-    date_password_change = models.DateTimeField(blank=True, null=True)
-    role = models.PositiveSmallIntegerField(choices=ROLE_CHOICES, default=1)
-    
-    def __str__(self):
-        return self.username
-
-    class Meta:
-        db_table = 'TBL_USER'
+"""
+unique
+validators
+max length
+null
+blank
+choices
+default
+"""
 
 
 
 class Employee(models.Model):
-    employee_number = models.ForeignKey(User, to_field='employee_number', on_delete=models.CASCADE)
-    
+    employee_number = models.PositiveSmallIntegerField(unique=True, validators=[MaxValueValidator(9990)])
     first_name = models.CharField(max_length=25)
     middle_name = models.CharField(max_length=25, null=True, blank=True)
     last_name = models.CharField(max_length=25)
-    suffix = models.CharField(max_length=4, null=True, blank=True, choices=SUFFIX)
-    
+    suffix = models.CharField(max_length=4, null=True, blank=True) # choice
     birthday = models.DateField()
-    birth_place = models.CharField(max_length=25, null=True, blank=True)
-    civil_status = models.PositiveSmallIntegerField(choices=CIVIL_STATUS, default=1)
-    gender = models.CharField(max_length=1, choices=GENDER)
-    
-    address = models.CharField(max_length=50)
-    provincial_address = models.CharField(max_length=50, null=True, blank=True)
-    
+    birth_place = models.CharField(max_length=50, null=True, blank=True)
+    civil_status = models.PositiveSmallIntegerField(default=1) # choice
+    gender = models.CharField(max_length=1) # choice
+    address = models.TextField(max_length=50)
+    provincial_address = models.TextField(max_length=50, null=True, blank=True)
     mobile_phone = models.CharField(max_length=15)
     email = models.EmailField()
     
-    approver = models.CharField(max_length=4)
-    
     date_hired = models.DateField()
     date_resigned = models.DateField(null=True, blank=True)
+    approver = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
+    date_added = models.DateField(auto_now_add=True)
+    date_deleted = models.DateField(null=True, blank=True)
 
-    date_added = models.DateTimeField(auto_now_add=True)
-    date_deleted = models.DateTimeField(blank=True, null=True)
-
-    branch_code = models.CharField(max_length=15, choices=BRANCH, default="main")
-    department_code = models.PositiveSmallIntegerField(choices=DEPT, null=True, blank=True)
-    division_code = models.PositiveSmallIntegerField(choices=DIV, null=True, blank=True)
-    position_code = models.PositiveSmallIntegerField(choices=POS, null=True, blank=True)
-    rank_code = models.PositiveSmallIntegerField(choices=RANK, null=True, blank=True)
-    city_code = models.PositiveSmallIntegerField(choices=CITY, null=True, blank=True)
-
-    payroll_group_code = models.PositiveSmallIntegerField(choices=PAYROLL, null=True, blank=True)
-    tax_code = models.PositiveSmallIntegerField(choices=TAX, null=True, blank=True)
-    pagibig_code = models.PositiveSmallIntegerField(choices=PAGIBIG, null=True, blank=True)
-    sssid_code = models.PositiveSmallIntegerField(choices=SSS, null=True, blank=True)
-    philhealth_code = models.PositiveSmallIntegerField(choices=PHILHEALTH, null=True, blank=True)
-
-    def __str__(self):
-        return f"{self.first_name} {self.last_name}"
+    branch_code = models.CharField(max_length=15, default="main") # choice
+    department_code = models.PositiveSmallIntegerField(null=True, blank=True) #choice
+    division_code = models.PositiveSmallIntegerField(null=True, blank=True) #choice
+    payroll_group_code = models.PositiveSmallIntegerField(null=True, blank=True) #choice
+    position_code = models.PositiveSmallIntegerField(null=True, blank=True) #choice
+    rank_code = models.PositiveSmallIntegerField(null=True, blank=True) #choice
+    tax_code = models.PositiveSmallIntegerField(null=True, blank=True) #choice
+    city_code = models.PositiveSmallIntegerField(null=True, blank=True) #choice
     
+    pagibig_code = models.PositiveSmallIntegerField(null=True, blank=True)
+    sssid_code = models.PositiveSmallIntegerField(null=True, blank=True)
+    philhealth_code = models.PositiveSmallIntegerField(null=True, blank=True)
+
     class Meta:
-        db_table = 'TBL_EMPLOYEE_PROFILE'
+        db_table = "TBL_EMPLOYEE_PROFILE"
 
+class User(models.Model):
+    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE)
+    username = models.CharField(unique=True, max_length=8)
+    password = models.CharField(max_length=128)
+    role = models.PositiveSmallIntegerField() # choice
 
+    is_active = models.BooleanField(default=1)
+    is_locked = models.BooleanField(default=0)
+    
+    date_added = models.DateField(auto_now_add=True)
+    date_deleted = models.DateField(null=True, blank=True)
+
+    failed_login_attempts = models.PositiveSmallIntegerField(null=True, blank=True)
+    last_login = models.DateTimeField(default=datetime.datetime(2023, 1, 1))
+
+    old_password = models.CharField(max_length=128, default="")
+    date_password_changed = models.DateField(null=True, blank=True)
+
+    class Meta:
+        db_table = "TBL_USER"
 
 class AuditTrail(models.Model):
-    employee_number = models.ForeignKey(User, to_field='employee_number', on_delete=models.CASCADE)
-    transaction_type = models.PositiveSmallIntegerField(choices=TRANS_TYPE)
-    table_affected = models.CharField(max_length=100)
+    employee_number = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
+    transaction_type = models.CharField(max_length=15) # choice
+    table_affected = models.CharField(max_length=30)
     action_remarks = models.TextField(max_length=100)
     date_added = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f"{self.id}: {self.transaction_type}"
-
     class Meta:
-        db_table = "TBL_AUDTRAIL"
-
-
+        db_table = "TBL_AUDITTRAIL"
 
 class DTR(models.Model):
-    bio_id = models.PositiveSmallIntegerField(unique=True, validators=[MaxValueValidator(9990)], null=True, blank=True)
-    date_time_bio = models.DateTimeField()
-    flag1_in_out = models.BooleanField(choices=FLAG)
-    flag2_lout_lin = models.BooleanField(choices=FLAG, null=True, blank=True)
-
-    entry_type = models.CharField(max_length=4, choices=ENTRY)
-    date_uploaded = models.DateTimeField(auto_now_add=True)
-    employee_number = models.ForeignKey(User, to_field='employee_number', on_delete=models.CASCADE)
-    processed = models.BooleanField()
+    employe_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE)
+    bio_id = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
+    datetime_bio = models.DateTimeField()
     
+    flag1_in_out = models.BooleanField() # choice
+    flag2_lout_lin = models.BooleanField(null=True, blank=True) # choice
+    entry_type = models.CharField(max_length=5) # choice
+    date_uploaded = models.DateTimeField()
+    processed = models.BooleanField(default=False)
+
     sched_timein = models.DateTimeField()
     sched_timeout = models.DateTimeField()
     business_datetime = models.DateTimeField()
-    branch_code =models.CharField(max_length=15, choices=BRANCH, default="main")
+    branch_code = models.CharField(max_length=15, default="main") # choice
 
     class Meta:
         db_table = "TBL_DTR"
 
-
-
 class DTRSummary(models.Model):
-    cutoff_id = models.PositiveSmallIntegerField()
+    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE)
+    cutoff_id = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
     business_datetime = models.DateTimeField()
-    shift_time = models.CharField(max_length=7, choices=SHIFTS)
+    shift_name = models.CharField(max_length=10) # choice
     date_in = models.DateTimeField()
     date_out = models.DateTimeField()
-    employee_number = models.ForeignKey(User, to_field="employee_number", on_delete=models.CASCADE)
+    
     sched_timein = models.DateTimeField()
     sched_timeout = models.DateTimeField()
     sched_restday = models.BooleanField()
@@ -131,11 +121,12 @@ class DTRSummary(models.Model):
     lunch_in = models.DateTimeField()
     overbreak = models.PositiveSmallIntegerField()
     lates = models.PositiveSmallIntegerField()
-    adjusted_time_in = models.DateTimeField()
-    adjusted_time_out = models.DateTimeField()
+    adjusted_timein = models.DateTimeField()
+    adjusted_timeout = models.DateTimeField()
+    
     total_hours = models.PositiveSmallIntegerField()
     paid_leave = models.BooleanField(default=False)
-    paid_leave_reason = models.CharField(max_length=15, choices=LEAVES, blank=True, null=True)
+    paid_leave_reason = models.CharField(max_length=50) # choice
     reg_ot_total = models.PositiveSmallIntegerField()
     nd_ot_total = models.PositiveSmallIntegerField()
     ot_approved = models.BooleanField(default=False)
@@ -143,48 +134,41 @@ class DTRSummary(models.Model):
     is_computed = models.BooleanField(default=False)
 
     class Meta:
-        db_table = "TBL_DTR_SUMMARY"
-
-
+        bd_table = "TBL_DTR_SUMMARY"
 
 class Holiday(models.Model):
-    date = models.DateField()
-    description = models.TextField(max_length=100)
-    holiday_type = models.CharField(max_length=2, choices=HOLIDAY)
-    location = models.CharField(max_length=10, choices=LOCATION)
+    holiday_date = models.DateField()
+    holiday_description = models.TextField(max_length=100)
+    holiday_type = models.CharField(max_length=15) # choice
+    holiday_location = models.CharField(max_length=15) # choice
 
     class Meta:
-        db_table = "TBL_HOLIDAY_TYPE"
-
-
+        db_table = "TBL_HOLIDAY"
 
 class OBT(models.Model):
-    date_filed = models.DateField(auto_now_add=True)
-    obt_type = models.CharField(max_length=25, choices=OBT_TYPE)
-    location = models.CharField(max_length=50)
-    remarks = models.TextField(max_length=100)
-    date_from = models.DateTimeField()
-    date_to = models.DateTimeField()
-    approval_status = models.CharField(max_length=15, choices=APPROVAL)
-    reason_disapproval = models.TextField(max_length=100, null=True, blank=True)
-    total_hour = models.PositiveSmallIntegerField()
-    cutoff_id = models.PositiveSmallIntegerField(default=0)
-    date_approved1 = models.DateTimeField(null=True, blank=True)
-    date_approved2 = models.DateTimeField(null=True, blank=True)
-    employee_number = models.ForeignKey(User, to_field="employee_number", on_delete=models.CASCADE)
+    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE)
+    cutoff_id = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
+    
+    obt_date_filed = models.DateTimeField(auto_now_add=True)
+    obt_type = models.CharField(max_length=20) # choice
+    obt_location = models.TextField(max_length=50)
+    obt_remarks = models.TextField(max_length=100)
+    obt_date_from = models.DateTimeField()
+    obt_date_to = models.DateTimeField()
+    obt_approval_status = models.CharField(max_length=3) # choice
+    obt_reason_disapproval = models.TextField(max_length=50, null=True, blank=True)
+    obt_total_hour = models.PositiveSmallIntegerField()
+    obt_date_approved1 = models.DateTimeField(null=True, blank=True)
+    obt_date_approved2 = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         db_table = "TBL_OBT_APP"
-
-
 
 class Province(models.Model):
     name = models.CharField(max_length=50)
 
     class Meta:
         db_table = "TBL_PROVINCE"
-
-
 
 class CityMunicipality(models.Model):
     name = models.CharField(max_length=40)
@@ -193,24 +177,46 @@ class CityMunicipality(models.Model):
     class Meta:
         db_table = "TBL_CITYMUNICIPALITY"
 
-
-
-class OvertimeApp(models.Model):
-    date_filed = models.DateTimeField(auto_now_add=True)
-    overtime_type = models.CharField(max_length=15, choices=OT_TYPE)
-    remarks = models.TextField(max_length=100)
-    date_from = models.DateTimeField()
-    date_to = models.DateTimeField()
-    approval_status = models.PositiveSmallIntegerField(choices=APPROVAL)
-    reason_disapproval = models.TextField(max_length=100)
-    total_hours = models.PositiveSmallIntegerField()
-    cutoff_id = models.PositiveSmallIntegerField(default=0)
-    date_approved1 = models.DateTimeField(null=True, blank=True)
-    date_approved2 = models.DateTimeField(null=True, blank=True)
-    employee_number = models.ForeignKey(User, to_field="employee_number", on_delete=models.CASCADE)
+class Overtime(models.Model):
+    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE)
+    cutoff_id = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
+    
+    ot_date_filed = models.DateTimeField(auto_now_add=True)
+    ot_type = models.CharField(max_length=2) # choice
+    ot_remarks = models.TextField(max_length=100)
+    ot_date_from = models.DateTimeField()
+    ot_date_to = models.DateTimeField()
+    ot_approval_status = models.PositiveSmallIntegerField() # choice
+    ot_reason_disapproval = models.TextField(max_length=100)
+    ot_total_hours = models.PositiveSmallIntegerField()
+    ot_date_approved1 = models.DateTimeField(null=True, blank=True)
+    ot_date_approved2 = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         db_table = "TBL_OVERTIME_APP"
+
+class Leaves(models.Model):
+    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE)
+    cutoff_id = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
+    
+    leave_date_filed = models.DateTimeField(auto_now_add=True)
+    leave_type = models.CharField(max_length=3) # choice
+    leave_remarks = models.TextField(max_length=100)
+    leave_date_from = models.DateTimeField()
+    leave_date_to = models.DateTimeField()
+    leave_approval_status = models.CharField(max_length=3) # choice
+    leave_reason_disapproval = models.TextField(max_length=100)
+    leave_total_hours = models.PositiveSmallIntegerField()
+    leave_date_approved1 = models.DateTimeField(null=True, blank=True)
+    leave_date_approved2 = models.DateTimeField(null=True, blank=True)
+    leave_number_days = models.PositiveSmallIntegerField()
+
+    class Meta:
+        db_table = "TBL_LEAVES_APP"
+
+
+
+
 
 # class Branch(models.Model):
 
