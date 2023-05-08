@@ -12,8 +12,9 @@ from rest_framework.response import Response
 from user.models import User, Employee, AuditTrail, DTR, DTRSummary, Holiday, OBT, Province, CityMunicipality, Overtime, Leaves 
 from user.serializers import UserSerializer, EmployeeSerializer, AuditTrailSerializer, DTRSerializer, DTRSummarySerializer, HolidaySerializer, OBTSerializer, ProvinceSerializer, CityMunicipalitySerializer, OvertimeSerializer, LeavesSerializer
 
-import secret
-import jwt, datetime
+import secret, datetime
+import jwt
+from .functions import number_of_days_before
 
 # Start Token with Login and User View
 
@@ -33,26 +34,32 @@ class LoginView(APIView):
             user.save()
             raise AuthenticationFailed("Incorrect password!")
         
-        # JWT
-        payload = {
-            "id": user.id,
-            "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
-            "iat": datetime.datetime.utcnow()
-        }
+        
 
         user.last_login = datetime.datetime.now()
         user.save()
         serializer = UserSerializer(user)
 
         employee = get_object_or_404(Employee, employee_number=serializer.data["employee_number"])
+        birthday_days = number_of_days_before(employee.birthday)
+        date_hired_days = number_of_days_before(employee.date_hired)
         serializer1 = EmployeeSerializer(employee)
 
+
+        # JWT
+        payload = {
+            "id": user.id,
+            "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
+            "iat": datetime.datetime.utcnow()
+        }
         token = jwt.encode(payload, key=secret.JWT_SECRET, algorithm="HS256")
         # response.set_cookie(key="jwt", value=token, httponly=True)
         response.data = {
             "jwt": token,
             "user": serializer.data,
-            "employee_details": serializer1.data
+            "employee_details": serializer1.data,
+            "days_before_birthday": birthday_days,
+            "days_before_anniversary": date_hired_days,
         }
 
         return response

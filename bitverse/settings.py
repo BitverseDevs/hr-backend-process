@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 import secret
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -41,6 +42,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'user',
+    # 'rest_framework_simplejwt',
 ]
 
 MIDDLEWARE = [
@@ -80,27 +82,27 @@ WSGI_APPLICATION = 'bitverse.wsgi.application'
 
 DATABASES = {
     # live server
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'db_a9418c_bitvers',
-        'USER': 'a9418c_bitvers',
-        'PASSWORD': secret.DB_PASS,
-        'HOST': 'MYSQL8003.site4now.net',
-        'OPTIONS': {
-            'sql_mode': 'traditional',
-        } # MySQL Strict Mode is not set for database connection 'default'
-    }
-    
-    # localhost
     # 'default': {
     #     'ENGINE': 'django.db.backends.mysql',
-    #     'NAME': 'bitverse_2023',
-    #     'USER': 'root',
-    #     'PASSWORD': '',
-    #     'HOST': '127.0.0.1',
-    #     'PORT': '3306',
-    #     'OPTIONS': {'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"},
+    #     'NAME': 'db_a9418c_bitvers',
+    #     'USER': 'a9418c_bitvers',
+    #     'PASSWORD': secret.DB_PASS,
+    #     'HOST': 'MYSQL8003.site4now.net',
+    #     'OPTIONS': {
+    #         'sql_mode': 'traditional',
+    #     } # MySQL Strict Mode is not set for database connection 'default'
     # }
+    
+    # localhost
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'bitverse_2023',
+        'USER': 'root',
+        'PASSWORD': '',
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
+        'OPTIONS': {'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"},
+    }
 }
 
 # Password validation
@@ -148,3 +150,19 @@ CORS_ORIGIN_ALLOW_ALL = True # Allow FE to access API from other PL
 CORS_ALLOW_CREDENTIALS = True # Allow FE to fetch cookies
 
 AUTH_USER_MODEL = "user.User"
+
+# Simple JWT
+
+# REST_FRAMEWORK = {
+#     'DEFAULT_AUTHENTICATION_CLASSES': [
+#         'rest_framework.authentication_BasicAuthentication',
+#         'rest_framework.authentication.SessionAuthentication',
+#         'rest_framework_simplejwt.authentication.JWTAuthentication',
+#     ],
+#     'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated', )
+# }
+
+# SIMPLE_JWT = {
+#     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+#     'REFRESH_TOKEN_LIFETIME': timedelta(days=1)
+# }

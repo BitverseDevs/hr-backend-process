@@ -2,7 +2,6 @@ from django.db import models
 from django.core.validators import MaxValueValidator
 from django.contrib.auth.models import AbstractUser
 
-# from .choices import *
 import secret
 import datetime
 
@@ -17,6 +16,63 @@ choices
 default
 """
 
+SUFFIX = [
+    ("sr", "Sr."),
+    ("jr", "Jr."),
+    ("iii", "III/Third"),
+    ("iv", "IV/Fourth"),
+    ("v", "V/Fifth"),
+]
+
+GENDER = [
+    ("m", "Male"),
+    ("f", "Femals"),
+]
+
+CIVIL_STATUS = [
+    (1, "Single"),
+    (2, "Married"),
+    (3, "Annulled"),
+    (4, "Widowed"),
+    (5, "Separated"),
+]
+
+ENTRY_TYPE = [
+    ("din", "Duty In"),
+    ("dout", "Duty Out"),
+    ("lout", "Lunch Out"),
+    ("lin", "Lunch In"),
+]
+
+SHIFT = [
+    ("morning", "Morning Shift"),
+    ("mid", "Mid Shift"),
+    ("night", "Night Shift"),
+]
+
+HOLIDAY_TYPE = [
+    ("sh", "Special Non-working Holiday"),
+    ("lh", "Legal Working Holiday"),
+]
+
+HOLIDAY_LOCATION = [
+    ("city", "City"),
+    ("province", "Province"),
+    ("national", "National"),
+]
+
+APPROVAL_STATUS = [
+    ("p1", "Pending"),
+    ("p2", "Pending2"),
+    ("apd", "Approved"),
+    ("dis", "Disapproved"),
+]
+
+OT_TYPE = [
+    ("wd", "Whole Day Overtime"),
+    ("bd", "Before Duty-in"),
+    ("ad", "After Duty-in"),
+]
 
 
 class Employee(models.Model):
@@ -24,11 +80,11 @@ class Employee(models.Model):
     first_name = models.CharField(max_length=25)
     middle_name = models.CharField(max_length=25, null=True, blank=True)
     last_name = models.CharField(max_length=25)
-    suffix = models.CharField(max_length=4, null=True, blank=True) # choice
+    suffix = models.CharField(max_length=4, null=True, blank=True, choices=SUFFIX)
     birthday = models.DateField()
     birth_place = models.CharField(max_length=50, null=True, blank=True)
-    civil_status = models.PositiveSmallIntegerField(default=1) # choice
-    gender = models.CharField(max_length=1) # choice
+    civil_status = models.PositiveSmallIntegerField(validators=[MaxValueValidator(5)], default=1, choices=CIVIL_STATUS)
+    gender = models.CharField(max_length=1, choices=GENDER)
     address = models.TextField(max_length=50)
     provincial_address = models.TextField(max_length=50, null=True, blank=True)
     mobile_phone = models.CharField(max_length=15)
@@ -64,6 +120,7 @@ class User(AbstractUser):
 
     is_active = models.BooleanField(default=True)
     is_locked = models.BooleanField(default=False)
+    is_logged_in = models.BooleanField(default=False)
     
     date_added = models.DateField(auto_now_add=True)
     date_deleted = models.DateField(null=True, blank=True)
@@ -95,9 +152,9 @@ class DTR(models.Model):
     bio_id = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
     datetime_bio = models.DateTimeField()
     
-    flag1_in_out = models.BooleanField() # choice
-    flag2_lout_lin = models.BooleanField(null=True, blank=True) # choice
-    entry_type = models.CharField(max_length=5) # choice
+    flag1_in_out = models.BooleanField() # 0:DutyIn; 1:DutyOut
+    flag2_lout_lin = models.BooleanField(null=True, blank=True) # 0:Lunchin; 1:LunchOut 
+    entry_type = models.CharField(max_length=4, choices=ENTRY_TYPE)
     date_uploaded = models.DateTimeField()
     processed = models.BooleanField(default=False)
 
@@ -113,7 +170,7 @@ class DTRSummary(models.Model):
     employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE)
     cutoff_id = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
     business_datetime = models.DateTimeField()
-    shift_name = models.CharField(max_length=10) # choice
+    shift_name = models.CharField(max_length=10, choices=SHIFT)
     date_in = models.DateTimeField()
     date_out = models.DateTimeField()
     
@@ -142,8 +199,8 @@ class DTRSummary(models.Model):
 class Holiday(models.Model):
     holiday_date = models.DateField()
     holiday_description = models.TextField(max_length=100)
-    holiday_type = models.CharField(unique=True, max_length=5) # choice
-    holiday_location = models.CharField(max_length=15) # choice
+    holiday_type = models.CharField(unique=True, max_length=5, choices=HOLIDAY_TYPE)
+    holiday_location = models.CharField(max_length=15, choices=HOLIDAY_LOCATION) 
 
     class Meta:
         db_table = "TBL_HOLIDAY"
@@ -158,7 +215,7 @@ class OBT(models.Model):
     obt_remarks = models.TextField(max_length=100)
     obt_date_from = models.DateTimeField()
     obt_date_to = models.DateTimeField()
-    obt_approval_status = models.CharField(max_length=3) # choice
+    obt_approval_status = models.CharField(max_length=3, choices=APPROVAL_STATUS)
     obt_reason_disapproval = models.TextField(max_length=50, null=True, blank=True)
     obt_total_hour = models.PositiveSmallIntegerField()
     obt_date_approved1 = models.DateTimeField(null=True, blank=True)
@@ -185,11 +242,11 @@ class Overtime(models.Model):
     cutoff_id = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
     
     ot_date_filed = models.DateTimeField(auto_now_add=True)
-    ot_type = models.CharField(max_length=2) # choice
+    ot_type = models.CharField(max_length=2, choices=OT_TYPE)
     ot_remarks = models.TextField(max_length=100)
     ot_date_from = models.DateTimeField()
     ot_date_to = models.DateTimeField()
-    ot_approval_status = models.PositiveSmallIntegerField() # choice
+    ot_approval_status = models.CharField(max_length=3, choices=APPROVAL_STATUS)
     ot_reason_disapproval = models.TextField(max_length=100)
     ot_total_hours = models.PositiveSmallIntegerField()
     ot_date_approved1 = models.DateTimeField(null=True, blank=True)
@@ -207,7 +264,7 @@ class Leaves(models.Model):
     leave_remarks = models.TextField(max_length=100)
     leave_date_from = models.DateTimeField()
     leave_date_to = models.DateTimeField()
-    leave_approval_status = models.CharField(max_length=3) # choice
+    leave_approval_status = models.CharField(max_length=3, choices=APPROVAL_STATUS)
     leave_reason_disapproval = models.TextField(max_length=100, null=True, blank=True)
     leave_total_hours = models.PositiveSmallIntegerField()
     leave_date_approved1 = models.DateTimeField(null=True, blank=True)
@@ -227,7 +284,6 @@ class Leaves(models.Model):
 #     address = models.CharField(max_length=50)
 #     phone_number = models.CharField(max_length=15)
 #     email = models.EmailField()
-#     parent_branch = models.CharField(max_length=15, blank=True, null=True) # foreign to branch
 #     created_at = models.DateTimeField(auto_now_add=True)
 #     updated_at = models.DateTimeField()
 
@@ -253,7 +309,7 @@ class Leaves(models.Model):
 
 #     name = models.CharField(max_length=15)
 #     description = models.TextField(max_length=100)
-#     pay_frequency = models.CharField(max_length=15, choices=FREQUENCY)
+#     pay_frequency = models.CharField(max_length=15, choices=FREQUENCY) # 
 #     pay_day = models.PositiveSmallIntegerField()
 #     is_default = models.BooleanField()
 #     created_at = models.DateTimeField(auto_now_add=True)
