@@ -80,24 +80,27 @@ WSGI_APPLICATION = 'bitverse.wsgi.application'
 
 DATABASES = {
     # live server
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.mysql',
-    #     'NAME': 'db_a9418c_bit2023',
-    #     'USER': 'a9418c_bit2023',
-    #     'PASSWORD': secret.db_pass,
-    #     'HOST': 'MYSQL8003.site4now.net',
-    # }
-    
-    # localhost
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'bitverse_2023',
-        'USER': 'root',
-        'PASSWORD': '',
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
-        'OPTIONS': {'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"},
+        'NAME': 'db_a9418c_bitvers',
+        'USER': 'a9418c_bitvers',
+        'PASSWORD': secret.DB_PASS,
+        'HOST': 'MYSQL8003.site4now.net',
+        'OPTIONS': {
+            'sql_mode': 'traditional',
+        } # MySQL Strict Mode is not set for database connection 'default'
     }
+    
+    # localhost
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.mysql',
+    #     'NAME': 'bitverse_2023',
+    #     'USER': 'root',
+    #     'PASSWORD': '',
+    #     'HOST': '127.0.0.1',
+    #     'PORT': '3306',
+    #     'OPTIONS': {'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"},
+    # }
 }
 
 # Password validation
