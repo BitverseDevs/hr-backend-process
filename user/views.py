@@ -1,28 +1,23 @@
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 
 from rest_framework.parsers import JSONParser
 from rest_framework import  status
 from rest_framework.decorators import api_view
-from rest_framework.views import APIView
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
 
 from user.models import User, Employee, AuditTrail, DTR, DTRSummary, Holiday, OBT, Overtime, Leaves, Adjustment, Branch, Department, Division, Rank, Position, Province, CityMunicipality
 from user.serializers import UserSerializer, EmployeeSerializer, AuditTrailSerializer, DTRSerializer, DTRSummarySerializer, HolidaySerializer, OBTSerializer, OvertimeSerializer, LeavesSerializer, AdjustmentSerializer, BranchSerializer, DepartmentSerializer, DivisionSerializer, RankSerializer, PositionSerializer, ProvinceSerializer, CityMunicipalitySerializer
 
-import secret, datetime
-import jwt
+import secret, datetime, jwt
 from .functions import number_of_days_before
 
-# Start Token with Login and User View
-
-class LoginView(APIView):
-    def post(self, request):
+@api_view(['POST'])
+def login(request):
+    if request.method == 'POST':
         username = request.data["username"]
         password = request.data["password"]
-        response = Response()
 
         try:
             user = User.objects.get(username=username)
@@ -32,41 +27,50 @@ class LoginView(APIView):
         if not user.check_password(password):
             user.failed_login_attempts += 1
             user.save()
-            raise AuthenticationFailed("Incorrect password!")
+            raise AuthenticationFailed("Incorrent password!")
         
-        
-
+        # User and Employee information based on login credentials
         user.last_login = datetime.datetime.now()
         user.save()
         serializer = UserSerializer(user)
 
         employee = get_object_or_404(Employee, employee_number=serializer.data["employee_number"])
-        birthday_days = number_of_days_before(employee.birthday)
-        date_hired_days = number_of_days_before(employee.date_hired)
+        incoming_birthday = number_of_days_before(employee.birthday)
+        incoming_anniversary = number_of_days_before(employee.date_hired)
         serializer1 = EmployeeSerializer(employee)
-
 
         # JWT
         payload = {
             "id": user.id,
-            "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
-            "iat": datetime.datetime.utcnow()
-        }
-        token = jwt.encode(payload, key=secret.JWT_SECRET, algorithm="HS256")
-        # response.set_cookie(key="jwt", value=token, httponly=True)
-        response.data = {
-            "jwt": token,
-            "user": serializer.data,
-            "employee_details": serializer1.data,
-            "days_before_birthday": birthday_days,
-            "days_before_anniversary": date_hired_days,
+            "exp": datetime.datetime.now() + datetime.timedelta(minutes=60),
+            "iat": datetime.datetime.now()
         }
 
-        return response
+        token = jwt.encode(payload=payload, key=secret.JWT_SECRET, algorithm="HS256")
 
-# End Token with Login and User View
+        data = {
+            "jwt":token, 
+            "user":serializer.data, 
+            "employee_details":serializer1.data, 
+            "incoming_birthday":incoming_birthday, 
+            "incoming_anniversary":incoming_anniversary
+            }
 
-# @csrf_exempt
+        return Response(data, status=status.HTTP_202_ACCEPTED)
+
+@api_view(['POST'])
+def new_employee(request):
+    if request.method == 'POST':
+        data = JSONParser().parse(request)
+        serializer = EmployeeSerializer(data=data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response()
+
+
+
 @api_view(['GET', 'POST'])
 def user_list(request):
 

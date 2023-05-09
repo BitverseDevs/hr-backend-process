@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 import secret
-from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -42,7 +41,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'user',
-    # 'rest_framework_simplejwt',
 ]
 
 MIDDLEWARE = [
@@ -150,19 +148,3 @@ CORS_ORIGIN_ALLOW_ALL = True # Allow FE to access API from other PL
 CORS_ALLOW_CREDENTIALS = True # Allow FE to fetch cookies
 
 AUTH_USER_MODEL = "user.User"
-
-# Simple JWT
-
-# REST_FRAMEWORK = {
-#     'DEFAULT_AUTHENTICATION_CLASSES': [
-#         'rest_framework.authentication_BasicAuthentication',
-#         'rest_framework.authentication.SessionAuthentication',
-#         'rest_framework_simplejwt.authentication.JWTAuthentication',
-#     ],
-#     'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated', )
-# }
-
-# SIMPLE_JWT = {
-#     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
-#     'REFRESH_TOKEN_LIFETIME': timedelta(days=1)
-# }

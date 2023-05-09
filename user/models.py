@@ -89,7 +89,7 @@ class Branch(models.Model):
 class Department(models.Model):
     name = models.CharField(max_length=25)
     lead = models.CharField(max_length=25)
-    branch_code = models.ForeignKey(Branch, on_delete=models.CASCADE)
+    branch_code = models.ForeignKey(Branch, on_delete=models.CASCADE, default=1)
     date_added = models.DateTimeField(auto_now_add=True)
     date_deleted = models.DateTimeField(null=True, blank=True)
 
