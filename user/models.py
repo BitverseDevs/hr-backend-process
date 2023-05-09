@@ -103,7 +103,7 @@ class Employee(models.Model):
     position_code = models.PositiveSmallIntegerField(null=True, blank=True) #choice
     rank_code = models.PositiveSmallIntegerField(null=True, blank=True) #choice
     tax_code = models.PositiveSmallIntegerField(null=True, blank=True) #choice
-    city_code = models.PositiveSmallIntegerField(null=True, blank=True) #choice
+    city_code = models.PositiveSmallIntegerField(null=True, blank=True)
     
     pagibig_code = models.PositiveSmallIntegerField(null=True, blank=True)
     sssid_code = models.PositiveSmallIntegerField(null=True, blank=True)
