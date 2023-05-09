@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from user.models import User, Employee, AuditTrail, DTR, DTRSummary, Holiday, OBT, Province, CityMunicipality, Overtime, Leaves
+from user.models import User, Employee, AuditTrail, DTR, DTRSummary, Holiday, OBT, Overtime, Leaves, Adjustment
+from user.models import Branch, Department, Division, Rank, Position, Province, CityMunicipality
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -51,6 +52,46 @@ class OBTSerializer(serializers.ModelSerializer):
         model = OBT
         fields = "__all__"
 
+class OvertimeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Overtime
+        fields = "__all__"
+
+class LeavesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Leaves
+        fields = "__all__"
+
+class AdjustmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Adjustment
+        fields = "__all__"
+
+class BranchSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Branch
+        fields = "__all__"
+
+class DepartmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Department
+        fields = "__all__"
+
+class DivisionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Division
+        fields = "__all__"
+
+class RankSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Rank
+        fields = "__all__"
+
+class PositionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Position
+        fields = "__all__"
+
 class CityMunicipalitySerializer(serializers.ModelSerializer):
     # Include the code below to access the fields you want to add in your API
     # province_name = serializers.CharField(source="province.name", read_only=True)
@@ -70,13 +111,3 @@ class ProvinceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Province
         fields = ("id", "name", "citymunicipality_set")
-
-class OvertimeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Overtime
-        fields = "__all__"
-
-class LeavesSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Leaves
-        fields = "__all__"

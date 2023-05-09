@@ -74,6 +74,69 @@ OT_TYPE = [
     ("ad", "After Duty-in"),
 ]
 
+class Branch(models.Model):
+    name = models.CharField(max_length=25)
+    address = models.TextField(max_length=50)
+    email = models.EmailField()
+    contact_number = models.CharField(max_length=15)
+    oic = models.CharField(max_length=25)
+    date_added = models.DateTimeField(auto_now_add=True)
+    date_deleted = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "TBL_BRANCH"
+
+class Department(models.Model):
+    name = models.CharField(max_length=25)
+    lead = models.CharField(max_length=25)
+    branch_code = models.ForeignKey(Branch, on_delete=models.CASCADE)
+    date_added = models.DateTimeField(auto_now_add=True)
+    date_deleted = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "TBL DEPARTMENT"
+
+class Division(models.Model):
+    name = models.CharField(max_length=25)
+    lead = models.CharField(max_length=25)
+    branch_code = models.ForeignKey(Branch, on_delete=models.CASCADE)
+    date_added = models.DateTimeField(auto_now_add=True)
+    date_deleted = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "TBL_DIVISION"
+
+class Rank(models.Model):
+    name = models.CharField(max_length=25)
+    description = models.TextField(max_length=100)
+    is_approver = models.BooleanField(default=False)
+    date_added = models.DateTimeField(auto_now_add=True)
+    date_deleted = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "TBL_RANK"
+
+class Position(models.Model):
+    name = models.CharField(max_length=25)
+    description = models.TextField(max_length=100)
+    date_added = models.DateTimeField(auto_now_add=True)
+    date_deleted = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "TBL_POSITION"
+
+class Province(models.Model):
+    name = models.CharField(max_length=50)
+
+    class Meta:
+        db_table = "TBL_PROVINCE"
+
+class CityMunicipality(models.Model):
+    name = models.CharField(max_length=40)
+    province = models.ForeignKey(Province, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = "TBL_CITYMUNICIPALITY"
 
 class Employee(models.Model):
     employee_number = models.PositiveSmallIntegerField(unique=True, validators=[MaxValueValidator(9990)])
@@ -96,14 +159,14 @@ class Employee(models.Model):
     date_added = models.DateField(auto_now_add=True)
     date_deleted = models.DateField(null=True, blank=True)
 
-    branch_code = models.CharField(max_length=15, default="main") # choice
-    department_code = models.PositiveSmallIntegerField(null=True, blank=True) #choice
-    division_code = models.PositiveSmallIntegerField(null=True, blank=True) #choice
+    branch_code = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
+    department_code = models.ForeignKey(Department, on_delete=models.CASCADE, null=True, blank=True)
+    division_code = models.ForeignKey(Division, on_delete=models.CASCADE, null=True, blank=True)
     payroll_group_code = models.PositiveSmallIntegerField(null=True, blank=True) #choice
-    position_code = models.PositiveSmallIntegerField(null=True, blank=True) #choice
-    rank_code = models.PositiveSmallIntegerField(null=True, blank=True) #choice
+    position_code = models.ForeignKey(Position, on_delete=models.CASCADE, null=True, blank=True)
+    rank_code = models.ForeignKey(Rank, on_delete=models.CASCADE, null=True, blank=True)
     tax_code = models.PositiveSmallIntegerField(null=True, blank=True) #choice
-    city_code = models.PositiveSmallIntegerField(null=True, blank=True)
+    city_code = models.ForeignKey(CityMunicipality, on_delete=models.CASCADE, null=True, blank=True)
     
     pagibig_code = models.PositiveSmallIntegerField(null=True, blank=True)
     sssid_code = models.PositiveSmallIntegerField(null=True, blank=True)
@@ -161,7 +224,7 @@ class DTR(models.Model):
     sched_timein = models.DateTimeField()
     sched_timeout = models.DateTimeField()
     business_datetime = models.DateTimeField()
-    branch_code = models.CharField(max_length=15, default="main") # choice
+    branch_code = models.ForeignKey(Branch, on_delete=models.CASCADE)
 
     class Meta:
         db_table = "TBL_DTR"
@@ -224,19 +287,6 @@ class OBT(models.Model):
     class Meta:
         db_table = "TBL_OBT_APP"
 
-class Province(models.Model):
-    name = models.CharField(max_length=50)
-
-    class Meta:
-        db_table = "TBL_PROVINCE"
-
-class CityMunicipality(models.Model):
-    name = models.CharField(max_length=40)
-    province = models.ForeignKey(Province, on_delete=models.CASCADE)
-
-    class Meta:
-        db_table = "TBL_CITYMUNICIPALITY"
-
 class Overtime(models.Model):
     employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE)
     cutoff_id = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
@@ -274,65 +324,18 @@ class Leaves(models.Model):
     class Meta:
         db_table = "TBL_LEAVES_APP"
 
+class Adjustment(models.Model):
+    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE)
+    cutoff_id = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
+    deducted_amount = models.FloatField()
+    added_amount = models.FloatField()
+    adjustment_remark = models.TextField(max_length=100)
+    adjustment_remark2 = models.TextField(max_length=100)
+    prepared_by_employee_number = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
+    approved_by_employee_number = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
+    is_computed = models.BooleanField(default=False)
+    date_added = models.DateTimeField(auto_now_add=True)
+    date_deleted = models.DateTimeField(null=True, blank=True)
 
-
-
-
-# class Branch(models.Model):
-
-#     name = models.CharField(max_length=25)
-#     address = models.CharField(max_length=50)
-#     phone_number = models.CharField(max_length=15)
-#     email = models.EmailField()
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     updated_at = models.DateTimeField()
-
-# class Department(models.Model):
-
-#     name = models.CharField(max_length=25)
-#     description = models.TextField(max_length=100)
-#     manager = models.CharField(max_length=25) # foreign to employee
-#     parent_department = models.CharField(max_length=25, null=True, blank=True) # foreign to department
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     updated_at = models.DateTimeField()
-
-# class Division(models.Model):
-
-#     name = models.CharField(max_length=25)
-#     description = models.TextField(max_length=100)
-#     manager = models.CharField(max_length=25) # foreign to employee
-#     parent_department = models.CharField(max_length=25, null=True, blank=True) # foreign to department
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     updated_at = models.DateTimeField()
-
-# class PayrollGroup(models.Model):
-
-#     name = models.CharField(max_length=15)
-#     description = models.TextField(max_length=100)
-#     pay_frequency = models.CharField(max_length=15, choices=FREQUENCY) # 
-#     pay_day = models.PositiveSmallIntegerField()
-#     is_default = models.BooleanField()
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     updated_at = models.DateTimeField()
-
-# class Position(models.Model):
-
-#     title = models.CharField(max_length=25)
-#     description = models.TextField(max_length=100)
-#     department = models.ForeignKey(Department, on_delete=models.CASCADE)
-#     payroll_group = models.ForeignKey(PayrollGroup, on_delete=models.CASCADE)
-#     minimum_qualifications = models.TextField(max_length=100)
-#     is_active = models.BooleanField(default=True)
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     updated_at = models.DateTimeField()
-
-# class Rank(models.Model):
-
-#     name = models.CharField(max_length=25, choices=RANK)
-#     description = models.TextField(max_length=100)
-#     rate = models.DecimalField()
-#     start_date = models.DateTimeField()
-#     end_date = models.DateTimeField()
-#     is_active = models.BooleanField(default=True)
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     updated_at = models.DateTimeField()
+    class Meta:
+        db_table = "TBL_ADJUSTMENT_ENTRY"
