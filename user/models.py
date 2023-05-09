@@ -94,7 +94,7 @@ class Department(models.Model):
     date_deleted = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        db_table = "TBL DEPARTMENT"
+        db_table = "TBL_DEPARTMENT"
 
 class Division(models.Model):
     name = models.CharField(max_length=25)

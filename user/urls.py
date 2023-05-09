@@ -25,7 +25,7 @@ urlpatterns = [
     path('adjustment/<int:pk>', views.adjustment_detail),
 
     path('branches/', views.branch_list),
-    path('branch/<int:pk>', views.province_detail),
+    path('branch/<int:pk>', views.branch_detail),
     path('departments/', views.department_list),
     path('department/<int:pk>', views.department_detail),
     path('divisions/', views.division_list),

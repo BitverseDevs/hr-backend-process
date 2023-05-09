@@ -462,7 +462,7 @@ def adjustment_detail(request, pk):
 @api_view(['GET', 'POST'])
 def branch_list(request):
     if request.method == 'GET':
-        branch = branch.objects.all()
+        branch = Branch.objects.all()
         serializer = BranchSerializer(branch, many=True)
         return JsonResponse(serializer.data, safe=False)
     
@@ -558,7 +558,7 @@ def division_list(request):
 @api_view(['GET', 'PUT', 'DELETE'])
 def division_detail(request, pk):
     try:
-        division = DepartmentSerializer.objects.get(pk=pk)
+        division = Division.objects.get(pk=pk)
     except User.DoesNotExist:
         return HttpResponse(status=status.HTTP_404_NOT_FOUND)
     
