@@ -2,7 +2,6 @@ from django.db import models
 from django.core.validators import MaxValueValidator
 from django.contrib.auth.models import AbstractUser
 
-import secret
 import datetime
 
 
@@ -25,23 +24,23 @@ SUFFIX = [
 ]
 
 GENDER = [
-    ("m", "Male"),
-    ("f", "Femals"),
+    ("M", "Male"),
+    ("F", "Female"),
 ]
 
 CIVIL_STATUS = [
-    (1, "Single"),
-    (2, "Married"),
-    (3, "Annulled"),
-    (4, "Widowed"),
-    (5, "Separated"),
+    ("S", "Single"),
+    ("M", "Married"),
+    ("A", "Annulled"),
+    ("W", "Widowed"),
+    ("SE", "Separated"),
 ]
 
 ENTRY_TYPE = [
-    ("din", "Duty In"),
-    ("dout", "Duty Out"),
-    ("lout", "Lunch Out"),
-    ("lin", "Lunch In"),
+    ("DIN", "Duty In"),
+    ("DOUT", "Duty Out"),
+    ("LOUT", "Lunch Out"),
+    ("LIN", "Lunch In"),
 ]
 
 SHIFT = [
@@ -51,8 +50,8 @@ SHIFT = [
 ]
 
 HOLIDAY_TYPE = [
-    ("sh", "Special Non-working Holiday"),
-    ("lh", "Legal Working Holiday"),
+    ("SH", "Special Non-working Holiday"),
+    ("LH", "Legal Working Holiday"),
 ]
 
 HOLIDAY_LOCATION = [
@@ -62,16 +61,16 @@ HOLIDAY_LOCATION = [
 ]
 
 APPROVAL_STATUS = [
-    ("p1", "Pending"),
-    ("p2", "Pending2"),
-    ("apd", "Approved"),
-    ("dis", "Disapproved"),
+    ("P1", "Pending"),
+    ("P2", "Pending2"),
+    ("APD", "Approved"),
+    ("DIS", "Disapproved"),
 ]
 
 OT_TYPE = [
-    ("wd", "Whole Day Overtime"),
-    ("bd", "Before Duty-in"),
-    ("ad", "After Duty-in"),
+    ("WD", "Whole Day Overtime"),
+    ("BD", "Before Duty-in"),
+    ("AD", "After Duty-in"),
 ]
 
 class Branch(models.Model):
@@ -89,7 +88,7 @@ class Branch(models.Model):
 class Department(models.Model):
     name = models.CharField(max_length=25)
     lead = models.CharField(max_length=25)
-    branch_code = models.ForeignKey(Branch, on_delete=models.CASCADE, default=1)
+    branch_code = models.ForeignKey(Branch, on_delete=models.CASCADE, default=1, related_name="department")
     date_added = models.DateTimeField(auto_now_add=True)
     date_deleted = models.DateTimeField(null=True, blank=True)
 
@@ -99,7 +98,7 @@ class Department(models.Model):
 class Division(models.Model):
     name = models.CharField(max_length=25)
     lead = models.CharField(max_length=25)
-    branch_code = models.ForeignKey(Branch, on_delete=models.CASCADE)
+    branch_code = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name="division")
     date_added = models.DateTimeField(auto_now_add=True)
     date_deleted = models.DateTimeField(null=True, blank=True)
 
@@ -133,7 +132,7 @@ class Province(models.Model):
 
 class CityMunicipality(models.Model):
     name = models.CharField(max_length=40)
-    province = models.ForeignKey(Province, on_delete=models.CASCADE)
+    province = models.ForeignKey(Province, on_delete=models.CASCADE, related_name="citymunicipality")
 
     class Meta:
         db_table = "TBL_CITYMUNICIPALITY"
@@ -146,7 +145,7 @@ class Employee(models.Model):
     suffix = models.CharField(max_length=4, null=True, blank=True, choices=SUFFIX)
     birthday = models.DateField()
     birth_place = models.CharField(max_length=50, null=True, blank=True)
-    civil_status = models.PositiveSmallIntegerField(validators=[MaxValueValidator(5)], default=1, choices=CIVIL_STATUS)
+    civil_status = models.CharField(max_length=2, choices=CIVIL_STATUS)
     gender = models.CharField(max_length=1, choices=GENDER)
     address = models.TextField(max_length=50)
     provincial_address = models.TextField(max_length=50, null=True, blank=True)
@@ -159,14 +158,14 @@ class Employee(models.Model):
     date_added = models.DateField(auto_now_add=True)
     date_deleted = models.DateField(null=True, blank=True)
 
-    branch_code = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True)
-    department_code = models.ForeignKey(Department, on_delete=models.CASCADE, null=True, blank=True)
-    division_code = models.ForeignKey(Division, on_delete=models.CASCADE, null=True, blank=True)
+    branch_code = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True, related_name="employee")
+    department_code = models.ForeignKey(Department, on_delete=models.CASCADE, null=True, blank=True, related_name="employee")
+    division_code = models.ForeignKey(Division, on_delete=models.CASCADE, null=True, blank=True, related_name="employee")
     payroll_group_code = models.PositiveSmallIntegerField(null=True, blank=True) #choice
-    position_code = models.ForeignKey(Position, on_delete=models.CASCADE, null=True, blank=True)
-    rank_code = models.ForeignKey(Rank, on_delete=models.CASCADE, null=True, blank=True)
+    position_code = models.ForeignKey(Position, on_delete=models.CASCADE, null=True, blank=True, related_name="employee")
+    rank_code = models.ForeignKey(Rank, on_delete=models.CASCADE, null=True, blank=True, related_name="employee")
     tax_code = models.PositiveSmallIntegerField(null=True, blank=True) #choice
-    city_code = models.ForeignKey(CityMunicipality, on_delete=models.CASCADE, null=True, blank=True)
+    city_code = models.ForeignKey(CityMunicipality, on_delete=models.CASCADE, null=True, blank=True, related_name="employee")
     
     pagibig_code = models.PositiveSmallIntegerField(null=True, blank=True)
     sssid_code = models.PositiveSmallIntegerField(null=True, blank=True)
@@ -176,7 +175,7 @@ class Employee(models.Model):
         db_table = "TBL_EMPLOYEE_PROFILE"
 
 class User(AbstractUser):
-    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE)
+    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE, related_name="user")
     username = models.CharField(unique=True, max_length=8)
     password = models.CharField(max_length=128)
     role = models.PositiveSmallIntegerField() # choice
@@ -211,7 +210,7 @@ class AuditTrail(models.Model):
         db_table = "TBL_AUDITTRAIL"
 
 class DTR(models.Model):
-    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE)
+    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE, related_name="dtr")
     bio_id = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
     datetime_bio = models.DateTimeField()
     
@@ -224,13 +223,13 @@ class DTR(models.Model):
     sched_timein = models.DateTimeField()
     sched_timeout = models.DateTimeField()
     business_datetime = models.DateTimeField()
-    branch_code = models.ForeignKey(Branch, on_delete=models.CASCADE)
+    branch_code = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name="dtr")
 
     class Meta:
         db_table = "TBL_DTR"
 
 class DTRSummary(models.Model):
-    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE)
+    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE, related_name="dtrsummary")
     cutoff_id = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
     business_datetime = models.DateTimeField()
     shift_name = models.CharField(max_length=10, choices=SHIFT)
@@ -269,7 +268,7 @@ class Holiday(models.Model):
         db_table = "TBL_HOLIDAY"
 
 class OBT(models.Model):
-    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE)
+    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE, related_name="obt")
     cutoff_id = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
     
     obt_date_filed = models.DateTimeField(auto_now_add=True)
@@ -288,7 +287,7 @@ class OBT(models.Model):
         db_table = "TBL_OBT_APP"
 
 class Overtime(models.Model):
-    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE)
+    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE, related_name="ot")
     cutoff_id = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
     
     ot_date_filed = models.DateTimeField(auto_now_add=True)
@@ -306,7 +305,7 @@ class Overtime(models.Model):
         db_table = "TBL_OVERTIME_APP"
 
 class Leaves(models.Model):
-    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE)
+    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE, related_name="leave")
     cutoff_id = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
     
     leave_date_filed = models.DateTimeField(auto_now_add=True)
@@ -325,7 +324,7 @@ class Leaves(models.Model):
         db_table = "TBL_LEAVES_APP"
 
 class Adjustment(models.Model):
-    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE)
+    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE, related_name="adjustment")
     cutoff_id = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
     deducted_amount = models.FloatField()
     added_amount = models.FloatField()

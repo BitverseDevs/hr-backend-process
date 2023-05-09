@@ -39,5 +39,6 @@ urlpatterns = [
     path('citiesmunicipalities/<int:pk>', views.citymunicipality_detail),
 
     path('login/', views.login),
-    path('new_employeee/', views.new_employee),
+    path('employees/', views.list_employees),
+    path('new_employee/', views.new_employee),
 ]

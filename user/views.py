@@ -58,6 +58,13 @@ def login(request):
 
         return Response(data, status=status.HTTP_202_ACCEPTED)
 
+@api_view(['GET'])
+def list_employees(request):
+    if request.method == 'GET':
+        employees = Employee.objects.all()
+        serializer = EmployeeSerializer(employees, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 @api_view(['POST'])
 def new_employee(request):
     if request.method == 'POST':
@@ -68,6 +75,8 @@ def new_employee(request):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response()
+
+
 
 
 
