@@ -41,4 +41,6 @@ urlpatterns = [
     path('login/', views.login),
     path('employees/', views.list_employees),
     path('new_employee/', views.new_employee),
+    path('birthdays/', views.list_birthdays),
+    path('anniversary/', views.list_work_anniversary),
 ]

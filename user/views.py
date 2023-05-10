@@ -76,8 +76,39 @@ def new_employee(request):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response()
 
-
-
+@api_view(['GET'])
+def list_birthdays(request):
+    if request.method =='GET':
+        employees = Employee.objects.all()
+        employees = sorted(employees, key=lambda e: e.days_before(e.birthday))
+        employees = employees[:50]
+        data = []
+        for employee in employees:
+            days_to_birthday = employee.days_before(employee.birthday)
+            employee_data = {
+                'name': f"{employee.first_name} {employee.last_name}",
+                'birthday': employee.birthday.strftime('%Y-%m-%d'),
+                'days_to_birthday': days_to_birthday
+            }
+            data.append(employee_data)
+        return Response(data, status=status.HTTP_200_OK)
+    
+@api_view(['GET'])
+def list_work_anniversary(request):
+    if request.method =='GET':
+        employees = Employee.objects.all()
+        employees = sorted(employees, key=lambda e: e.days_before(e.date_added))
+        employees = employees[:50]
+        data = []
+        for employee in employees:
+            days_to_anniversary = employee.days_before(employee.date_added)
+            employee_data = {
+                'name': f"{employee.first_name} {employee.last_name}",
+                'birthday': employee.date_added.strftime('%Y-%m-%d'),
+                'days_to_anniversary': days_to_anniversary
+            }
+            data.append(employee_data)
+        return Response(data, status=status.HTTP_200_OK)
 
 
 @api_view(['GET', 'POST'])

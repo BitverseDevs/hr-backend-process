@@ -171,6 +171,17 @@ class Employee(models.Model):
     sssid_code = models.PositiveSmallIntegerField(null=True, blank=True)
     philhealth_code = models.PositiveSmallIntegerField(null=True, blank=True)
 
+    def days_before(self, date):
+        today = datetime.date.today()
+        next_day = datetime.date(today.year, date.month, date.day)
+        if next_day.month < today.month or next_day.day < today.day:
+            next_day = next_day.replace(year=today.year + 1)
+        days = next_day - today
+        
+        return (days.days + datetime.time(days=1)) if (today.year%4 == 0) else days.days
+
+        
+
     class Meta:
         db_table = "TBL_EMPLOYEE_PROFILE"
 
