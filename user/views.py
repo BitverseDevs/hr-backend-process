@@ -11,7 +11,6 @@ from user.models import User, Employee, AuditTrail, DTR, DTRSummary, Holiday, OB
 from user.serializers import UserSerializer, EmployeeSerializer, AuditTrailSerializer, DTRSerializer, DTRSummarySerializer, HolidaySerializer, OBTSerializer, OvertimeSerializer, LeavesSerializer, AdjustmentSerializer, BranchSerializer, DepartmentSerializer, DivisionSerializer, RankSerializer, PositionSerializer, ProvinceSerializer, CityMunicipalitySerializer
 
 import secret, datetime, jwt
-from .functions import number_of_days_before
 
 @api_view(['POST'])
 def login(request):
@@ -35,8 +34,6 @@ def login(request):
         serializer = UserSerializer(user)
 
         employee = get_object_or_404(Employee, employee_number=serializer.data["employee_number"])
-        incoming_birthday = number_of_days_before(employee.birthday)
-        incoming_anniversary = number_of_days_before(employee.date_hired)
         serializer1 = EmployeeSerializer(employee)
 
         # JWT
@@ -52,8 +49,6 @@ def login(request):
             "jwt":token, 
             "user":serializer.data, 
             "employee_details":serializer1.data, 
-            "incoming_birthday":incoming_birthday, 
-            "incoming_anniversary":incoming_anniversary
             }
 
         return Response(data, status=status.HTTP_202_ACCEPTED)
@@ -97,14 +92,14 @@ def list_birthdays(request):
 def list_work_anniversary(request):
     if request.method =='GET':
         employees = Employee.objects.all()
-        employees = sorted(employees, key=lambda e: e.days_before(e.date_added))
+        employees = sorted(employees, key=lambda e: e.days_before(e.date_hired))
         employees = employees[:50]
         data = []
         for employee in employees:
-            days_to_anniversary = employee.days_before(employee.date_added)
+            days_to_anniversary = employee.days_before(employee.date_hired)
             employee_data = {
                 'name': f"{employee.first_name} {employee.last_name}",
-                'birthday': employee.date_added.strftime('%Y-%m-%d'),
+                'birthday': employee.date_hired.strftime('%Y-%m-%d'),
                 'days_to_anniversary': days_to_anniversary
             }
             data.append(employee_data)
