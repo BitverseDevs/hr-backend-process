@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 import secret
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -148,3 +149,9 @@ CORS_ORIGIN_ALLOW_ALL = True # Allow FE to access API from other PL
 CORS_ALLOW_CREDENTIALS = True # Allow FE to fetch cookies
 
 AUTH_USER_MODEL = "user.User"
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+STATICFILES_DIR = (
+    os.path.join(BASE_DIR, 'static')
+)
