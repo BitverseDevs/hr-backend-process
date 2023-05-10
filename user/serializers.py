@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from user.models import User, Employee, AuditTrail, DTR, DTRSummary, Holiday, OBT, Overtime, Leaves, Adjustment
-from user.models import Branch, Department, Division, Rank, Position, Province, CityMunicipality
+from user.models import Branch, Department, Division, PayrollGroup, Rank, Position, Tax, Province, CityMunicipality, PAGIBIG, SSSID
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -82,6 +82,11 @@ class DivisionSerializer(serializers.ModelSerializer):
         model = Division
         fields = "__all__"
 
+class PayrollGroupSerializer(serializers.Serializer):
+    class Meta:
+        model = PayrollGroup
+        fields = "__all__"
+
 class RankSerializer(serializers.ModelSerializer):
     class Meta:
         model = Rank
@@ -90,6 +95,11 @@ class RankSerializer(serializers.ModelSerializer):
 class PositionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Position
+        fields = "__all__"
+
+class TaxSerializer(serializers.Serializer):
+    class Meta:
+        model = Tax
         fields = "__all__"
 
 class CityMunicipalitySerializer(serializers.ModelSerializer):
@@ -111,3 +121,13 @@ class ProvinceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Province
         fields = ("id", "name", "citymunicipality_set")
+
+class PAGIBIGSerializer(serializers.Serializer):
+    class Meta:
+        model = PAGIBIG
+        fields = "__all__"
+
+class SSSIDSerializer(serializers.Serializer):
+    class Meta:
+        model = SSSID
+        fields = "__all__"

@@ -7,8 +7,8 @@ from rest_framework.decorators import api_view
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
 
-from user.models import User, Employee, AuditTrail, DTR, DTRSummary, Holiday, OBT, Overtime, Leaves, Adjustment, Branch, Department, Division, Rank, Position, Province, CityMunicipality
-from user.serializers import UserSerializer, EmployeeSerializer, AuditTrailSerializer, DTRSerializer, DTRSummarySerializer, HolidaySerializer, OBTSerializer, OvertimeSerializer, LeavesSerializer, AdjustmentSerializer, BranchSerializer, DepartmentSerializer, DivisionSerializer, RankSerializer, PositionSerializer, ProvinceSerializer, CityMunicipalitySerializer
+from user.models import User, Employee, AuditTrail, DTR, DTRSummary, Holiday, OBT, Overtime, Leaves, Adjustment, Branch, Department, Division, PayrollGroup, Position, Rank, Tax, Province, CityMunicipality, PAGIBIG, SSSID
+from user.serializers import UserSerializer, EmployeeSerializer, AuditTrailSerializer, DTRSerializer, DTRSummarySerializer, HolidaySerializer, OBTSerializer, OvertimeSerializer, LeavesSerializer, AdjustmentSerializer, BranchSerializer, DepartmentSerializer, DivisionSerializer, PayrollGroupSerializer, PositionSerializer, RankSerializer, TaxSerializer, ProvinceSerializer, CityMunicipalitySerializer, PAGIBIGSerializer, SSSIDSerializer
 
 import secret, datetime, jwt
 
@@ -619,15 +619,15 @@ def division_detail(request, pk):
         return HttpResponse(status=status.HTTP_204_NO_CONTENT)
     
 @api_view(['GET', 'POST'])
-def rank_list(request):
+def payroll_list(request):
     if request.method == 'GET':
-        rank = Rank.objects.all()
-        serializer = RankSerializer(rank, many=True)
+        payroll = PayrollGroup.objects.all()
+        serializer = PayrollGroupSerializer(payroll, many=True)
         return JsonResponse(serializer.data, safe=False)
     
     elif request.method == 'POST':
         data = JSONParser().parse(request)
-        serializer = RankSerializer(data=data)
+        serializer = PayrollGroupSerializer(data=data)
 
         if serializer.is_valid():
             serializer.save()
@@ -635,19 +635,19 @@ def rank_list(request):
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET', 'PUT', 'DELETE'])
-def rank_detail(request, pk):
+def payroll_detail(request, pk):
     try:
-        rank = Rank.objects.get(pk=pk)
+        payroll = PayrollGroup.objects.get(pk=pk)
     except User.DoesNotExist:
         return HttpResponse(status=status.HTTP_404_NOT_FOUND)
     
     if request.method == 'GET':
-        serializer = RankSerializer(rank)
+        serializer = PayrollGroupSerializer(payroll)
         return JsonResponse(serializer.data)
     
     elif request.method == 'PUT':
         data = JSONParser().parse(request)
-        serializer = RankSerializer(rank, data=data)
+        serializer = PayrollGroupSerializer(payroll, data=data)
 
         if serializer.is_valid():
             serializer.save()
@@ -655,7 +655,7 @@ def rank_detail(request, pk):
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     elif request.method == 'DELETE':
-        rank.delete()
+        payroll.delete()
         return HttpResponse(status=status.HTTP_204_NO_CONTENT)
     
 @api_view(['GET', 'POST'])
@@ -698,6 +698,86 @@ def position_detail(request, pk):
         position.delete()
         return HttpResponse(status=status.HTTP_204_NO_CONTENT)
 
+@api_view(['GET', 'POST'])
+def rank_list(request):
+    if request.method == 'GET':
+        rank = Rank.objects.all()
+        serializer = RankSerializer(rank, many=True)
+        return JsonResponse(serializer.data, safe=False)
+    
+    elif request.method == 'POST':
+        data = JSONParser().parse(request)
+        serializer = RankSerializer(data=data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def rank_detail(request, pk):
+    try:
+        rank = Rank.objects.get(pk=pk)
+    except User.DoesNotExist:
+        return HttpResponse(status=status.HTTP_404_NOT_FOUND)
+    
+    if request.method == 'GET':
+        serializer = RankSerializer(rank)
+        return JsonResponse(serializer.data)
+    
+    elif request.method == 'PUT':
+        data = JSONParser().parse(request)
+        serializer = RankSerializer(rank, data=data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    elif request.method == 'DELETE':
+        rank.delete()
+        return HttpResponse(status=status.HTTP_204_NO_CONTENT)
+    
+@api_view(['GET', 'POST'])
+def tax_list(request):
+    if request.method == 'GET':
+        tax = Tax.objects.all()
+        serializer = TaxSerializer(tax, many=True)
+        return JsonResponse(serializer.data, safe=False)
+    
+    elif request.method == 'POST':
+        data = JSONParser().parse(request)
+        serializer = TaxSerializer(data=data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def tax_detail(request, pk):
+    try:
+        tax = Tax.objects.get(pk=pk)
+    except User.DoesNotExist:
+        return HttpResponse(status=status.HTTP_404_NOT_FOUND)
+    
+    if request.method == 'GET':
+        serializer = TaxSerializer(tax)
+        return JsonResponse(serializer.data)
+    
+    elif request.method == 'PUT':
+        data = JSONParser().parse(request)
+        serializer = TaxSerializer(tax, data=data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    elif request.method == 'DELETE':
+        tax.delete()
+        return HttpResponse(status=status.HTTP_204_NO_CONTENT)
+
 @api_view(['GET'])
 def province_list(request):
     if request.method == 'GET':
@@ -716,8 +796,6 @@ def province_detail(request, pk):
         serializer = ProvinceSerializer(province)
         return JsonResponse(serializer.data)
 
-
-
 @api_view(['GET'])
 def citymunicipality_list(request):
     if request.method == 'GET':
@@ -735,3 +813,83 @@ def citymunicipality_detail(request, pk):
     if request.method == 'GET':
         serializer = CityMunicipalitySerializer(citymunicipality)
         return JsonResponse(serializer.data)
+    
+@api_view(['GET', 'POST'])
+def pagibig_list(request):
+    if request.method == 'GET':
+        pagibig = PAGIBIG.objects.all()
+        serializer = PAGIBIGSerializer(pagibig, many=True)
+        return JsonResponse(serializer.data, safe=False)
+    
+    elif request.method == 'POST':
+        data = JSONParser().parse(request)
+        serializer = PAGIBIGSerializer(data=data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def pagibig_detail(request, pk):
+    try:
+        pagibig = PAGIBIG.objects.get(pk=pk)
+    except User.DoesNotExist:
+        return HttpResponse(status=status.HTTP_404_NOT_FOUND)
+    
+    if request.method == 'GET':
+        serializer = PAGIBIGSerializer(pagibig)
+        return JsonResponse(serializer.data)
+    
+    elif request.method == 'PUT':
+        data = JSONParser().parse(request)
+        serializer = PAGIBIGSerializer(pagibig, data=data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    elif request.method == 'DELETE':
+        pagibig.delete()
+        return HttpResponse(status=status.HTTP_204_NO_CONTENT)
+    
+@api_view(['GET', 'POST'])
+def sssid_list(request):
+    if request.method == 'GET':
+        sssid = SSSID.objects.all()
+        serializer = SSSIDSerializer(sssid, many=True)
+        return JsonResponse(serializer.data, safe=False)
+    
+    elif request.method == 'POST':
+        data = JSONParser().parse(request)
+        serializer = SSSIDSerializer(data=data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def sssid_detail(request, pk):
+    try:
+        sssid = SSSID.objects.get(pk=pk)
+    except User.DoesNotExist:
+        return HttpResponse(status=status.HTTP_404_NOT_FOUND)
+    
+    if request.method == 'GET':
+        serializer = SSSIDSerializer(sssid)
+        return JsonResponse(serializer.data)
+    
+    elif request.method == 'PUT':
+        data = JSONParser().parse(request)
+        serializer = SSSIDSerializer(sssid, data=data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    elif request.method == 'DELETE':
+        sssid.delete()
+        return HttpResponse(status=status.HTTP_204_NO_CONTENT)
