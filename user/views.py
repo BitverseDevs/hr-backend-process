@@ -167,7 +167,7 @@ def employee_list(request):
 def employee_detail(request, employee_number):
     try:
         employee = Employee.objects.get(employee_number=employee_number)
-    except User.DoesNotExist:
+    except Employee.DoesNotExist:
         return HttpResponse(status=status.HTTP_404_NOT_FOUND)
     
     if request.method == 'GET':
@@ -207,7 +207,7 @@ def audittrail_list(request):
 def audittrail_detail(request, pk):
     try:
         audittrail = AuditTrail.objects.get(pk=pk)
-    except User.DoesNotExist:
+    except AuditTrail.DoesNotExist:
         return HttpResponse(status=status.HTTP_404_NOT_FOUND)
     
     if request.method == 'GET':
@@ -234,7 +234,7 @@ def dtr_list(request):
 def dtr_detail(request, pk):
     try:
         dtr = DTR.objects.get(pk=pk)
-    except User.DoesNotExist:
+    except DTR.DoesNotExist:
         return HttpResponse(status=status.HTTP_404_NOT_FOUND)
     
     if request.method == 'GET':
@@ -274,7 +274,7 @@ def dtrsummary_list(request):
 def dtrsummary_detail(request, pk):
     try:
         dtrsummary = DTRSummary.objects.get(pk=pk)
-    except User.DoesNotExist:
+    except DTRSummary.DoesNotExist:
         return HttpResponse(status=status.HTTP_404_NOT_FOUND)
     
     if request.method == 'GET':
@@ -314,7 +314,7 @@ def holiday_list(request):
 def holiday_detail(request, pk):
     try:
         holiday = Holiday.objects.get(pk=pk)
-    except User.DoesNotExist:
+    except Holiday.DoesNotExist:
         return HttpResponse(status=status.HTTP_404_NOT_FOUND)
     
     if request.method == 'GET':
@@ -354,7 +354,7 @@ def obt_list(request):
 def obt_detail(request, pk):
     try:
         obt = OBT.objects.get(pk=pk)
-    except User.DoesNotExist:
+    except OBT.DoesNotExist:
         return HttpResponse(status=status.HTTP_404_NOT_FOUND)
     
     if request.method == 'GET':
@@ -394,7 +394,7 @@ def ot_list(request):
 def ot_detail(request, pk):
     try:
         ot = Overtime.objects.get(pk=pk)
-    except User.DoesNotExist:
+    except Overtime.DoesNotExist:
         return HttpResponse(status=status.HTTP_404_NOT_FOUND)
     
     if request.method == 'GET':
@@ -434,7 +434,7 @@ def leave_list(request):
 def leave_detail(request, pk):
     try:
         leave = Leaves.objects.get(pk=pk)
-    except User.DoesNotExist:
+    except Leaves.DoesNotExist:
         return HttpResponse(status=status.HTTP_404_NOT_FOUND)
     
     if request.method == 'GET':
@@ -474,7 +474,7 @@ def adjustment_list(request):
 def adjustment_detail(request, pk):
     try:
         adjustment = Adjustment.objects.get(pk=pk)
-    except User.DoesNotExist:
+    except Adjustment.DoesNotExist:
         return HttpResponse(status=status.HTTP_404_NOT_FOUND)
     
     if request.method == 'GET':
@@ -518,7 +518,7 @@ def branch_list(request):
 def branch_detail(request, pk):
     try:
         branch = Branch.objects.get(pk=pk)
-    except User.DoesNotExist:
+    except Branch.DoesNotExist:
         return HttpResponse(status=status.HTTP_404_NOT_FOUND)
     
     if request.method == 'GET':
@@ -558,7 +558,7 @@ def department_list(request):
 def department_detail(request, pk):
     try:
         department = Department.objects.get(pk=pk)
-    except User.DoesNotExist:
+    except Department.DoesNotExist:
         return HttpResponse(status=status.HTTP_404_NOT_FOUND)
     
     if request.method == 'GET':
@@ -598,7 +598,7 @@ def division_list(request):
 def division_detail(request, pk):
     try:
         division = Division.objects.get(pk=pk)
-    except User.DoesNotExist:
+    except Division.DoesNotExist:
         return HttpResponse(status=status.HTTP_404_NOT_FOUND)
     
     if request.method == 'GET':
@@ -638,7 +638,7 @@ def payroll_list(request):
 def payroll_detail(request, pk):
     try:
         payroll = PayrollGroup.objects.get(pk=pk)
-    except User.DoesNotExist:
+    except PayrollGroup.DoesNotExist:
         return HttpResponse(status=status.HTTP_404_NOT_FOUND)
     
     if request.method == 'GET':
@@ -678,7 +678,7 @@ def position_list(request):
 def position_detail(request, pk):
     try:
         position = Position.objects.get(pk=pk)
-    except User.DoesNotExist:
+    except Position.DoesNotExist:
         return HttpResponse(status=status.HTTP_404_NOT_FOUND)
     
     if request.method == 'GET':
@@ -718,7 +718,7 @@ def rank_list(request):
 def rank_detail(request, pk):
     try:
         rank = Rank.objects.get(pk=pk)
-    except User.DoesNotExist:
+    except Rank.DoesNotExist:
         return HttpResponse(status=status.HTTP_404_NOT_FOUND)
     
     if request.method == 'GET':
@@ -758,7 +758,7 @@ def tax_list(request):
 def tax_detail(request, pk):
     try:
         tax = Tax.objects.get(pk=pk)
-    except User.DoesNotExist:
+    except Tax.DoesNotExist:
         return HttpResponse(status=status.HTTP_404_NOT_FOUND)
     
     if request.method == 'GET':
@@ -789,7 +789,7 @@ def province_list(request):
 def province_detail(request, pk):
     try:
         province = Province.objects.get(pk=pk)
-    except User.DoesNotExist:
+    except Province.DoesNotExist:
         return HttpResponse(status=status.HTTP_404_NOT_FOUND)
     
     if request.method == 'GET':
@@ -807,7 +807,7 @@ def citymunicipality_list(request):
 def citymunicipality_detail(request, pk):
     try:
         citymunicipality = CityMunicipality.objects.get(pk=pk)
-    except User.DoesNotExist:
+    except CityMunicipality.DoesNotExist:
         return HttpResponse(status=status.HTTP_404_NOT_FOUND)
     
     if request.method == 'GET':
@@ -834,7 +834,7 @@ def pagibig_list(request):
 def pagibig_detail(request, pk):
     try:
         pagibig = PAGIBIG.objects.get(pk=pk)
-    except User.DoesNotExist:
+    except PAGIBIG.DoesNotExist:
         return HttpResponse(status=status.HTTP_404_NOT_FOUND)
     
     if request.method == 'GET':
@@ -874,7 +874,7 @@ def sssid_list(request):
 def sssid_detail(request, pk):
     try:
         sssid = SSSID.objects.get(pk=pk)
-    except User.DoesNotExist:
+    except SSSID.DoesNotExist:
         return HttpResponse(status=status.HTTP_404_NOT_FOUND)
     
     if request.method == 'GET':

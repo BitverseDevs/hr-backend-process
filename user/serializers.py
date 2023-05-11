@@ -23,6 +23,7 @@ class UserSerializer(serializers.ModelSerializer):
         return instance
 
 class EmployeeSerializer(serializers.ModelSerializer):
+    employee_image = serializers.ImageField(max_length=None, allow_empty_file=True, use_url=True, required=False)
     class Meta:
         model = Employee
         fields = "__all__"
@@ -82,7 +83,7 @@ class DivisionSerializer(serializers.ModelSerializer):
         model = Division
         fields = "__all__"
 
-class PayrollGroupSerializer(serializers.Serializer):
+class PayrollGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = PayrollGroup
         fields = "__all__"
@@ -97,7 +98,7 @@ class PositionSerializer(serializers.ModelSerializer):
         model = Position
         fields = "__all__"
 
-class TaxSerializer(serializers.Serializer):
+class TaxSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tax
         fields = "__all__"
@@ -122,12 +123,12 @@ class ProvinceSerializer(serializers.ModelSerializer):
         model = Province
         fields = ("id", "name", "citymunicipality_set")
 
-class PAGIBIGSerializer(serializers.Serializer):
+class PAGIBIGSerializer(serializers.ModelSerializer):
     class Meta:
         model = PAGIBIG
         fields = "__all__"
 
-class SSSIDSerializer(serializers.Serializer):
+class SSSIDSerializer(serializers.ModelSerializer):
     class Meta:
         model = SSSID
         fields = "__all__"

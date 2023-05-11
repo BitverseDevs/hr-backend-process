@@ -37,6 +37,7 @@ urlpatterns = [
     path('rank/<int:pk>', views.rank_detail),
     path('taxes/', views.tax_list),
     path('tax/<int:pk>', views.tax_detail),
+    path('provinces', views.province_list),
     path('province/<int:pk>', views.province_detail),
     path('citiesmunicipalities/', views.citymunicipality_list),
     path('citiesmunicipalities/<int:pk>', views.citymunicipality_detail),

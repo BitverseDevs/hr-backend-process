@@ -215,8 +215,8 @@ class Tax(models.Model):
     employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE)
     tax_form = models.CharField(max_length=15)
     tax_description = models.TextField(max_length=100, null=True, blank=True)
-    tax_percentage = models.DecimalField(max_digits=3, decimal_places=2, null=True, blank=True)
-    tax_amount = models.DecimalField(max_digits=5, decimal_places=4, null=True, blank=True)
+    tax_percentage = models.FloatField()
+    tax_amount = models.FloatField()
     tin_id = models.CharField(max_length=12)
     payment_frequency = models.PositiveSmallIntegerField(validators=[MaxValueValidator(4)], choices=TAX_FREQUENCY)
 
@@ -226,11 +226,11 @@ class Tax(models.Model):
 class PAGIBIG(models.Model):
     employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE)
     pagibig_number = models.CharField(max_length=15)
-    pagibig_contribution_month = models.DecimalField(max_digits=5, decimal_places=4, null=True, blank=True)
-    pagibig_with_cloan_amount = models.DecimalField(max_digits=5, decimal_places=4, null=True, blank=True)
-    pagibig_rem_cloan_amount = models.DecimalField(max_digits=5, decimal_places=4, null=True, blank=True)
-    pagibig_with_hloan_amount = models.DecimalField(max_digits=5, decimal_places=4, null=True, blank=True)
-    pagibig_rem_hloan_amount = models.DecimalField(max_digits=5, decimal_places=4, null=True, blank=True)
+    pagibig_contribution_month = models.FloatField()
+    pagibig_with_cloan_amount = models.FloatField()
+    pagibig_rem_cloan_amount = models.FloatField()
+    pagibig_with_hloan_amount = models.FloatField()
+    pagibig_rem_hloan_amount = models.FloatField()
 
     class Meta:
         db_table = "TBL_PAGIBIG_CODE"
@@ -238,11 +238,11 @@ class PAGIBIG(models.Model):
 class SSSID(models.Model):
     employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE)
     sss_number = models.CharField(max_length=10)
-    sss_contribution_month = models.DecimalField(max_digits=5, decimal_places=4, null=True, blank=True)
-    sss_with_cashloan_amount = models.DecimalField(max_digits=5, decimal_places=4, null=True, blank=True)
-    sss_rem_cashloan_amount = models.DecimalField(max_digits=5, decimal_places=4, null=True, blank=True)
-    sss_with_calloan_amount = models.DecimalField(max_digits=5, decimal_places=4, null=True, blank=True)
-    sss_rem_callloan_amount = models.DecimalField(max_digits=5, decimal_places=4, null=True, blank=True)
+    sss_contribution_month = models.FloatField()
+    sss_with_cashloan_amount = models.FloatField()
+    sss_rem_cashloan_amount = models.FloatField()
+    sss_with_calloan_amount = models.FloatField()
+    sss_rem_callloan_amount = models.FloatField()
 
     class Meta:
         db_table = "TBL_SSSID_CODE"
@@ -399,8 +399,8 @@ class Leaves(models.Model):
 class Adjustment(models.Model):
     employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE, related_name="adjustment")
     cutoff_id = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
-    deducted_amount = models.DecimalField(max_digits=5, decimal_places=2)
-    added_amount = models.DecimalField(max_digits=5, decimal_places=2)
+    deducted_amount = models.FloatField()
+    added_amount = models.FloatField()
     adjustment_remark = models.TextField(max_length=100)
     adjustment_remark2 = models.TextField(max_length=100)
     prepared_by_employee_number = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
