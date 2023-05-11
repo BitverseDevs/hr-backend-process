@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from user.models import User, Employee, AuditTrail, DTR, DTRSummary, Holiday, OBT, Overtime, Leaves, Adjustment
-from user.models import Branch, Department, Division, PayrollGroup, Rank, Position, Tax, Province, CityMunicipality, PAGIBIG, SSSID
+from user.models import Branch, Department, Division, PayrollGroup, Rank, Position, Tax, Province, CityMunicipality, PAGIBIG, SSS
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -128,7 +128,7 @@ class PAGIBIGSerializer(serializers.ModelSerializer):
         model = PAGIBIG
         fields = "__all__"
 
-class SSSIDSerializer(serializers.ModelSerializer):
+class SSSSerializer(serializers.ModelSerializer):
     class Meta:
-        model = SSSID
+        model = SSS
         fields = "__all__"

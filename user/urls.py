@@ -44,8 +44,8 @@ urlpatterns = [
     path('citiesmunicipalities/<int:pk>', views.citymunicipality_detail),
     path('pagibigs/', views.pagibig_list),
     path('pagibig/<int:pk>', views.pagibig_detail),
-    path('sssids/', views.sssid_list),
-    path('sssid/<int:pk>', views.sssid_detail),
+    path('sssids/', views.sss_list),
+    path('sssid/<int:pk>', views.sss_detail),
 
     path('login/', views.login),
     path('employees/', views.list_employees),

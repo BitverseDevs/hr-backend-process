@@ -8,8 +8,8 @@ from rest_framework.views import APIView
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
 
-from user.models import User, Employee, AuditTrail, DTR, DTRSummary, Holiday, OBT, Overtime, Leaves, Adjustment, Branch, Department, Division, PayrollGroup, Position, Rank, Tax, Province, CityMunicipality, PAGIBIG, SSSID
-from user.serializers import UserSerializer, EmployeeSerializer, AuditTrailSerializer, DTRSerializer, DTRSummarySerializer, HolidaySerializer, OBTSerializer, OvertimeSerializer, LeavesSerializer, AdjustmentSerializer, BranchSerializer, DepartmentSerializer, DivisionSerializer, PayrollGroupSerializer, PositionSerializer, RankSerializer, TaxSerializer, ProvinceSerializer, CityMunicipalitySerializer, PAGIBIGSerializer, SSSIDSerializer
+from user.models import User, Employee, AuditTrail, DTR, DTRSummary, Holiday, OBT, Overtime, Leaves, Adjustment, Branch, Department, Division, PayrollGroup, Position, Rank, Tax, Province, CityMunicipality, PAGIBIG, SSS
+from user.serializers import UserSerializer, EmployeeSerializer, AuditTrailSerializer, DTRSerializer, DTRSummarySerializer, HolidaySerializer, OBTSerializer, OvertimeSerializer, LeavesSerializer, AdjustmentSerializer, BranchSerializer, DepartmentSerializer, DivisionSerializer, PayrollGroupSerializer, PositionSerializer, RankSerializer, TaxSerializer, ProvinceSerializer, CityMunicipalitySerializer, PAGIBIGSerializer, SSSSerializer
 
 import secret, datetime, jwt
 
@@ -869,15 +869,15 @@ def pagibig_detail(request, pk):
         return HttpResponse(status=status.HTTP_204_NO_CONTENT)
     
 @api_view(['GET', 'POST'])
-def sssid_list(request):
+def sss_list(request):
     if request.method == 'GET':
-        sssid = SSSID.objects.all()
-        serializer = SSSIDSerializer(sssid, many=True)
+        sss = SSS.objects.all()
+        serializer = SSSSerializer(sss, many=True)
         return JsonResponse(serializer.data, safe=False)
     
     elif request.method == 'POST':
         data = JSONParser().parse(request)
-        serializer = SSSIDSerializer(data=data)
+        serializer = SSSSerializer(data=data)
 
         if serializer.is_valid():
             serializer.save()
@@ -885,19 +885,19 @@ def sssid_list(request):
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET', 'PUT', 'DELETE'])
-def sssid_detail(request, pk):
+def sss_detail(request, pk):
     try:
-        sssid = SSSID.objects.get(pk=pk)
-    except SSSID.DoesNotExist:
+        sss = SSS.objects.get(pk=pk)
+    except SSS.DoesNotExist:
         return HttpResponse(status=status.HTTP_404_NOT_FOUND)
     
     if request.method == 'GET':
-        serializer = SSSIDSerializer(sssid)
+        serializer = SSSSerializer(sss)
         return JsonResponse(serializer.data)
     
     elif request.method == 'PUT':
         data = JSONParser().parse(request)
-        serializer = SSSIDSerializer(sssid, data=data)
+        serializer = SSSSerializer(sss, data=data)
 
         if serializer.is_valid():
             serializer.save()
@@ -905,5 +905,5 @@ def sssid_detail(request, pk):
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     elif request.method == 'DELETE':
-        sssid.delete()
+        sss.delete()
         return HttpResponse(status=status.HTTP_204_NO_CONTENT)

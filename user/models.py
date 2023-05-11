@@ -91,11 +91,11 @@ def upload_to(instance, filename):
     return f'image/{filename}'
 
 class Branch(models.Model):
-    name = models.CharField(max_length=25)
-    address = models.TextField(max_length=50)
-    email = models.EmailField()
-    contact_number = models.CharField(max_length=15)
-    oic = models.CharField(max_length=25)
+    branch_name = models.CharField(max_length=25)
+    branch_address = models.TextField(max_length=50)
+    branch_email = models.EmailField()
+    branch_contact_number = models.CharField(max_length=15)
+    branch_oic = models.CharField(max_length=25)
     date_added = models.DateTimeField(auto_now_add=True)
     date_deleted = models.DateTimeField(null=True, blank=True)
 
@@ -103,9 +103,9 @@ class Branch(models.Model):
         db_table = "TBL_BRANCH_CODE"
 
 class Department(models.Model):
-    name = models.CharField(max_length=25)
-    lead = models.CharField(max_length=25)
-    branch_code = models.ForeignKey(Branch, on_delete=models.CASCADE, default=1, related_name="department")
+    dept_name = models.CharField(max_length=25)
+    dept_lead = models.CharField(max_length=25)
+    dept_branch_code = models.ForeignKey(Branch, on_delete=models.CASCADE, default=1, related_name="department")
     date_added = models.DateTimeField(auto_now_add=True)
     date_deleted = models.DateTimeField(null=True, blank=True)
 
@@ -113,9 +113,9 @@ class Department(models.Model):
         db_table = "TBL_DEPARTMENT_CODE"
 
 class Division(models.Model):
-    name = models.CharField(max_length=25)
-    lead = models.CharField(max_length=25)
-    branch_code = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name="division")
+    div_name = models.CharField(max_length=25)
+    div_lead = models.CharField(max_length=25)
+    div_branch_code = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name="division")
     date_added = models.DateTimeField(auto_now_add=True)
     date_deleted = models.DateTimeField(null=True, blank=True)
 
@@ -152,6 +152,18 @@ class Rank(models.Model):
     class Meta:
         db_table = "TBL_RANK_CODE"
 
+class Tax(models.Model):
+    employee_number = models.ForeignKey("Employee", to_field="employee_number", on_delete=models.CASCADE)
+    tax_form = models.CharField(max_length=15)
+    tax_description = models.TextField(max_length=100, null=True, blank=True)
+    tax_percentage = models.FloatField()
+    tax_amount = models.FloatField()
+    tin_id = models.CharField(max_length=12)
+    payment_frequency = models.PositiveSmallIntegerField(validators=[MaxValueValidator(4)], choices=TAX_FREQUENCY)
+
+    class Meta:
+        db_table = "TBL_TAX_CODE"
+
 class Province(models.Model):
     name = models.CharField(max_length=50)
 
@@ -160,12 +172,34 @@ class Province(models.Model):
 
 class CityMunicipality(models.Model):
     name = models.CharField(max_length=40)
-    province = models.ForeignKey(Province, on_delete=models.CASCADE, related_name="citymunicipality")
+    province_code = models.ForeignKey(Province, on_delete=models.CASCADE, related_name="citymunicipality")
 
     class Meta:
         db_table = "TBL_CITYMUNICIPALITY"
 
+class PAGIBIG(models.Model):
+    employee_number = models.ForeignKey("Employee", to_field="employee_number", on_delete=models.CASCADE)
+    pagibig_number = models.CharField(max_length=15)
+    pagibig_contribution_month = models.FloatField()
+    pagibig_with_cloan_amount = models.FloatField()
+    pagibig_rem_cloan_amount = models.FloatField()
+    pagibig_with_hloan_amount = models.FloatField()
+    pagibig_rem_hloan_amount = models.FloatField()
 
+    class Meta:
+        db_table = "TBL_PAGIBIG_CODE"
+
+class SSS(models.Model):
+    employee_number = models.ForeignKey("Employee", to_field="employee_number", on_delete=models.CASCADE)
+    sss_number = models.CharField(max_length=10)
+    sss_contribution_month = models.FloatField()
+    sss_with_cashloan_amount = models.FloatField()
+    sss_rem_cashloan_amount = models.FloatField()
+    sss_with_calloan_amount = models.FloatField()
+    sss_rem_callloan_amount = models.FloatField()
+
+    class Meta:
+        db_table = "TBL_SSS_CODE"
 
 class Employee(models.Model):
     employee_number = models.PositiveSmallIntegerField(unique=True, validators=[MaxValueValidator(9990)])
@@ -180,7 +214,7 @@ class Employee(models.Model):
     address = models.TextField(max_length=50)
     provincial_address = models.TextField(max_length=50, null=True, blank=True)
     mobile_phone = models.CharField(max_length=15)
-    email = models.EmailField()
+    email_address = models.EmailField()
     
     date_hired = models.DateField()
     date_resigned = models.DateField(null=True, blank=True)
@@ -194,14 +228,15 @@ class Employee(models.Model):
     payroll_group_code = models.PositiveSmallIntegerField(null=True, blank=True) #choice
     position_code = models.ForeignKey(Position, on_delete=models.CASCADE, null=True, blank=True, related_name="employee")
     rank_code = models.ForeignKey(Rank, on_delete=models.CASCADE, null=True, blank=True, related_name="employee")
-    tax_code = models.PositiveSmallIntegerField(null=True, blank=True) #choice
+    tax_code = models.ForeignKey(Tax, on_delete=models.SET_NULL, null=True, blank=True, related_name="employee")
     city_code = models.ForeignKey(CityMunicipality, on_delete=models.CASCADE, null=True, blank=True, related_name="employee")
     
-    pagibig_code = models.PositiveSmallIntegerField(null=True, blank=True)
-    sssid_code = models.PositiveSmallIntegerField(null=True, blank=True)
+    pagibig_code = models.ForeignKey(PAGIBIG, on_delete=models.SET_NULL, null=True, blank=True, related_name="employee")
+    sssid_code = models.ForeignKey(SSS, on_delete=models.SET_NULL, null=True, blank=True, related_name="employee")
     philhealth_code = models.PositiveSmallIntegerField(null=True, blank=True)
 
     employee_image = models.ImageField(_("Image"), upload_to=upload_to, null=True, blank=True)
+    bio_id = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)], null=True, blank=True)
 
     def days_before(self, date):
         today = datetime.date.today()
@@ -214,42 +249,6 @@ class Employee(models.Model):
 
     class Meta:
         db_table = "TBL_EMPLOYEE_PROFILE"
-
-class Tax(models.Model):
-    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE)
-    tax_form = models.CharField(max_length=15)
-    tax_description = models.TextField(max_length=100, null=True, blank=True)
-    tax_percentage = models.FloatField()
-    tax_amount = models.FloatField()
-    tin_id = models.CharField(max_length=12)
-    payment_frequency = models.PositiveSmallIntegerField(validators=[MaxValueValidator(4)], choices=TAX_FREQUENCY)
-
-    class Meta:
-        db_table = "TBL_TAX_CODE"
-
-class PAGIBIG(models.Model):
-    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE)
-    pagibig_number = models.CharField(max_length=15)
-    pagibig_contribution_month = models.FloatField()
-    pagibig_with_cloan_amount = models.FloatField()
-    pagibig_rem_cloan_amount = models.FloatField()
-    pagibig_with_hloan_amount = models.FloatField()
-    pagibig_rem_hloan_amount = models.FloatField()
-
-    class Meta:
-        db_table = "TBL_PAGIBIG_CODE"
-
-class SSSID(models.Model):
-    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE)
-    sss_number = models.CharField(max_length=10)
-    sss_contribution_month = models.FloatField()
-    sss_with_cashloan_amount = models.FloatField()
-    sss_rem_cashloan_amount = models.FloatField()
-    sss_with_calloan_amount = models.FloatField()
-    sss_rem_callloan_amount = models.FloatField()
-
-    class Meta:
-        db_table = "TBL_SSSID_CODE"
 
 class User(AbstractUser):
     employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE, related_name="user")
@@ -295,7 +294,7 @@ class DTR(models.Model):
     flag2_lout_lin = models.BooleanField(null=True, blank=True) # 0:Lunchin; 1:LunchOut 
     entry_type = models.CharField(max_length=4, choices=ENTRY_TYPE)
     date_uploaded = models.DateTimeField()
-    processed = models.BooleanField(default=False)
+    is_processed = models.BooleanField(default=False)
 
     sched_timein = models.DateTimeField()
     sched_timeout = models.DateTimeField()
@@ -342,7 +341,7 @@ class Holiday(models.Model):
     holiday_location = models.CharField(max_length=15, choices=HOLIDAY_LOCATION) 
 
     class Meta:
-        db_table = "TBL_HOLIDAY"
+        db_table = "TBL_HOLIDAY_TYPE"
 
 class OBT(models.Model):
     employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE, related_name="obt")
