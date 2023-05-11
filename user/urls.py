@@ -1,5 +1,6 @@
 from django.urls import path
 from user import views
+from .views import NewEmployee
 
 urlpatterns = [
     path('users/', views.user_list),
@@ -48,7 +49,8 @@ urlpatterns = [
 
     path('login/', views.login),
     path('employees/', views.list_employees),
-    path('new_employee/', views.new_employee),
+    # path('new_employee/', views.new_employee),
+    path('new_employee/', NewEmployee.as_view(  )),
     path('birthdays/', views.list_birthdays),
     path('anniversary/', views.list_work_anniversary),
 ]
