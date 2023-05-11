@@ -1,9 +1,10 @@
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 
-from rest_framework.parsers import JSONParser
+from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 from rest_framework import  status
 from rest_framework.decorators import api_view
+from rest_framework.views import APIView
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
 
@@ -60,16 +61,29 @@ def list_employees(request):
         serializer = EmployeeSerializer(employees, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-@api_view(['POST'])
-def new_employee(request):
-    if request.method == 'POST':
-        data = JSONParser().parse(request)
-        serializer = EmployeeSerializer(data=data)
+# @api_view(['POST'])
+# def new_employee(request):
+#     if request.method == 'POST':
+#         # data = JSONParser().parse(request)
+#         data = JSONParser().parse(request)
+#         serializer = EmployeeSerializer(data=data)
 
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data, status=status.HTTP_201_CREATED)
+#         return Response()
+
+class NewEmployee(APIView):
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request, format=None):
+        print(request.data)
+        serializer = EmployeeSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response()
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
 def list_birthdays(request):

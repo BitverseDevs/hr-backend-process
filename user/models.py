@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import MaxValueValidator
 from django.contrib.auth.models import AbstractUser
+from django.utils.translation import gettext_lazy as _
 
 import datetime
 
@@ -85,6 +86,9 @@ OT_TYPE = [
     ("BD", "Before Duty-in"),
     ("AD", "After Duty-in"),
 ]
+
+def upload_to(instance, filename):
+    return f'image/{filename}'
 
 class Branch(models.Model):
     name = models.CharField(max_length=25)
@@ -197,7 +201,7 @@ class Employee(models.Model):
     sssid_code = models.PositiveSmallIntegerField(null=True, blank=True)
     philhealth_code = models.PositiveSmallIntegerField(null=True, blank=True)
 
-    employee_image = models.ImageField(null=True, blank=True, upload_to="images/")
+    employee_image = models.ImageField(_("Image"), upload_to=upload_to, null=True, blank=True)
 
     def days_before(self, date):
         today = datetime.date.today()
