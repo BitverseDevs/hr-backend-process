@@ -225,7 +225,7 @@ class Employee(models.Model):
     branch_code = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True, blank=True, related_name="employee")
     department_code = models.ForeignKey(Department, on_delete=models.CASCADE, null=True, blank=True, related_name="employee")
     division_code = models.ForeignKey(Division, on_delete=models.CASCADE, null=True, blank=True, related_name="employee")
-    payroll_group_code = models.PositiveSmallIntegerField(null=True, blank=True) #choice
+    payroll_group_code = models.ForeignKey(PayrollGroup, on_delete=models.CASCADE, null=True, blank=True)
     position_code = models.ForeignKey(Position, on_delete=models.CASCADE, null=True, blank=True, related_name="employee")
     rank_code = models.ForeignKey(Rank, on_delete=models.CASCADE, null=True, blank=True, related_name="employee")
     tax_code = models.ForeignKey(Tax, on_delete=models.SET_NULL, null=True, blank=True, related_name="employee")
@@ -284,7 +284,7 @@ class User(AbstractUser):
         db_table = "TBL_USER"
 
 class AuditTrail(models.Model):
-    employee_number = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
+    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE, related_name="audittrail")
     transaction_type = models.CharField(max_length=15) # choice
     table_affected = models.CharField(max_length=30)
     action_remarks = models.TextField(max_length=100)
@@ -322,7 +322,7 @@ class DTRSummary(models.Model):
     
     sched_timein = models.DateTimeField()
     sched_timeout = models.DateTimeField()
-    sched_restday = models.BooleanField()
+    is_sched_restday = models.BooleanField()
     lunch_out = models.DateTimeField()
     lunch_in = models.DateTimeField()
     overbreak = models.PositiveSmallIntegerField()
@@ -331,11 +331,11 @@ class DTRSummary(models.Model):
     adjusted_timeout = models.DateTimeField()
     
     total_hours = models.PositiveSmallIntegerField()
-    paid_leave = models.BooleanField(default=False)
+    is_paid_leave = models.BooleanField(default=False)
     paid_leave_reason = models.CharField(max_length=50) # choice
     reg_ot_total = models.PositiveSmallIntegerField()
     nd_ot_total = models.PositiveSmallIntegerField()
-    ot_approved = models.BooleanField(default=False)
+    is_ot_approved = models.BooleanField(default=False)
     pay_period = models.DateTimeField()
     is_computed = models.BooleanField(default=False)
 
