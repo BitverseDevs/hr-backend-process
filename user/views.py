@@ -56,12 +56,12 @@ class LoginView(APIView):
     
 class EmployeesListView(APIView):
     def get(self, request):
-        employees = Employee.objects.all()
+        employees = Employee.objects.filter(date_deleted__exact=None)
         serializer = EmployeeSerializer(employees, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class EmployeesPagination(PageNumberPagination):
-    page_size = 10
+    page_size = 50
     # page_size_query_param = 'page_size'
     max_page_size = 100
 
@@ -69,12 +69,17 @@ class EmployeesView(APIView):
     parser_classes = [MultiPartParser, FormParser]
     pagination_class = EmployeesPagination
 
-    def get(self, request):
-        employees = Employee.objects.all()
-        paginator = self.pagination_class()
-        result_page = paginator.paginate_queryset(employees, request)
-        serializer = EmployeeSerializer(result_page, many=True)
-        return paginator.get_paginated_response(serializer.data) if result_page is not None else Response(serializer.data)
+    def get(self, request, employee_number=None):
+        if employee_number is not None:
+            employee = get_object_or_404(Employee, employee_number=employee_number, date_deleted__isnull=True)
+            serializer = EmployeeSerializer(employee)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            employees = Employee.objects.filter(date_deleted__exact=None)
+            paginator = self.pagination_class()
+            result_page = paginator.paginate_queryset(employees, request)
+            serializer = EmployeeSerializer(result_page, many=True)
+            return paginator.get_paginated_response(serializer.data) if result_page is not None else Response(serializer.data)
 
     def post(self, request):
         serializer = EmployeeSerializer(data=request.data)
@@ -93,6 +98,13 @@ class EmployeesView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+    def delete(self, request, employee_number):
+        employee = get_object_or_404(Employee, employee_number=employee_number)
+        employee.date_deleted = datetime.date.today()
+        employee.save()
+        
+        return Response({"message": "Account successfully deleted"}, status=status.HTTP_204_NO_CONTENT)
 
 class BirthdayView(APIView):
     def get(self, request):
