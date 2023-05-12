@@ -269,6 +269,14 @@ class User(AbstractUser):
     old_password = models.CharField(max_length=128, default="N/A")
     date_password_changed = models.DateField(null=True, blank=True)
 
+    #  To remove default fields of Django User Model
+
+    # first_name = None
+    # last_name = None
+    # email = None
+    # is_staff = None
+    # date_joined = None
+
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = ["password", "role", "is_active", "is_locked"]
 
