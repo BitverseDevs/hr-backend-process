@@ -1,7 +1,8 @@
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, JsonResponse
+from django.db import transaction
 
-from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
+from rest_framework.parsers import JSONParser, MultiPartParser, FormParser, FileUploadParser
 from rest_framework import  status
 from rest_framework.decorators import api_view
 from rest_framework.views import APIView
@@ -11,7 +12,7 @@ from rest_framework.response import Response
 from user.models import User, Employee, AuditTrail, DTR, DTRSummary, Holiday, OBT, Overtime, Leaves, Adjustment, Branch, Department, Division, PayrollGroup, Position, Rank, Tax, Province, CityMunicipality, PAGIBIG, SSS
 from user.serializers import UserSerializer, EmployeeSerializer, AuditTrailSerializer, DTRSerializer, DTRSummarySerializer, HolidaySerializer, OBTSerializer, OvertimeSerializer, LeavesSerializer, AdjustmentSerializer, BranchSerializer, DepartmentSerializer, DivisionSerializer, PayrollGroupSerializer, PositionSerializer, RankSerializer, TaxSerializer, ProvinceSerializer, CityMunicipalitySerializer, PAGIBIGSerializer, SSSSerializer
 
-import secret, datetime, jwt
+import secret, datetime, jwt, csv
 
 @api_view(['POST'])
 def login(request):
@@ -61,18 +62,6 @@ def list_employees(request):
         serializer = EmployeeSerializer(employees, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-# @api_view(['POST'])
-# def new_employee(request):
-#     if request.method == 'POST':
-#         # data = JSONParser().parse(request)
-#         data = JSONParser().parse(request)
-#         serializer = EmployeeSerializer(data=data)
-
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response(serializer.data, status=status.HTTP_201_CREATED)
-#         return Response()
-
 class NewEmployee(APIView):
     parser_classes = [MultiPartParser, FormParser]
 
@@ -118,6 +107,32 @@ def list_work_anniversary(request):
             }
             data.append(employee_data)
         return Response(data, status=status.HTTP_200_OK)
+    
+class TsvFileUploadView(APIView):
+
+    def post(self, request, *args, **kwargs):
+        tsv_file = request.FILES.get('file')
+        print(tsv_file)
+
+        if not tsv_file:
+            return Response({"error": "No TSV file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            tsv_file_text = tsv_file.read().decode('utf-8')
+            reader = csv.reader(tsv_file_text.splitlines(), delimiter='\t')
+            for row in reader:
+                dtr = DTR.objects.create(
+                    bio_id = row[0],
+                    datetime_bio = row[1],
+                    flag1_in_out = 1 if (row[3] == 1) else 0,
+                    flag2_lout_lin = 1 if (row[5] == 1) else 0,
+                    is_processed = False,
+                )
+                dtr.save()      
+            return Response({"message": "Successfully uploaded DTR logs to DTR Model"}, status=status.HTTP_201_CREATED)
+        
+        except Exception as e:
+            return Response({'error':str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['GET', 'POST'])

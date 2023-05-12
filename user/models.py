@@ -286,20 +286,20 @@ class AuditTrail(models.Model):
         db_table = "TBL_AUDITTRAIL"
 
 class DTR(models.Model):
-    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE, related_name="dtr")
+    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE, related_name="dtr", null=True, blank=True)
     bio_id = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
     datetime_bio = models.DateTimeField()
     
     flag1_in_out = models.BooleanField() # 0:DutyIn; 1:DutyOut
-    flag2_lout_lin = models.BooleanField(null=True, blank=True) # 0:Lunchin; 1:LunchOut 
-    entry_type = models.CharField(max_length=4, choices=ENTRY_TYPE)
-    date_uploaded = models.DateTimeField()
+    flag2_lout_lin = models.BooleanField(null=True, blank=True) # 0:LunchIn; 1:LunchOut
+    entry_type = models.CharField(max_length=4, choices=ENTRY_TYPE, null=True, blank=True)
+    date_uploaded = models.DateTimeField(auto_now_add=True)
     is_processed = models.BooleanField(default=False)
 
-    sched_timein = models.DateTimeField()
-    sched_timeout = models.DateTimeField()
-    business_datetime = models.DateTimeField()
-    branch_code = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name="dtr")
+    sched_timein = models.DateTimeField(null=True, blank=True)
+    sched_timeout = models.DateTimeField(null=True, blank=True)
+    business_datetime = models.DateTimeField(null=True, blank=True)
+    branch_code = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name="dtr", null=True, blank=True)
 
     class Meta:
         db_table = "TBL_DTR"

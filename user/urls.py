@@ -1,6 +1,6 @@
 from django.urls import path
 from user import views
-from .views import NewEmployee
+from .views import NewEmployee, TsvFileUploadView
 
 urlpatterns = [
     path('users/', views.user_list),
@@ -53,4 +53,5 @@ urlpatterns = [
     path('new_employee/', NewEmployee.as_view(  )),
     path('birthdays/', views.list_birthdays),
     path('anniversary/', views.list_work_anniversary),
+    path('upload_DTR_logs/', TsvFileUploadView.as_view())
 ]
