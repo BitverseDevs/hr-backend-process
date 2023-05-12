@@ -8,15 +8,18 @@ from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
 
 from user.models import User, Employee, AuditTrail, DTR, DTRSummary, Holiday, OBT, Overtime, Leaves, Adjustment, Branch, Department, Division, PayrollGroup, Position, Rank, Tax, Province, CityMunicipality, PAGIBIG, SSS
 from user.serializers import UserSerializer, EmployeeSerializer, AuditTrailSerializer, DTRSerializer, DTRSummarySerializer, HolidaySerializer, OBTSerializer, OvertimeSerializer, LeavesSerializer, AdjustmentSerializer, BranchSerializer, DepartmentSerializer, DivisionSerializer, PayrollGroupSerializer, PositionSerializer, RankSerializer, TaxSerializer, ProvinceSerializer, CityMunicipalitySerializer, PAGIBIGSerializer, SSSSerializer
 
 import secret, datetime, jwt, csv
 
-@api_view(['POST'])
-def login(request):
-    if request.method == 'POST':
+
+
+class LoginView(APIView):
+    @staticmethod
+    def post(request):
         username = request.data["username"]
         password = request.data["password"]
 
@@ -28,84 +31,103 @@ def login(request):
         if not user.check_password(password):
             user.failed_login_attempts += 1
             user.save()
-            raise AuthenticationFailed("Incorrent password!")
+            raise AuthenticationFailed("Incorrect password!")
         
-        # User and Employee information based on login credentials
         user.last_login = datetime.datetime.now()
         user.save()
-        serializer = UserSerializer(user)
+        user_serializer = UserSerializer(user)
 
-        employee = get_object_or_404(Employee, employee_number=serializer.data["employee_number"])
-        serializer1 = EmployeeSerializer(employee)
+        employee = get_object_or_404(Employee, employee_number=user_serializer.data["employee_number"])
+        employee_serializer = EmployeeSerializer(employee)
 
-        # JWT
         payload = {
             "id": user.id,
             "exp": datetime.datetime.now() + datetime.timedelta(minutes=60),
             "iat": datetime.datetime.now()
         }
-
         token = jwt.encode(payload=payload, key=secret.JWT_SECRET, algorithm="HS256")
-
         data = {
-            "jwt":token, 
-            "user":serializer.data, 
-            "employee_details":serializer1.data, 
-            }
+            "jwt": token,
+            "user": user_serializer.data,
+            "employee_detail": employee_serializer.data
+        }
 
-        return Response(data, status=status.HTTP_202_ACCEPTED)
-
-@api_view(['GET'])
-def list_employees(request):
-    if request.method == 'GET':
+        return Response(data, status=status.HTTP_200_OK)
+    
+class EmployeesListView(APIView):
+    def get(self, request):
         employees = Employee.objects.all()
         serializer = EmployeeSerializer(employees, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-class NewEmployee(APIView):
-    parser_classes = [MultiPartParser, FormParser]
+class EmployeesPagination(PageNumberPagination):
+    page_size = 10
+    # page_size_query_param = 'page_size'
+    max_page_size = 100
 
-    def post(self, request, format=None):
-        print(request.data)
+class EmployeesView(APIView):
+    parser_classes = [MultiPartParser, FormParser]
+    pagination_class = EmployeesPagination
+
+    def get(self, request):
+        employees = Employee.objects.all()
+        paginator = self.pagination_class()
+        result_page = paginator.paginate_queryset(employees, request)
+        serializer = EmployeeSerializer(result_page, many=True)
+        return paginator.get_paginated_response(serializer.data) if result_page is not None else Response(serializer.data)
+
+    def post(self, request):
         serializer = EmployeeSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+    def put(self, request, employee_number):
+        employee = get_object_or_404(Employee, employee_number=employee_number)
+        serializer = EmployeeSerializer(employee, data=request.data)
 
-@api_view(['GET'])
-def list_birthdays(request):
-    if request.method =='GET':
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class BirthdayView(APIView):
+    def get(self, request):
         employees = Employee.objects.all()
         employees = sorted(employees, key=lambda e: e.days_before(e.birthday))
         employees = employees[:50]
         data = []
+
         for employee in employees:
-            days_to_birthday = employee.days_before(employee.birthday)
+            days_before_birthday = employee.days_before(employee.birthday)
             employee_data = {
-                'name': f"{employee.first_name} {employee.last_name}",
-                'birthday': employee.birthday.strftime('%Y-%m-%d'),
-                'days_to_birthday': days_to_birthday
+                "name": f"{employee.first_name} {employee.last_name}",
+                "birthday": employee.birthday.strftime("%Y-%m-%d"),
+                "days_before_birthday": days_before_birthday
             }
             data.append(employee_data)
+
         return Response(data, status=status.HTTP_200_OK)
     
-@api_view(['GET'])
-def list_work_anniversary(request):
-    if request.method =='GET':
+class AnniversaryView(APIView):
+    def get(self, request):
         employees = Employee.objects.all()
         employees = sorted(employees, key=lambda e: e.days_before(e.date_hired))
         employees = employees[:50]
         data = []
+
         for employee in employees:
-            days_to_anniversary = employee.days_before(employee.date_hired)
+            days_before_anniv = employee.days_before(employee.date_hired)
             employee_data = {
-                'name': f"{employee.first_name} {employee.last_name}",
-                'birthday': employee.date_hired.strftime('%Y-%m-%d'),
-                'days_to_anniversary': days_to_anniversary
+                "name": f"{employee.first_name} {employee.last_name}",
+                "anniversary": employee.date_hired.strftime("%Y-%m-%d"),
+                "days_before_anniv": days_before_anniv
             }
             data.append(employee_data)
+
         return Response(data, status=status.HTTP_200_OK)
     
 class TsvFileUploadView(APIView):
@@ -133,6 +155,9 @@ class TsvFileUploadView(APIView):
         
         except Exception as e:
             return Response({'error':str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
 
 
 @api_view(['GET', 'POST'])
