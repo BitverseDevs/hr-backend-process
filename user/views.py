@@ -182,7 +182,9 @@ class TsvFileUploadView(APIView):
                     datetime_bio = row[1],
                     flag1_in_out = 1 if (row[3] == 1) else 0,
                     flag2_lout_lin = 1 if (row[5] == 1) else 0,
-                    is_processed = False,
+                    entry_type = 1 if row[3] == 1 else 0,
+                    branch_code = Branch.objects.get(branch_name=row[6]),
+                    employee_number = Employee.objects.get(employee_number=row[0])
                 )
                 dtr.save()      
             return Response({"message": "Successfully uploaded DTR logs to DTR Model"}, status=status.HTTP_201_CREATED)
