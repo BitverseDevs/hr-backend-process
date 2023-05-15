@@ -1,10 +1,11 @@
 from django.urls import path
 from user import views
-from .views import LoginView, EmployeesListView, EmployeesView, BirthdayView, AnniversaryView, TsvFileUploadView
+from .views import UserView, LoginView, EmployeesListView, EmployeesView, BirthdayView, AnniversaryView, TsvFileUploadView
 
 from rest_framework.urlpatterns import format_suffix_patterns
 
 urlpatterns = [
+    path('user/', UserView.as_view()),
     path('login/', LoginView.as_view()),
     path('employees_list/', EmployeesListView.as_view()),
     path('employees/', EmployeesView.as_view()),
