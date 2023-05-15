@@ -13,6 +13,8 @@ urlpatterns = [
     path('birthdays/', BirthdayView.as_view()),
     path('anniversary/', AnniversaryView.as_view()),
     path('upload_DTR_logs/', TsvFileUploadView.as_view()),
+
+    path('philhealths/', views.PhilhealthView)
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

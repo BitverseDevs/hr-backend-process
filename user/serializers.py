@@ -1,72 +1,6 @@
 from rest_framework import serializers
-from user.models import User, Employee, AuditTrail, DTR, DTRSummary, Holiday, OBT, Overtime, Leaves, Adjustment
-from user.models import Branch, Department, Division, PayrollGroup, Rank, Position, Tax, Province, CityMunicipality, PAGIBIG, SSS
-
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = "__all__"
-
-        # prevent password from returning on json file
-        extra_kwargs = {
-            "password": {"write_only":True}
-        }
-
-    def create(self, validated_data):
-        password = validated_data.pop("password", None)
-        instance = self.Meta.model(**validated_data)
-
-        if password is not None:
-            instance.set_password(password)
-        instance.save()
-
-        return instance
-
-class EmployeeSerializer(serializers.ModelSerializer):
-    employee_image = serializers.ImageField(max_length=None, allow_empty_file=True, use_url=True, required=False)
-    class Meta:
-        model = Employee
-        fields = "__all__"
-
-class AuditTrailSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = AuditTrail
-        fields = "__all__"
-        
-class DTRSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = DTR
-        fields = "__all__"
-
-class DTRSummarySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = DTRSummary
-        fields = "__all__"
-
-class HolidaySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Holiday
-        fields = "__all__"
-
-class OBTSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = OBT
-        fields = "__all__"
-
-class OvertimeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Overtime
-        fields = "__all__"
-
-class LeavesSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Leaves
-        fields = "__all__"
-
-class AdjustmentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Adjustment
-        fields = "__all__"
+from user.models import User, Employee, AuditTrail, DTR, DTRSummary, Holiday, OBT, Overtime, Leaves, Adjustment, Cutoff, Schedule
+from user.models import Branch, Department, Division, PayrollGroup, Rank, Position, Tax, Province, CityMunicipality, PAGIBIG, SSS, Philhealth
 
 class BranchSerializer(serializers.ModelSerializer):
     class Meta:
@@ -131,4 +65,85 @@ class PAGIBIGSerializer(serializers.ModelSerializer):
 class SSSSerializer(serializers.ModelSerializer):
     class Meta:
         model = SSS
+        fields = "__all__"
+
+class PhilhealthSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Philhealth
+        fields = "__all__"
+
+class EmployeeSerializer(serializers.ModelSerializer):
+    employee_image = serializers.ImageField(max_length=None, allow_empty_file=True, use_url=True, required=False)
+    class Meta:
+        model = Employee
+        fields = "__all__"
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = "__all__"
+
+        # prevent password from returning on json file
+        extra_kwargs = {
+            "password": {"write_only":True}
+        }
+
+    def create(self, validated_data):
+        password = validated_data.pop("password", None)
+        instance = self.Meta.model(**validated_data)
+
+        if password is not None:
+            instance.set_password(password)
+        instance.save()
+
+        return instance
+
+class AuditTrailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AuditTrail
+        fields = "__all__"
+        
+class DTRSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DTR
+        fields = "__all__"
+
+class DTRSummarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DTRSummary
+        fields = "__all__"
+
+class HolidaySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Holiday
+        fields = "__all__"
+
+class OBTSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OBT
+        fields = "__all__"
+
+class OvertimeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Overtime
+        fields = "__all__"
+
+class LeavesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Leaves
+        fields = "__all__"
+
+class AdjustmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Adjustment
+        fields = "__all__"
+
+class CutoffSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Cutoff
+        fields = "__all__"
+
+class ScheduleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Schedule
         fields = "__all__"

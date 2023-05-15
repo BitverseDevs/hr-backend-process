@@ -154,12 +154,12 @@ class Rank(models.Model):
 
 class Tax(models.Model):
     employee_number = models.ForeignKey("Employee", to_field="employee_number", on_delete=models.CASCADE)
-    tax_form = models.CharField(max_length=15)
+    tax_form = models.CharField(max_length=15, null=True, blank=True)
     tax_description = models.TextField(max_length=100, null=True, blank=True)
-    tax_percentage = models.FloatField()
-    tax_amount = models.FloatField()
+    tax_percentage = models.FloatField(null=True, blank=True)
+    tax_amount = models.FloatField(null=True, blank=True)
     tin_id = models.CharField(max_length=12)
-    payment_frequency = models.PositiveSmallIntegerField(validators=[MaxValueValidator(4)], choices=TAX_FREQUENCY)
+    payment_frequency = models.PositiveSmallIntegerField(validators=[MaxValueValidator(4)], choices=TAX_FREQUENCY, null=True, blank=True)
 
     class Meta:
         db_table = "TBL_TAX_CODE"
@@ -180,11 +180,11 @@ class CityMunicipality(models.Model):
 class PAGIBIG(models.Model):
     employee_number = models.ForeignKey("Employee", to_field="employee_number", on_delete=models.CASCADE)
     pagibig_number = models.CharField(max_length=15)
-    pagibig_contribution_month = models.FloatField()
-    pagibig_with_cloan_amount = models.FloatField()
-    pagibig_rem_cloan_amount = models.FloatField()
-    pagibig_with_hloan_amount = models.FloatField()
-    pagibig_rem_hloan_amount = models.FloatField()
+    pagibig_contribution_month = models.FloatField(null=True, blank=True)
+    pagibig_with_cloan_amount = models.FloatField(null=True, blank=True)
+    pagibig_rem_cloan_amount = models.FloatField(null=True, blank=True)
+    pagibig_with_hloan_amount = models.FloatField(null=True, blank=True)
+    pagibig_rem_hloan_amount = models.FloatField(null=True, blank=True)
 
     class Meta:
         db_table = "TBL_PAGIBIG_CODE"
@@ -192,14 +192,23 @@ class PAGIBIG(models.Model):
 class SSS(models.Model):
     employee_number = models.ForeignKey("Employee", to_field="employee_number", on_delete=models.CASCADE)
     sss_number = models.CharField(max_length=10)
-    sss_contribution_month = models.FloatField()
-    sss_with_cashloan_amount = models.FloatField()
-    sss_rem_cashloan_amount = models.FloatField()
-    sss_with_calloan_amount = models.FloatField()
-    sss_rem_callloan_amount = models.FloatField()
+    sss_contribution_month = models.FloatField(null=True, blank=True)
+    sss_with_cashloan_amount = models.FloatField(null=True, blank=True)
+    sss_rem_cashloan_amount = models.FloatField(null=True, blank=True)
+    sss_with_calloan_amount = models.FloatField(null=True, blank=True)
+    sss_rem_callloan_amount = models.FloatField(null=True, blank=True)
 
     class Meta:
         db_table = "TBL_SSS_CODE"
+    
+class Philhealth(models.Model):
+    employee_number = models.ForeignKey("Employee", to_field="employee_number", on_delete=models.CASCADE)
+    ph_number = models.CharField(max_length=10)
+    ph_contribution_month = models.FloatField(null=True, blank=True)
+    ph_category = models.CharField(max_length=10, null=True, blank=True)
+
+    class Meta:
+        db_table = "TBL_PHILHEALTH_CODE"
 
 class Employee(models.Model):
     employee_number = models.PositiveSmallIntegerField(unique=True, validators=[MaxValueValidator(9990)])
@@ -422,3 +431,29 @@ class Adjustment(models.Model):
 
     class Meta:
         db_table = "TBL_ADJUSTMENT_ENTRY"
+
+class Cutoff(models.Model):
+    co_name = models.CharField(max_length=20)
+    co_description = models.TextField(max_length=75)
+    co_date = models.DateTimeField()
+    co_date_from = models.DateTimeField()
+    co_date_to = models.DateTimeField()
+    payroll_group_code = models.ForeignKey(PayrollGroup, on_delete=models.CASCADE)
+    division_code = models.ForeignKey(Division, on_delete=models.CASCADE)
+    co_is_processed = models.BooleanField()
+    credit_date = models.DateTimeField()
+    payroll_frequency = models.PositiveSmallIntegerField(validators=[MaxValueValidator(4)], choices=PAYROLL_FREQUENCY)
+
+    class Meta:
+        db_table = "TBL_CUTOFF_PERIOD_LIST"
+
+class Schedule(models.Model):
+    name = models.CharField(max_length=20)
+    time_in = models.TimeField()
+    time_out = models.TimeField()
+    grace_period = models.PositiveSmallIntegerField(null=True, blank=True)
+    with_overtime = models.BooleanField()
+    is_night_shift = models.BooleanField()
+
+    class Meta:
+        db_table = "TBL_SCHEDULE_SHIFT"
