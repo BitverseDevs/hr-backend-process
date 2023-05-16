@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from user.models import User, Employee, AuditTrail, DTR, DTRSummary, Holiday, OBT, Overtime, Leaves, Adjustment, Cutoff, Schedule
+from user.models import User, Employee, AuditTrail, DTR, DTRSummary, Holiday, OBT, Overtime, Leaves, Adjustment, Cutoff, ScheduleShift, ScheduleDaily
 from user.models import Branch, Department, Division, PayrollGroup, Rank, Position, Tax, Province, CityMunicipality, PAGIBIG, SSS, Philhealth
 
 class BranchSerializer(serializers.ModelSerializer):
@@ -143,7 +143,12 @@ class CutoffSerializer(serializers.ModelSerializer):
         model = Cutoff
         fields = "__all__"
 
-class ScheduleSerializer(serializers.ModelSerializer):
+class ScheduleShiftSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Schedule
+        model = ScheduleShift
+        fields = "__all__"
+
+class ScheduleDailySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ScheduleDaily
         fields = "__all__"

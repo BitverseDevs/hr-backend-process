@@ -319,7 +319,7 @@ class DTR(models.Model):
     branch_code = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name="dtr", null=True, blank=True)
 
     class Meta:
-        db_table = "TBL_DTR"
+        db_table = "TBL_DTR_ENTRY"
 
 class DTRSummary(models.Model):
     employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE, related_name="dtrsummary")
@@ -447,7 +447,7 @@ class Cutoff(models.Model):
     class Meta:
         db_table = "TBL_CUTOFF_PERIOD_LIST"
 
-class Schedule(models.Model):
+class ScheduleShift(models.Model):
     name = models.CharField(max_length=20)
     time_in = models.TimeField()
     time_out = models.TimeField()
@@ -457,3 +457,14 @@ class Schedule(models.Model):
 
     class Meta:
         db_table = "TBL_SCHEDULE_SHIFT"
+
+class ScheduleDaily(models.Model):
+    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE)
+    business_datetime = models.DateTimeField()
+    sched_dutyin = models.TimeField()
+    sched_dutyout = models.TimeField()
+    is_processed = models.BooleanField(null=True, blank=True)
+    is_current = models.BooleanField(null=True, blank=True)
+
+    class Meta:
+        db_table = "TBL_SCHED_DAILY"
