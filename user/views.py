@@ -103,7 +103,7 @@ class EmployeesView(APIView):
             serializer = EmployeeSerializer(result_page, many=True)
             return paginator.get_paginated_response(serializer.data) if result_page is not None else Response(serializer.data)
 
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         serializer = EmployeeSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -187,9 +187,63 @@ class TsvFileUploadView(APIView):
                     employee_number = Employee.objects.get(employee_number=row[0])
                 )
                 dtr.save()      
-            return Response({"message": "Successfully uploaded DTR logs to DTR Model"}, status=status.HTTP_201_CREATED)
+            return Response({"message": "Successfully uploaded to DTR database"}, status=status.HTTP_201_CREATED)
         
         except Exception as e:
             return Response({'error':str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+class EmployeeUploadView(APIView):
+    def post(self, request, *args, **kwargs):
+        employee_file = request.FILES.get('file')
+        print(employee_file)
 
+        if not employee_file:
+            return Response({'message': "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            tsv_file = employee_file.read().decode('utf-8')
+            reader = csv.reader(tsv_file.splitlines(), delimiter='\t')
+            for row in reader:
+                employee = Employee.objects.create(
+                    employee_number = row[0],
+                    first_name = row[1],
+                    middle_name = None if row[2] == "" else row[2],
+                    last_name = row[3],
+                    suffix = None if row[4] == "" else row[4],
+                    birthday = row[5],
+                    birth_place = row[6],
+                    civil_status = 7,
+                    gender = 8,
+                    address = row[9],
+                    provincial_address = None if row[10] == "" else row[10],
+                    mobile_phone = row[11],
+                    email_address = f"{row[1]}.{row[3]}@sample.com",
+                    date_hired = row[12],
+                    date_resigned = None,
+                    approver = 0000,
+                    date_added = datetime.datetime.today(),
+                    date_deleted = None,
+                )
+            return Response({"message": "File has been read and successfully uploaded to Employee database"}, status=status.HTTP_201_CREATED)
+        
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+class ExportEmployeeView(APIView):
+    def post(self, request, number_of_employee=None, order=None, *args, **kwargs):
+        if number_of_employee is None and order is None:
+            employees = Employee.objects.all()
+            serializer = EmployeeSerializer(employees)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        elif number_of_employee is not None and order is None:
+            employees = Employee.objects.all()[:number_of_employee]
+            serializer = EmployeeSerializer(employees)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        elif order is not None and number_of_employee is None:
+            employees = Employee.objects.order_by(order)
+            serializer = EmployeeSerializer(employees)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        elif number_of_employee is not None and order is not None:
+            employees = Employee.objects.order_by(order)[:number_of_employee]
+            serializer = EmployeeSerializer(employees)
+            return Response(serializer.data, status=status.HTTP_200_OK)
