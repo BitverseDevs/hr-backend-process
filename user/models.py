@@ -260,7 +260,7 @@ class Employee(models.Model):
         db_table = "TBL_EMPLOYEE_PROFILE"
 
 class User(AbstractUser):
-    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE, related_name="user")
+    employee_number = models.OneToOneField(Employee, to_field="employee_number", on_delete=models.CASCADE, related_name="user")
     username = models.CharField(unique=True, max_length=8)
     password = models.CharField(max_length=128)
     role = models.PositiveSmallIntegerField() # choice

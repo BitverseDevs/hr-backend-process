@@ -110,7 +110,7 @@ class EmployeesView(APIView):
             serializer = EmployeeSerializer(employee)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
-            employees = Employee.objects.filter(date_deleted__exact=None)
+            employees = Employee.objects.filter(date_deleted__exact=None).order_by('id')
             paginator = self.pagination_class()
             result_page = paginator.paginate_queryset(employees, request)
             serializer = EmployeeSerializer(result_page, many=True)

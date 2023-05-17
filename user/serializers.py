@@ -72,16 +72,10 @@ class PhilhealthSerializer(serializers.ModelSerializer):
         model = Philhealth
         fields = "__all__"
 
-class EmployeeSerializer(serializers.ModelSerializer):
-    employee_image = serializers.ImageField(max_length=None, allow_empty_file=True, use_url=True, required=False)
-    class Meta:
-        model = Employee
-        fields = "__all__"
-
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = "__all__"
+        fields = ["role", "is_active", "is_locked", "is_logged_in", "last_login", "employee_number"]
 
         # prevent password from returning on json file
         extra_kwargs = {
@@ -97,6 +91,20 @@ class UserSerializer(serializers.ModelSerializer):
         instance.save()
 
         return instance
+    
+class EmployeeSerializer(serializers.ModelSerializer):
+    user = serializers.SerializerMethodField()
+    employee_image = serializers.ImageField(max_length=None, allow_empty_file=True, use_url=True, required=False)
+    class Meta:
+        model = Employee
+        fields = "__all__"
+
+    def get_user(self, obj):
+        try:
+            user = User.objects.get(employee_number=obj.employee_number)
+            return UserSerializer(user).data
+        except User.DoesNotExist:
+            return None
 
 class AuditTrailSerializer(serializers.ModelSerializer):
     class Meta:
