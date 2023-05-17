@@ -13,6 +13,8 @@ from user.serializers import BranchSerializer, DepartmentSerializer, DivisionSer
 
 import secret, datetime, jwt, csv
 
+# Test API
+
 @api_view(['GET', 'POST'])
 def test_view(request, pk=None):
     if request.method == 'GET':
@@ -34,6 +36,8 @@ def test_view(request, pk=None):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+# Create new user based on existing employee data
+
 class UserView(APIView):
     def post(self, request):
         
@@ -43,6 +47,8 @@ class UserView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# Login Dashboard
 
 class LoginView(APIView):
     @staticmethod
@@ -81,6 +87,8 @@ class LoginView(APIView):
 
         return Response(data, status=status.HTTP_200_OK)
     
+# Employee Dashboard
+
 class EmployeesListView(APIView):
     def get(self, request):
         employees = Employee.objects.filter(date_deleted__exact=None)
@@ -168,34 +176,6 @@ class AnniversaryView(APIView):
             data.append(employee_data)
 
         return Response(data, status=status.HTTP_200_OK)
-    
-class TsvFileUploadView(APIView):
-
-    def post(self, request, *args, **kwargs):
-        tsv_file = request.FILES.get('file')
-        print(tsv_file)
-
-        if not tsv_file:
-            return Response({"error": "No TSV file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            tsv_file_text = tsv_file.read().decode('utf-8')
-            reader = csv.reader(tsv_file_text.splitlines(), delimiter='\t')
-            for row in reader:
-                dtr = DTR.objects.create(
-                    bio_id = row[0],
-                    datetime_bio = row[1],
-                    flag1_in_out = 1 if (row[3] == 1) else 0,
-                    flag2_lout_lin = 1 if (row[5] == 1) else 0,
-                    entry_type = 1 if row[3] == 1 else 0,
-                    branch_code = Branch.objects.get(branch_name=row[6]),
-                    employee_number = Employee.objects.get(employee_number=row[0])
-                )
-                dtr.save()      
-            return Response({"message": "Successfully uploaded to DTR database"}, status=status.HTTP_201_CREATED)
-        
-        except Exception as e:
-            return Response({'error':str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class EmployeeUploadView(APIView):
     def post(self, request, *args, **kwargs):
@@ -252,3 +232,44 @@ class ExportEmployeeView(APIView):
             employees = Employee.objects.order_by(order)[:number_of_employee]
             serializer = EmployeeSerializer(employees)
             return Response(serializer.data, status=status.HTTP_200_OK)
+
+# DTR Dashboard
+
+class DTRView(APIView):
+    def get(self, request, pk=None):
+        if pk is not None:
+            dtr = get_object_or_404(DTR, pk=pk)
+            serializer = DTRSerializer(dtr)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            dtr = DTR.objects.all()
+            serializer = DTRSerializer(dtr)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
+class TsvFileUploadView(APIView):
+
+    def post(self, request, *args, **kwargs):
+        tsv_file = request.FILES.get('file')
+        print(tsv_file)
+
+        if not tsv_file:
+            return Response({"error": "No TSV file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            tsv_file_text = tsv_file.read().decode('utf-8')
+            reader = csv.reader(tsv_file_text.splitlines(), delimiter='\t')
+            for row in reader:
+                dtr = DTR.objects.create(
+                    bio_id = row[0],
+                    datetime_bio = row[1],
+                    flag1_in_out = 1 if (row[3] == 1) else 0,
+                    flag2_lout_lin = 1 if (row[5] == 1) else 0,
+                    entry_type = 1 if row[3] == 1 else 0,
+                    branch_code = Branch.objects.get(branch_name=row[6]),
+                    employee_number = Employee.objects.get(employee_number=row[0])
+                )
+                dtr.save()      
+            return Response({"message": "Successfully uploaded to DTR database"}, status=status.HTTP_201_CREATED)
+        
+        except Exception as e:
+            return Response({'error':str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
