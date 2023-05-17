@@ -16,7 +16,7 @@ urlpatterns = [
     path('import_employee/', EmployeeUploadView.as_view()),
     path('export_employee/', ExportEmployeeView.as_view()),
 
-    path('philhealths/', views.PhilhealthView)
+    path('test_api/<int:pk>', views.test_view)
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

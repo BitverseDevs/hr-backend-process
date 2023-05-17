@@ -14,11 +14,16 @@ from user.serializers import BranchSerializer, DepartmentSerializer, DivisionSer
 import secret, datetime, jwt, csv
 
 @api_view(['GET', 'POST'])
-def PhilhealthView(request):
+def test_view(request, pk=None):
     if request.method == 'GET':
-        philhealth = ScheduleDaily.objects.all()
-        serializer = ScheduleDailySerializer(philhealth, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        if pk is not None:
+            test = get_object_or_404(ScheduleDaily, pk=pk)
+            serializer = ScheduleDailySerializer(test)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            test = ScheduleDaily.objects.all()
+            serializer = ScheduleDailySerializer(test, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
     
     elif request.method == 'POST':
         data = JSONParser().parse(request.data)
