@@ -7,8 +7,8 @@ from rest_framework.decorators import api_view
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
 
-from user.models import Branch, Department, Division, PayrollGroup, Position, Rank, Tax, Province, CityMunicipality, PAGIBIG, SSS, Philhealth, Employee, User, AuditTrail, DTR, DTRSummary, Holiday, OBT, Overtime, Leaves, Adjustment, Cutoff, ScheduleShift, ScheduleDaily
-from user.serializers import BranchSerializer, DepartmentSerializer, DivisionSerializer, PayrollGroupSerializer, PositionSerializer, RankSerializer, TaxSerializer, ProvinceSerializer, CityMunicipalitySerializer, PAGIBIGSerializer, SSSSerializer, PhilhealthSerializer, EmployeeSerializer, UserSerializer, AuditTrailSerializer, DTRSerializer, DTRSummarySerializer, HolidaySerializer, OBTSerializer, OvertimeSerializer, LeavesSerializer, AdjustmentSerializer,CutoffSerializer, ScheduleShiftSerializer, ScheduleDailySerializer
+from user.models import Branch, Department, Division, PayrollGroup, Position, Rank, Tax, Province, CityMunicipality, PAGIBIG, SSS, Philhealth, Employee, User, AuditTrail, DTR, DTRSummary, Holiday, OBT, Overtime, Leaves, Adjustment, Cutoff, ScheduleShift, ScheduleDaily, DTRCutoff
+from user.serializers import BranchSerializer, DepartmentSerializer, DivisionSerializer, PayrollGroupSerializer, PositionSerializer, RankSerializer, TaxSerializer, ProvinceSerializer, CityMunicipalitySerializer, PAGIBIGSerializer, SSSSerializer, PhilhealthSerializer, EmployeeSerializer, UserSerializer, AuditTrailSerializer, DTRSerializer, DTRSummarySerializer, HolidaySerializer, OBTSerializer, OvertimeSerializer, LeavesSerializer, AdjustmentSerializer,CutoffSerializer, ScheduleShiftSerializer, ScheduleDailySerializer, DTRCutoffSerializer
 
 import secret, datetime, jwt, csv
 
@@ -18,17 +18,17 @@ import secret, datetime, jwt, csv
 def test_view(request, pk=None):
     if request.method == 'GET':
         if pk is not None:
-            test = get_object_or_404(ScheduleDaily, pk=pk)
-            serializer = ScheduleDailySerializer(test)
+            test = get_object_or_404(DTRCutoff, pk=pk)
+            serializer = DTRCutoffSerializer(test)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
-            test = ScheduleDaily.objects.all()
-            serializer = ScheduleDailySerializer(test, many=True)
+            test = DTRCutoff.objects.all()
+            serializer = DTRCutoffSerializer(test, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
     
     elif request.method == 'POST':
         data = JSONParser().parse(request.data)
-        serializer = PhilhealthSerializer(data=data)
+        serializer = DTRCutoffSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)

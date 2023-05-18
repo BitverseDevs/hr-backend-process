@@ -468,3 +468,24 @@ class ScheduleDaily(models.Model):
 
     class Meta:
         db_table = "TBL_SCHED_DAILY"
+
+class DTRCutoff(models.Model):
+    cutoff_id = models.ForeignKey(Cutoff, on_delete=models.CASCADE, related_name="dtrcutoff")
+    business_datefrom = models.DateField()
+    business_dateto = models.DateField()
+    emp_no = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name="dtrcutoff")
+    hours_total = models.PositiveSmallIntegerField()
+    overbreak_total = models.PositiveSmallIntegerField(null=True, blank=True)
+    lates_total = models.PositiveSmallIntegerField(null=True, blank=True)
+    paid_leaves_total = models.PositiveSmallIntegerField(null=True, blank=True)
+    reg_ot_total = models.PositiveSmallIntegerField(null=True, blank=True)
+    nd_ot_total = models.PositiveSmallIntegerField(null=True, blank=True)
+    sp_holiday_total = models.PositiveSmallIntegerField(null=True, blank=True)
+    reg_holiday_total = models.PositiveSmallIntegerField(null=True, blank=True)
+    absent_total = models.PositiveSmallIntegerField(null=True, blank=True)
+    leaves_type_used = models.CharField(max_length=40, null=True, blank=True)
+    is_processed = models.BooleanField()
+    is_deleted = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "TBL_DTR_CUTOFF_SUMMARY"
