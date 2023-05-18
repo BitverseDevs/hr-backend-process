@@ -344,7 +344,7 @@ class DTRSummary(models.Model):
     paid_leave_reason = models.CharField(max_length=50) # choice
     reg_ot_total = models.PositiveSmallIntegerField()
     nd_ot_total = models.PositiveSmallIntegerField()
-    is_ot_approved = models.BooleanField(default=False)
+    # is_ot_approved = models.BooleanField(default=False)
     pay_period = models.DateTimeField()
     is_computed = models.BooleanField(default=False)
 

@@ -6,7 +6,6 @@ from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
-from rest_framework.pagination import PageNumberPagination
 
 from user.models import Branch, Department, Division, PayrollGroup, Position, Rank, Tax, Province, CityMunicipality, PAGIBIG, SSS, Philhealth, Employee, User, AuditTrail, DTR, DTRSummary, Holiday, OBT, Overtime, Leaves, Adjustment, Cutoff, ScheduleShift, ScheduleDaily
 from user.serializers import BranchSerializer, DepartmentSerializer, DivisionSerializer, PayrollGroupSerializer, PositionSerializer, RankSerializer, TaxSerializer, ProvinceSerializer, CityMunicipalitySerializer, PAGIBIGSerializer, SSSSerializer, PhilhealthSerializer, EmployeeSerializer, UserSerializer, AuditTrailSerializer, DTRSerializer, DTRSummarySerializer, HolidaySerializer, OBTSerializer, OvertimeSerializer, LeavesSerializer, AdjustmentSerializer,CutoffSerializer, ScheduleShiftSerializer, ScheduleDailySerializer
@@ -89,20 +88,8 @@ class LoginView(APIView):
     
 # Employee Dashboard
 
-class EmployeesListView(APIView):
-    def get(self, request):
-        employees = Employee.objects.filter(date_deleted__exact=None)
-        serializer = EmployeeSerializer(employees, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-class EmployeesPagination(PageNumberPagination):
-    page_size = 50
-    # page_size_query_param = 'page_size'
-    max_page_size = 100
-
 class EmployeesView(APIView):
     parser_classes = [MultiPartParser, FormParser]
-    pagination_class = EmployeesPagination
 
     def get(self, request, employee_number=None):
         if employee_number is not None:
@@ -110,11 +97,9 @@ class EmployeesView(APIView):
             serializer = EmployeeSerializer(employee)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
-            employees = Employee.objects.filter(date_deleted__exact=None).order_by('id')
-            paginator = self.pagination_class()
-            result_page = paginator.paginate_queryset(employees, request)
-            serializer = EmployeeSerializer(result_page, many=True)
-            return paginator.get_paginated_response(serializer.data) if result_page is not None else Response(serializer.data)
+            employees = Employee.objects.filter(date_deleted__exact=None)
+            serializer = EmployeeSerializer(employees, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):
         serializer = EmployeeSerializer(data=request.data)
