@@ -75,7 +75,7 @@ class PhilhealthSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["role", "is_active", "is_locked", "is_logged_in", "last_login", "employee_number"]
+        fields = "__all__"
 
         # prevent password from returning on json file
         extra_kwargs = {
@@ -101,7 +101,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
 
     def get_user(self, obj):
         try:
-            user = User.objects.get(employee_number=obj.employee_number)
+            user = User.objects.get(emp_no=obj.emp_no)
             return UserSerializer(user).data
         except User.DoesNotExist:
             return None

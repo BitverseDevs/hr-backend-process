@@ -153,7 +153,7 @@ class Rank(models.Model):
         db_table = "TBL_RANK_CODE"
 
 class Tax(models.Model):
-    employee_number = models.ForeignKey("Employee", to_field="employee_number", on_delete=models.CASCADE)
+    emp_no = models.ForeignKey("Employee", to_field="emp_no", on_delete=models.CASCADE)
     tax_form = models.CharField(max_length=15, null=True, blank=True)
     tax_description = models.TextField(max_length=100, null=True, blank=True)
     tax_percentage = models.FloatField(null=True, blank=True)
@@ -178,7 +178,7 @@ class CityMunicipality(models.Model):
         db_table = "TBL_CITYMUNICIPALITY"
 
 class PAGIBIG(models.Model):
-    employee_number = models.ForeignKey("Employee", to_field="employee_number", on_delete=models.CASCADE)
+    emp_no = models.ForeignKey("Employee", to_field="emp_no", on_delete=models.CASCADE)
     pagibig_number = models.CharField(max_length=15)
     pagibig_contribution_month = models.FloatField(null=True, blank=True)
     pagibig_with_cloan_amount = models.FloatField(null=True, blank=True)
@@ -190,7 +190,7 @@ class PAGIBIG(models.Model):
         db_table = "TBL_PAGIBIG_CODE"
 
 class SSS(models.Model):
-    employee_number = models.ForeignKey("Employee", to_field="employee_number", on_delete=models.CASCADE)
+    emp_no = models.ForeignKey("Employee", to_field="emp_no", on_delete=models.CASCADE)
     sss_number = models.CharField(max_length=10)
     sss_contribution_month = models.FloatField(null=True, blank=True)
     sss_with_cashloan_amount = models.FloatField(null=True, blank=True)
@@ -202,7 +202,7 @@ class SSS(models.Model):
         db_table = "TBL_SSS_CODE"
     
 class Philhealth(models.Model):
-    employee_number = models.ForeignKey("Employee", to_field="employee_number", on_delete=models.CASCADE)
+    emp_no = models.ForeignKey("Employee", to_field="emp_no", on_delete=models.CASCADE)
     ph_number = models.CharField(max_length=10)
     ph_contribution_month = models.FloatField(null=True, blank=True)
     ph_category = models.CharField(max_length=10, null=True, blank=True)
@@ -211,7 +211,7 @@ class Philhealth(models.Model):
         db_table = "TBL_PHILHEALTH_CODE"
 
 class Employee(models.Model):
-    employee_number = models.PositiveSmallIntegerField(unique=True, validators=[MaxValueValidator(9990)])
+    emp_no = models.PositiveSmallIntegerField(unique=True, validators=[MaxValueValidator(9990)])
     first_name = models.CharField(max_length=25)
     middle_name = models.CharField(max_length=25, null=True, blank=True)
     last_name = models.CharField(max_length=25)
@@ -260,7 +260,7 @@ class Employee(models.Model):
         db_table = "TBL_EMPLOYEE_PROFILE"
 
 class User(AbstractUser):
-    employee_number = models.OneToOneField(Employee, to_field="employee_number", on_delete=models.CASCADE, related_name="user")
+    emp_no = models.OneToOneField(Employee, to_field="emp_no", on_delete=models.CASCADE, related_name="user")
     username = models.CharField(unique=True, max_length=8)
     password = models.CharField(max_length=128)
     role = models.PositiveSmallIntegerField() # choice
@@ -293,7 +293,7 @@ class User(AbstractUser):
         db_table = "TBL_USER"
 
 class AuditTrail(models.Model):
-    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE, related_name="audittrail")
+    emp_no = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE, related_name="audittrail")
     transaction_type = models.CharField(max_length=15) # choice
     table_affected = models.CharField(max_length=30)
     action_remarks = models.TextField(max_length=100)
@@ -303,7 +303,7 @@ class AuditTrail(models.Model):
         db_table = "TBL_AUDITTRAIL"
 
 class DTR(models.Model):
-    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE, related_name="dtr", null=True, blank=True)
+    emp_no = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE, related_name="dtr", null=True, blank=True)
     bio_id = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
     datetime_bio = models.DateTimeField()
     
@@ -322,7 +322,7 @@ class DTR(models.Model):
         db_table = "TBL_DTR_ENTRY"
 
 class DTRSummary(models.Model):
-    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE, related_name="dtrsummary")
+    emp_no = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE, related_name="dtrsummary")
     cutoff_id = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
     business_datetime = models.DateTimeField()
     shift_name = models.CharField(max_length=10, choices=SHIFT)
@@ -361,7 +361,7 @@ class Holiday(models.Model):
         db_table = "TBL_HOLIDAY_TYPE"
 
 class OBT(models.Model):
-    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE, related_name="obt")
+    emp_no = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE, related_name="obt")
     cutoff_id = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
     
     obt_date_filed = models.DateTimeField(auto_now_add=True)
@@ -380,7 +380,7 @@ class OBT(models.Model):
         db_table = "TBL_OBT_APP"
 
 class Overtime(models.Model):
-    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE, related_name="ot")
+    emp_no = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE, related_name="ot")
     cutoff_id = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
     
     ot_date_filed = models.DateTimeField(auto_now_add=True)
@@ -398,7 +398,7 @@ class Overtime(models.Model):
         db_table = "TBL_OVERTIME_APP"
 
 class Leaves(models.Model):
-    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE, related_name="leave")
+    emp_no = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE, related_name="leave")
     cutoff_id = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
     
     leave_date_filed = models.DateTimeField(auto_now_add=True)
@@ -417,7 +417,7 @@ class Leaves(models.Model):
         db_table = "TBL_LEAVES_APP"
 
 class Adjustment(models.Model):
-    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE, related_name="adjustment")
+    emp_no = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE, related_name="adjustment")
     cutoff_id = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
     deducted_amount = models.FloatField()
     added_amount = models.FloatField()
@@ -459,7 +459,7 @@ class ScheduleShift(models.Model):
         db_table = "TBL_SCHEDULE_SHIFT"
 
 class ScheduleDaily(models.Model):
-    employee_number = models.ForeignKey(Employee, to_field="employee_number", on_delete=models.CASCADE)
+    emp_no = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE)
     business_datetime = models.DateTimeField()
     sched_dutyin = models.TimeField()
     sched_dutyout = models.TimeField()

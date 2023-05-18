@@ -69,7 +69,7 @@ class LoginView(APIView):
         user.save()
         user_serializer = UserSerializer(user)
 
-        employee = get_object_or_404(Employee, employee_number=user_serializer.data["employee_number"])
+        employee = get_object_or_404(Employee, emp_no=user_serializer.data["emp_no"])
         employee_serializer = EmployeeSerializer(employee)
 
         payload = {
@@ -91,9 +91,9 @@ class LoginView(APIView):
 class EmployeesView(APIView):
     parser_classes = [MultiPartParser, FormParser]
 
-    def get(self, request, employee_number=None):
-        if employee_number is not None:
-            employee = get_object_or_404(Employee, employee_number=employee_number, date_deleted__isnull=True)
+    def get(self, request, emp_no=None):
+        if emp_no is not None:
+            employee = get_object_or_404(Employee, emp_no=emp_no, date_deleted__isnull=True)
             serializer = EmployeeSerializer(employee)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
@@ -109,8 +109,8 @@ class EmployeesView(APIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
-    def put(self, request, employee_number):
-        employee = get_object_or_404(Employee, employee_number=employee_number)
+    def put(self, request, emp_no):
+        employee = get_object_or_404(Employee, emp_no=emp_no)
         serializer = EmployeeSerializer(employee, data=request.data)
 
         if serializer.is_valid():
@@ -119,8 +119,8 @@ class EmployeesView(APIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
-    def delete(self, request, employee_number):
-        employee = get_object_or_404(Employee, employee_number=employee_number)
+    def delete(self, request, emp_no):
+        employee = get_object_or_404(Employee, emp_no=emp_no)
         employee.date_deleted = datetime.date.today()
         employee.save()
         
@@ -175,7 +175,7 @@ class EmployeeUploadView(APIView):
             reader = csv.reader(tsv_file.splitlines(), delimiter='\t')
             for row in reader:
                 employee = Employee.objects.create(
-                    employee_number = row[0],
+                    emp_no = row[0],
                     first_name = row[1],
                     middle_name = None if row[2] == "" else row[2],
                     last_name = row[3],
@@ -251,7 +251,7 @@ class TsvFileUploadView(APIView):
                     flag2_lout_lin = 1 if (row[5] == 1) else 0,
                     entry_type = 1 if row[3] == 1 else 0,
                     branch_code = Branch.objects.get(branch_name=row[6]),
-                    employee_number = Employee.objects.get(employee_number=row[0])
+                    emp_no = Employee.objects.get(emp_no=row[0])
                 )
                 dtr.save()      
             return Response({"message": "Successfully uploaded to DTR database"}, status=status.HTTP_201_CREATED)

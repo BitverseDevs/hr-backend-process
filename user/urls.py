@@ -8,7 +8,7 @@ urlpatterns = [
     path('user/', UserView.as_view()),
     path('login/', LoginView.as_view()),
     path('employees/', EmployeesView.as_view()),
-    path('employees/<int:employee_number>/', EmployeesView.as_view()),
+    path('employees/<int:emp_no>/', EmployeesView.as_view()),
     path('birthdays/', BirthdayView.as_view()),
     path('anniversary/', AnniversaryView.as_view()),
     path('upload_dtr_logs/', TsvFileUploadView.as_view()),
