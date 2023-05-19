@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from user.models import User, Employee, AuditTrail, DTR, DTRSummary, Holiday, OBT, Overtime, Leaves, Adjustment, Cutoff, ScheduleShift, ScheduleDaily, DTRCutoff
+from user.models import User, Employee, AuditTrail, DTR, DTRSummary, DTRCutoff, Holiday, OBT, Overtime, Leaves, LeavesType, LeavesCredit, Adjustment, Cutoff, ScheduleShift, ScheduleDaily, UnaccountedAttendance
 from user.models import Branch, Department, Division, PayrollGroup, Rank, Position, Tax, Province, CityMunicipality, PAGIBIG, SSS, Philhealth
 
 class BranchSerializer(serializers.ModelSerializer):
@@ -121,6 +121,11 @@ class DTRSummarySerializer(serializers.ModelSerializer):
         model = DTRSummary
         fields = "__all__"
 
+class DTRCutoffSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DTRCutoff
+        fields = "__all__"
+
 class HolidaySerializer(serializers.ModelSerializer):
     class Meta:
         model = Holiday
@@ -139,6 +144,16 @@ class OvertimeSerializer(serializers.ModelSerializer):
 class LeavesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Leaves
+        fields = "__all__"
+
+class LeavesCreditSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LeavesCredit
+        fields = "__all__"
+
+class LeavesTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LeavesType
         fields = "__all__"
 
 class AdjustmentSerializer(serializers.ModelSerializer):
@@ -164,4 +179,9 @@ class ScheduleDailySerializer(serializers.ModelSerializer):
 class DTRCutoffSerializer(serializers.ModelSerializer):
     class Meta:
         model = DTRCutoff
+        fields = "__all__"
+
+class UnaccountedAttendanceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UnaccountedAttendance
         fields = "__all__"

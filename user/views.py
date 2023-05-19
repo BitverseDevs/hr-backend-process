@@ -7,8 +7,8 @@ from rest_framework.decorators import api_view
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
 
-from user.models import Branch, Department, Division, PayrollGroup, Position, Rank, Tax, Province, CityMunicipality, PAGIBIG, SSS, Philhealth, Employee, User, AuditTrail, DTR, DTRSummary, Holiday, OBT, Overtime, Leaves, Adjustment, Cutoff, ScheduleShift, ScheduleDaily, DTRCutoff
-from user.serializers import BranchSerializer, DepartmentSerializer, DivisionSerializer, PayrollGroupSerializer, PositionSerializer, RankSerializer, TaxSerializer, ProvinceSerializer, CityMunicipalitySerializer, PAGIBIGSerializer, SSSSerializer, PhilhealthSerializer, EmployeeSerializer, UserSerializer, AuditTrailSerializer, DTRSerializer, DTRSummarySerializer, HolidaySerializer, OBTSerializer, OvertimeSerializer, LeavesSerializer, AdjustmentSerializer,CutoffSerializer, ScheduleShiftSerializer, ScheduleDailySerializer, DTRCutoffSerializer
+from user.models import Branch, Department, Division, PayrollGroup, Position, Rank, Tax, Province, CityMunicipality, PAGIBIG, SSS, Philhealth, Employee, User, AuditTrail, DTR, DTRSummary, DTRCutoff, Holiday, OBT, Overtime, Leaves, LeavesCredit, LeavesType, Adjustment, Cutoff, ScheduleShift, ScheduleDaily, UnaccountedAttendance
+from user.serializers import BranchSerializer, DepartmentSerializer, DivisionSerializer, PayrollGroupSerializer, PositionSerializer, RankSerializer, TaxSerializer, ProvinceSerializer, CityMunicipalitySerializer, PAGIBIGSerializer, SSSSerializer, PhilhealthSerializer, EmployeeSerializer, UserSerializer, AuditTrailSerializer, DTRSerializer, DTRSummarySerializer, DTRCutoffSerializer, HolidaySerializer, OBTSerializer, OvertimeSerializer, LeavesSerializer, LeavesCreditSerializer, LeavesTypeSerializer, AdjustmentSerializer,CutoffSerializer, ScheduleShiftSerializer, ScheduleDailySerializer, UnaccountedAttendanceSerializer
 
 import secret, datetime, jwt, csv
 
@@ -18,17 +18,17 @@ import secret, datetime, jwt, csv
 def test_view(request, pk=None):
     if request.method == 'GET':
         if pk is not None:
-            test = get_object_or_404(DTRCutoff, pk=pk)
-            serializer = DTRCutoffSerializer(test)
+            test = get_object_or_404(LeavesType, pk=pk)
+            serializer = LeavesTypeSerializer(test)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
-            test = DTRCutoff.objects.all()
-            serializer = DTRCutoffSerializer(test, many=True)
+            test = LeavesType.objects.all()
+            serializer = LeavesTypeSerializer(test, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
     
     elif request.method == 'POST':
         data = JSONParser().parse(request.data)
-        serializer = DTRCutoffSerializer(data=data)
+        serializer = LeavesTypeSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
