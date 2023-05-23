@@ -166,7 +166,6 @@ class AnniversaryView(APIView):
 class EmployeeUploadView(APIView):
     def post(self, request, *args, **kwargs):
         employee_file = request.FILES.get('file')
-        print(employee_file)
 
         if not employee_file:
             return Response({'message': "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
@@ -236,8 +235,6 @@ class TsvFileUploadView(APIView):
 
     def post(self, request, *args, **kwargs):
         tsv_file = request.FILES.get('file')
-        print(tsv_file)
-
         if not tsv_file:
             return Response({"error": "No TSV file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -254,10 +251,7 @@ class TsvFileUploadView(APIView):
                     entry = "DOUT"
 
                 employee = Employee.objects.get(bio_id=row[0])
-                print(employee)
-                print(employee.emp_no)
                 date = datetime.datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S").date()
-                print(date)
                 sched = ScheduleDaily.objects.get(emp_no=employee.emp_no, business_date=date)
                 dtr = DTR(
                     bio_id = employee,
