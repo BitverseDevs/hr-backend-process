@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
+from rest_framework.renderers import JSONRenderer
 from rest_framework import  status
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
@@ -10,7 +11,7 @@ from rest_framework.response import Response
 from user.models import Branch, Department, Division, PayrollGroup, Position, Rank, Tax, Province, CityMunicipality, PAGIBIG, SSS, Philhealth, Employee, User, AuditTrail, DTR, DTRSummary, DTRCutoff, Holiday, OBT, Overtime, Leaves, LeavesCredit, LeavesType, Adjustment, Cutoff, ScheduleShift, ScheduleDaily, UnaccountedAttendance
 from user.serializers import BranchSerializer, DepartmentSerializer, DivisionSerializer, PayrollGroupSerializer, PositionSerializer, RankSerializer, TaxSerializer, ProvinceSerializer, CityMunicipalitySerializer, PAGIBIGSerializer, SSSSerializer, PhilhealthSerializer, EmployeeSerializer, UserSerializer, AuditTrailSerializer, DTRSerializer, DTRSummarySerializer, DTRCutoffSerializer, HolidaySerializer, OBTSerializer, OvertimeSerializer, LeavesSerializer, LeavesCreditSerializer, LeavesTypeSerializer, AdjustmentSerializer,CutoffSerializer, ScheduleShiftSerializer, ScheduleDailySerializer, UnaccountedAttendanceSerializer
 
-import secret, datetime, jwt, csv
+import secret, datetime, jwt, csv, io
 
 # Test API
 
@@ -244,16 +245,42 @@ class TsvFileUploadView(APIView):
             tsv_file_text = tsv_file.read().decode('utf-8')
             reader = csv.reader(tsv_file_text.splitlines(), delimiter='\t')
             for row in reader:
-                dtr = DTR.objects.create(
-                    bio_id = row[0],
+                entry = ""
+                if row[3] == 0 and row[5] == 0:
+                    entry = "DIN"
+                elif row[3] == 0 and row[5] == 1:
+                    entry = "LOUT"
+                elif row[3] == 1:
+                    entry = "DOUT"
+
+                employee = Employee.objects.get(bio_id=row[0])
+                print(employee)
+                print(employee.emp_no)
+                date = datetime.datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S").date()
+                print(date)
+                sched = ScheduleDaily.objects.get(emp_no=employee.emp_no, business_date=date)
+                dtr = DTR(
+                    bio_id = employee,
+                    emp_no = employee,
                     datetime_bio = row[1],
                     flag1_in_out = 1 if (row[3] == 1) else 0,
                     flag2_lout_lin = 1 if (row[5] == 1) else 0,
-                    entry_type = 1 if row[3] == 1 else 0,
+                    entry_type = entry,
+                    date_uploaded = datetime.datetime.now(),
+
                     branch_code = Branch.objects.get(branch_name=row[6]),
-                    emp_no = Employee.objects.get(emp_no=row[0])
+                    schedule_daily_code = sched                
                 )
-                dtr.save()      
+                serializer = DTRSerializer(dtr)
+                content = JSONRenderer().render(serializer.data) 
+                stream = io.BytesIO(content)
+                data = JSONParser().parse(stream)
+                dtr_serializer = DTRSerializer(data=data)
+                if dtr_serializer.is_valid():
+                    dtr_serializer.save()
+                    continue
+                else:
+                    return Response({"error": dtr_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
             return Response({"message": "Successfully uploaded to DTR database"}, status=status.HTTP_201_CREATED)
         
         except Exception as e:

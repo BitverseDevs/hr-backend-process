@@ -385,7 +385,6 @@ class OBT(models.Model):
     cutoff_code = models.ForeignKey("Cutoff", on_delete=models.CASCADE)
     
     obt_date_filed = models.DateTimeField(auto_now_add=True)
-    obt_description = models.TextField(max_length=75, null=True, blank=True)
     obt_type = models.CharField(max_length=20) # choice
     obt_location = models.TextField(max_length=50)
     obt_remarks = models.TextField(max_length=75)
@@ -424,7 +423,7 @@ class Overtime(models.Model):
 
 class Leaves(models.Model):
     emp_no = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE)
-    cutoff_id = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
+    cutoff_code = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
     
     leave_date_filed = models.DateTimeField(auto_now_add=True)
     leave_type = models.CharField(max_length=3) # choice
@@ -511,7 +510,7 @@ class ScheduleShift(models.Model):
 
 class ScheduleDaily(models.Model):
     emp_no = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE)
-    business_datetime = models.DateTimeField()
+    business_date = models.DateField()
     schedule_shift_code = models.ForeignKey(ScheduleShift, on_delete=models.CASCADE)
     is_processed = models.BooleanField(null=True, blank=True)
     is_current = models.BooleanField(null=True, blank=True)
