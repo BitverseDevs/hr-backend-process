@@ -50,12 +50,12 @@ CIVIL_STATUS = [
     ("SE", "Separated"),
 ]
 
-ENTRY_TYPE = [
-    ("DIN", "Duty In"),
-    ("DOUT", "Duty Out"),
-    ("LOUT", "Lunch Out"),
-    ("LIN", "Lunch In"),
-]
+# ENTRY_TYPE = [
+#     ("DIN", "Duty In"),
+#     ("DOUT", "Duty Out"),
+#     ("LOUT", "Lunch Out"),
+#     ("LIN", "Lunch In"),
+# ]
 
 SHIFT = [
     ("morning", "Morning Shift"),
@@ -308,7 +308,7 @@ class DTR(models.Model):
     
     flag1_in_out = models.BooleanField() # 0:DutyIn; 1:DutyOut
     flag2_lout_lin = models.BooleanField(null=True, blank=True) # 0:LunchIn; 1:LunchOut
-    entry_type = models.CharField(max_length=4, choices=ENTRY_TYPE, null=True, blank=True)
+    entry_type = models.CharField(max_length=4, null=True, blank=True)
     schedule_daily_code = models.ForeignKey("ScheduleDaily", on_delete=models.CASCADE)
     
     date_uploaded = models.DateTimeField(auto_now_add=True)
@@ -320,7 +320,7 @@ class DTR(models.Model):
 class DTRSummary(models.Model):
     emp_no = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE)
     cutoff_code = models.ForeignKey("Cutoff", on_delete=models.CASCADE)
-    business_datetime = models.DateTimeField()
+    business_date = models.DateField()
     shift_name = models.CharField(max_length=25, choices=SHIFT)
     date_in = models.DateTimeField()
     date_out = models.DateTimeField()

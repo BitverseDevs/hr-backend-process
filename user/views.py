@@ -242,13 +242,15 @@ class TsvFileUploadView(APIView):
             tsv_file_text = tsv_file.read().decode('utf-8')
             reader = csv.reader(tsv_file_text.splitlines(), delimiter='\t')
             for row in reader:
+                # print(row[5])
                 entry = ""
-                if row[3] == 0 and row[5] == 0:
+                if row[3] == "0" and row[5] == "0":
                     entry = "DIN"
-                elif row[3] == 0 and row[5] == 1:
+                elif row[3] == "0" and row[5] == "1":
                     entry = "LOUT"
-                elif row[3] == 1:
+                elif row[3] == "1":
                     entry = "DOUT"
+                # print(entry)
 
                 employee = Employee.objects.get(bio_id=row[0])
                 date = datetime.datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S").date()
@@ -257,8 +259,8 @@ class TsvFileUploadView(APIView):
                     bio_id = employee,
                     emp_no = employee,
                     datetime_bio = row[1],
-                    flag1_in_out = 1 if (row[3] == 1) else 0,
-                    flag2_lout_lin = 1 if (row[5] == 1) else 0,
+                    flag1_in_out = int(row[3]),
+                    flag2_lout_lin = int(row[5]),
                     entry_type = entry,
                     date_uploaded = datetime.datetime.now(),
 
