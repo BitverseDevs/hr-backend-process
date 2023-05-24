@@ -50,19 +50,6 @@ CIVIL_STATUS = [
     ("SE", "Separated"),
 ]
 
-# ENTRY_TYPE = [
-#     ("DIN", "Duty In"),
-#     ("DOUT", "Duty Out"),
-#     ("LOUT", "Lunch Out"),
-#     ("LIN", "Lunch In"),
-# ]
-
-SHIFT = [
-    ("morning", "Morning Shift"),
-    ("mid", "Mid Shift"),
-    ("night", "Night Shift"),
-]
-
 HOLIDAY_TYPE = [
     ("SH", "Special Non-working Holiday"),
     ("LH", "Legal Working Holiday"),
@@ -125,7 +112,7 @@ class Division(models.Model):
 class PayrollGroup(models.Model):
     name = models.CharField(max_length=25)
     payroll_description = models.TextField(max_length=75, null=True, blank=True)
-    monthly_frequency = models.PositiveSmallIntegerField(validators=[MaxValueValidator(4)], choices=PAYROLL_FREQUENCY)
+    payroll_freq = models.PositiveSmallIntegerField(validators=[MaxValueValidator(4)], choices=PAYROLL_FREQUENCY)
     date_added = models.DateTimeField(auto_now_add=True)
     date_deleted = models.DateTimeField(null=True, blank=True)
     used_account =models.PositiveSmallIntegerField(default=0)
@@ -267,7 +254,7 @@ class User(AbstractUser):
 
     is_logged_in = models.BooleanField(default=False)
     is_locked = models.BooleanField(default=False)
-    failed_login_attempts = models.PositiveSmallIntegerField(null=True, blank=True)
+    failed_login_attempts = models.PositiveSmallIntegerField(default=0)
     last_login = models.DateTimeField(default=datetime.datetime(2023, 1, 1))
     old_password = models.CharField(max_length=128, default="N/A")
     date_password_changed = models.DateField(null=True, blank=True)
@@ -321,19 +308,19 @@ class DTRSummary(models.Model):
     emp_no = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE)
     cutoff_code = models.ForeignKey("Cutoff", on_delete=models.CASCADE)
     business_date = models.DateField()
-    shift_name = models.CharField(max_length=25, choices=SHIFT)
-    date_in = models.DateTimeField()
-    date_out = models.DateTimeField()
+    shift_name = models.CharField(max_length=25)
+    duty_in = models.DateTimeField()
+    duty_out = models.DateTimeField()
     
     sched_timein = models.DateTimeField()
     sched_timeout = models.DateTimeField()
     is_sched_restday = models.BooleanField()
-    lunch_out = models.DateTimeField()
-    lunch_in = models.DateTimeField()
-    overbreak = models.PositiveSmallIntegerField()
+    lunch_out = models.DateTimeField(null=True, blank=True)
+    lunch_in = models.DateTimeField(null=True, blank=True)
+    overbreak = models.PositiveSmallIntegerField(null=True, blank=True)
     lates = models.PositiveSmallIntegerField()
-    adjusted_timein = models.DateTimeField()
-    adjusted_timeout = models.DateTimeField()
+    adjusted_timein = models.DateTimeField(null=True, blank=True)
+    adjusted_timeout = models.DateTimeField(null=True, blank=True)
     
     total_hours = models.PositiveSmallIntegerField()
     is_paid_leave = models.BooleanField(default=False)
@@ -344,7 +331,6 @@ class DTRSummary(models.Model):
     is_sp_holiday = models.BooleanField(default=False)
     is_reg_holiday = models.BooleanField(default=False)
     is_absent = models.BooleanField(default=False)
-    pay_period = models.DateTimeField()
     is_computed = models.BooleanField(default=False)
 
     class Meta:
@@ -403,7 +389,7 @@ class OBT(models.Model):
 
 class Overtime(models.Model):
     emp_no = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE)
-    cutoff_code = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
+    cutoff_code = models.ForeignKey("Cutoff", on_delete=models.CASCADE)
     
     ot_date_filed = models.DateTimeField(auto_now_add=True)
     ot_type = models.CharField(max_length=2, choices=OT_TYPE)
@@ -415,7 +401,7 @@ class Overtime(models.Model):
     ot_total_hours = models.PositiveSmallIntegerField()
     ot_approver1_empno = models.PositiveSmallIntegerField()
     ot_date_approved1 = models.DateTimeField(null=True, blank=True)
-    ot_approver2_empno = models.PositiveSmallIntegerField()
+    ot_approver2_empno = models.PositiveSmallIntegerField(null=True, blank=True)
     ot_date_approved2 = models.DateTimeField(null=True, blank=True)
 
     class Meta:
@@ -423,10 +409,10 @@ class Overtime(models.Model):
 
 class Leaves(models.Model):
     emp_no = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE)
-    cutoff_code = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
+    cutoff_code = models.ForeignKey("Cutoff", on_delete=models.CASCADE)
     
     leave_date_filed = models.DateTimeField(auto_now_add=True)
-    leave_type = models.CharField(max_length=3) # choice
+    leave_type = models.ForeignKey("LeavesType", on_delete=models.CASCADE)
     leave_remarks = models.TextField(max_length=75)
     leave_date_from = models.DateTimeField()
     leave_date_to = models.DateTimeField()
@@ -435,7 +421,7 @@ class Leaves(models.Model):
     leave_total_hours = models.PositiveSmallIntegerField()
     leave_approver1_empno = models.PositiveSmallIntegerField()
     leave_date_approved1 = models.DateTimeField(null=True, blank=True)
-    leave_approver2_empno = models.PositiveSmallIntegerField()
+    leave_approver2_empno = models.PositiveSmallIntegerField(null=True, blank=True)
     leave_date_approved2 = models.DateTimeField(null=True, blank=True)
     leave_number_days = models.PositiveSmallIntegerField()
 
@@ -484,14 +470,12 @@ class Adjustment(models.Model):
 class Cutoff(models.Model):
     co_name = models.CharField(max_length=25)
     co_description = models.TextField(max_length=75)
-    co_date = models.DateTimeField()
     co_date_from = models.DateTimeField()
     co_date_to = models.DateTimeField()
     payroll_group_code = models.ForeignKey(PayrollGroup, on_delete=models.CASCADE)
     division_code = models.ForeignKey(Division, on_delete=models.CASCADE)
     co_is_processed = models.BooleanField()
     credit_date = models.DateTimeField()
-    payroll_frequency = models.PositiveSmallIntegerField(validators=[MaxValueValidator(4)], choices=PAYROLL_FREQUENCY)
 
     class Meta:
         db_table = "TBL_CUTOFF_PERIOD_LIST"
@@ -513,7 +497,7 @@ class ScheduleDaily(models.Model):
     business_date = models.DateField()
     schedule_shift_code = models.ForeignKey(ScheduleShift, on_delete=models.CASCADE)
     is_processed = models.BooleanField(null=True, blank=True)
-    is_current = models.BooleanField(null=True, blank=True)
+    sched_default = models.ForeignKey(ScheduleShift, on_delete=models.CASCADE, null=True, blank=True, related_name="sched_daily_default")
 
     class Meta:
         db_table = "TBL_SCHED_DAILY"
@@ -525,10 +509,10 @@ class UnaccountedAttendance(models.Model):
     ua_description = models.TextField(max_length=75)
     ua_date_from = models.DateTimeField()
     ua_date_to = models.DateTimeField()
-    ua_approved_status = models.PositiveSmallIntegerField()
-    ua_reason_disapproval = models.TextField(max_length=75)
+    ua_approved_status = models.CharField(max_length=3, choices=APPROVAL_STATUS)
+    ua_reason_disapproval = models.TextField(max_length=75, null=True, blank=True)
     ua_total_hour = models.PositiveSmallIntegerField()
-    ua_approver1_empno = models.PositiveSmallIntegerField(null=True, blank=True)
+    ua_approver1_empno = models.PositiveSmallIntegerField()
     ua_date_approved1 = models.DateTimeField(null=True, blank=True)
     ua_approver2_empno = models.PositiveSmallIntegerField(null=True, blank=True)
     ua_date_approved2 = models.DateTimeField(null=True, blank=True)

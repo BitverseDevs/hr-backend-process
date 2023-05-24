@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from user.models import User, Employee, AuditTrail, DTR, DTRSummary, DTRCutoff, Holiday, OBT, Overtime, Leaves, LeavesType, LeavesCredit, Adjustment, Cutoff, ScheduleShift, ScheduleDaily, UnaccountedAttendance
 from user.models import Branch, Department, Division, PayrollGroup, Rank, Position, Tax, Province, CityMunicipality, PAGIBIG, SSS, Philhealth
-
 class BranchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Branch
@@ -72,58 +71,9 @@ class PhilhealthSerializer(serializers.ModelSerializer):
         model = Philhealth
         fields = "__all__"
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = "__all__"
-
-        # prevent password from returning on json file
-        extra_kwargs = {
-            "password": {"write_only":True}
-        }
-
-    def create(self, validated_data):
-        password = validated_data.pop("password", None)
-        instance = self.Meta.model(**validated_data)
-
-        if password is not None:
-            instance.set_password(password)
-        instance.save()
-
-        return instance
-    
-class EmployeeSerializer(serializers.ModelSerializer):
-    user = serializers.SerializerMethodField()
-    employee_image = serializers.ImageField(max_length=None, allow_empty_file=True, use_url=True, required=False)
-    class Meta:
-        model = Employee
-        fields = "__all__"
-
-    def get_user(self, obj):
-        try:
-            user = User.objects.get(emp_no=obj.emp_no)
-            return UserSerializer(user).data
-        except User.DoesNotExist:
-            return None
-
 class AuditTrailSerializer(serializers.ModelSerializer):
     class Meta:
         model = AuditTrail
-        fields = "__all__"
-        
-class DTRSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = DTR
-        fields = "__all__"
-
-class DTRSummarySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = DTRSummary
-        fields = "__all__"
-
-class DTRCutoffSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = DTRCutoff
         fields = "__all__"
 
 class HolidaySerializer(serializers.ModelSerializer):
@@ -172,6 +122,7 @@ class ScheduleShiftSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class ScheduleDailySerializer(serializers.ModelSerializer):
+    schedule_shift_code = ScheduleShiftSerializer()
     class Meta:
         model = ScheduleDaily
         fields = "__all__"
@@ -184,4 +135,59 @@ class DTRCutoffSerializer(serializers.ModelSerializer):
 class UnaccountedAttendanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = UnaccountedAttendance
+        fields = "__all__"
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = "__all__"
+
+        # prevent password from returning on json file
+        extra_kwargs = {
+            "password": {"write_only":True}
+        }
+
+    def create(self, validated_data):
+        password = validated_data.pop("password", None)
+        instance = self.Meta.model(**validated_data)
+
+        if password is not None:
+            instance.set_password(password)
+        instance.save()
+
+        return instance
+    
+class EmployeeSerializer(serializers.ModelSerializer):
+    user = serializers.SerializerMethodField()
+    employee_image = serializers.ImageField(max_length=None, allow_empty_file=True, use_url=True, required=False)
+    class Meta:
+        model = Employee
+        fields = "__all__"
+
+    def get_user(self, obj):
+        try:
+            user = User.objects.get(emp_no=obj.emp_no)
+            return UserSerializer(user).data
+        except User.DoesNotExist:
+            return None
+        
+class DTRSerializer(serializers.ModelSerializer):
+    emp_no = EmployeeSerializer()
+    bio_id = EmployeeSerializer()
+    branch_code = BranchSerializer()
+    schedule_daily_code = ScheduleDailySerializer()
+
+    class Meta:
+        model = DTR
+        fields = "__all__"
+
+class DTRSummarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DTRSummary
+        fields = "__all__"
+
+class DTRCutoffSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DTRCutoff
         fields = "__all__"

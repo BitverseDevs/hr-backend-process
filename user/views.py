@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404
+from django.db.models import Q
 
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 from rest_framework.renderers import JSONRenderer
@@ -242,7 +243,6 @@ class TsvFileUploadView(APIView):
             tsv_file_text = tsv_file.read().decode('utf-8')
             reader = csv.reader(tsv_file_text.splitlines(), delimiter='\t')
             for row in reader:
-                # print(row[5])
                 entry = ""
                 if row[3] == "0" and row[5] == "0":
                     entry = "DIN"
@@ -250,7 +250,6 @@ class TsvFileUploadView(APIView):
                     entry = "LOUT"
                 elif row[3] == "1":
                     entry = "DOUT"
-                # print(entry)
 
                 employee = Employee.objects.get(bio_id=row[0])
                 date = datetime.datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S").date()
@@ -284,4 +283,52 @@ class TsvFileUploadView(APIView):
 
 class MergeDTREntryView(APIView):
     def post(self, request):
-        pass
+        user = request.data["emp_no"]
+        cutoff_code = request.data["cutoff_code"]
+
+        if user is not None:
+            dtrsummary = {}
+
+            employee = Employee.objects.get(emp_no=request.data["emp_no"])
+            cutoff = Cutoff.objects.get(pk=cutoff_code)
+            dtr_entries = DTR.objects.filter(emp_no=employee.emp_no, datetime_bio__gte=cutoff.co_date_from, datetime_bio__lte=cutoff.co_date_to).order_by("schedule_daily_code", "datetime_bio")
+            leaves = Leaves.objects.filter(Q(emp_no=employee.emp_no) & (Q(leave_date_approved1__isnull=False) | Q(leave_date_approved2__isnull=False)))
+            ot = Overtime.objects.filter(Q(emp_no=employee.emp_no) & (Q(ot_date_approved1__isnull=False) | Q(ot_date_approved2__isnull=False)))
+            obt = OBT.objects.filter(Q(emp_no=employee.emp_no) & (Q(obt_date_approved1__isnull=False) | Q(obt_date_approved2__isnull=False)))
+            date = datetime.datetime(2023,5,31)
+            holiday = Holiday.objects.get(holiday_date=date)
+            ua = UnaccountedAttendance.objects.filter(Q(emp_no=employee.emp_no) & (Q(ua_date_approved1__isnull=False) | Q(ua_date_approved2__isnull=False)))
+            print(holiday)
+            for data in ua:
+                print(data)
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            # dtrs = DTR.objects.filter(emp_no=employee.emp_no, datetime_bio__gte=cutoff.co_date_from, datetime_bio__lte=cutoff.co_date_to).order_by("emp_no", "schedule_daily_code")
+            
+            # for dtr in dtrs:
+            #     print(dtr.schedule_daily_code.business_date)
+
+            # dtrsummary["emp_no"] = employee
+            # dtrsummary["cutoff_code"] = cutoff
+            # print(dtrsummary)
+
+        elif user is None:
+            pass
+
+        return Response({"message": "Testing API"})
