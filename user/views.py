@@ -62,11 +62,21 @@ class LoginView(APIView):
         except User.DoesNotExist:
             raise AuthenticationFailed("User not found!")
         
-        if not user.check_password(password):
-            user.failed_login_attempts += 1
-            user.save()
-            raise AuthenticationFailed("Incorrect password!")
+        if user.is_locked:
+            return Response({"message": "Your account is locked! Make a proper request on your HR regarding this issue. :)"}, status=status.HTTP_403_FORBIDDEN)
         
+        if not user.check_password(password):
+            if user.failed_login_attempts == 3:
+                user.is_locked = True
+                user.save()
+                return Response({"message": "We lock your account due to security purposes. If you want to login again, contact your HR to inform them about this matter."}, status=status.HTTP_403_FORBIDDEN)
+            else:
+                user.failed_login_attempts += 1
+                user.save()
+                raise AuthenticationFailed("Incorrect password!")
+            
+        user.failed_login_attempts = 0
+        user.is_locked = False
         user.last_login = datetime.datetime.now()
         user.save()
         user_serializer = UserSerializer(user)
