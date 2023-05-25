@@ -314,7 +314,7 @@ class DTRSummary(models.Model):
     
     sched_timein = models.DateTimeField()
     sched_timeout = models.DateTimeField()
-    is_sched_restday = models.BooleanField()
+    is_sched_restday = models.BooleanField(default=False)
     lunch_out = models.DateTimeField(null=True, blank=True)
     lunch_in = models.DateTimeField(null=True, blank=True)
     overbreak = models.PositiveSmallIntegerField(null=True, blank=True)
@@ -324,9 +324,9 @@ class DTRSummary(models.Model):
     
     total_hours = models.PositiveSmallIntegerField()
     is_paid_leave = models.BooleanField(default=False)
-    paid_leave_type = models.CharField(max_length=50) # choice
-    reg_ot_total = models.PositiveSmallIntegerField()
-    nd_ot_total = models.PositiveSmallIntegerField()
+    paid_leave_type = models.CharField(max_length=50, null=True, blank=True) # choice
+    reg_ot_total = models.PositiveSmallIntegerField(default=0)
+    nd_ot_total = models.PositiveSmallIntegerField(default=0)
     is_obt = models.BooleanField(default=False)
     is_sp_holiday = models.BooleanField(default=False)
     is_reg_holiday = models.BooleanField(default=False)
@@ -509,7 +509,7 @@ class UnaccountedAttendance(models.Model):
     ua_description = models.TextField(max_length=75)
     ua_date_from = models.DateTimeField()
     ua_date_to = models.DateTimeField()
-    ua_approved_status = models.CharField(max_length=3, choices=APPROVAL_STATUS)
+    ua_approval_status = models.CharField(max_length=3, choices=APPROVAL_STATUS)
     ua_reason_disapproval = models.TextField(max_length=75, null=True, blank=True)
     ua_total_hour = models.PositiveSmallIntegerField()
     ua_approver1_empno = models.PositiveSmallIntegerField()

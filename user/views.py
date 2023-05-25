@@ -297,20 +297,105 @@ class MergeDTREntryView(APIView):
         cutoff_code = request.data["cutoff_code"]
 
         if user is not None:
-            dtrsummary = {}
-
             employee = Employee.objects.get(emp_no=request.data["emp_no"])
             cutoff = Cutoff.objects.get(pk=cutoff_code)
-            dtr_entries = DTR.objects.filter(emp_no=employee.emp_no, datetime_bio__gte=cutoff.co_date_from, datetime_bio__lte=cutoff.co_date_to).order_by("schedule_daily_code", "datetime_bio")
-            leaves = Leaves.objects.filter(Q(emp_no=employee.emp_no) & (Q(leave_date_approved1__isnull=False) | Q(leave_date_approved2__isnull=False)))
-            ot = Overtime.objects.filter(Q(emp_no=employee.emp_no) & (Q(ot_date_approved1__isnull=False) | Q(ot_date_approved2__isnull=False)))
-            obt = OBT.objects.filter(Q(emp_no=employee.emp_no) & (Q(obt_date_approved1__isnull=False) | Q(obt_date_approved2__isnull=False)))
-            date = datetime.datetime(2023,5,31)
-            holiday = Holiday.objects.get(holiday_date=date)
-            ua = UnaccountedAttendance.objects.filter(Q(emp_no=employee.emp_no) & (Q(ua_date_approved1__isnull=False) | Q(ua_date_approved2__isnull=False)))
-            print(holiday)
-            for data in ua:
-                print(data)
+            delta = datetime.timedelta(days=1)
+            start_date = cutoff.co_date_from
+            end_date = cutoff.co_date_to
+
+            while start_date <= end_date:
+                date_from = datetime.datetime(start_date.year, start_date.month, start_date.day)
+                date_to = datetime.datetime(start_date.year, start_date.month, start_date.day, 23, 59, 59)
+                late = 0
+                
+                dtr_entries = DTR.objects.filter(emp_no=employee.emp_no, datetime_bio__gte=date_from, datetime_bio__lte=date_to).order_by("schedule_daily_code", "datetime_bio")
+
+                if dtr_entries.exists():
+                    # Computation for Late
+                    sched_timein = dtr_entries.first().schedule_daily_code.schedule_shift_code.time_in
+                    sched_timeout = dtr_entries.first().schedule_daily_code.schedule_shift_code.time_out
+                    time_in = dtr_entries.first().datetime_bio
+                    time_out = dtr_entries.last().datetime_bio
+                    curr_sched_timein = datetime.datetime(time_in.year, time_in.month, time_in.day, sched_timein.hour, sched_timein.minute, sched_timein.second)
+                    curr_sched_timeout = datetime.datetime(time_in.year, time_in.month, time_in.day, sched_timeout.hour, sched_timeout.minute, sched_timeout.second)
+                    time = time_in - curr_sched_timein
+
+                    if time >= datetime.timedelta(minutes=0):
+                        late = time.second            
+
+                    # Computation for total hours
+                    total_hours = 0
+                    work_hours = time_out - time_in
+                    if work_hours >= datetime.timedelta(hours=8):
+                        total_hours = 480
+                    else:
+                        total_hours = work_hours.seconds/60 # in minutes
+
+                    #  Computation for OverTime
+
+                    ot = Overtime.objects.filter(emp_no=employee.emp_no, ot_approval_status="APD", ot_date_from__gte=date_from, ot_date_to__lte=date_to)
+                    if ot.exists():
+                        ot_total_hours = ot.first().ot_date_to - ot.first().ot_date_from
+                        ot_total_hours = ot_total_hours.seconds/60
+
+                        # To continue ND TOTAL HOURS
+                        # nd_ot_start = datetime.datetime(ot.first().ot_date_from.year, ot.first().ot_date_from.month, ot.first().ot_date_from.day, 22)
+                        # nd_ot_end = datetime.datetime(ot.first().ot_date_from.year, ot.first().ot_date_from.month, ot.first().ot_date_from.day + 1, 6)
+                        # if ot.first().ot_date_from >= nd_ot_start and ot.first().ot_date_to <= nd_ot_end:
+                        #     nd_hours = ot.first().ot_date_from - ot.first().ot_date_from
+                        #     nd_total_hours = nd_hours.seconds/60
+                        #     print(nd_total_hours)
+
+                    # Computation for OBT
+
+                    obt = OBT.objects.filter(emp_no=employee.emp_no, obt_approval_status="APD", obt_date_from__gte=date_from, obt_date_to__lte=date_to)
+                    if obt.exists():
+                        obt_hours = obt.first().obt_date_to - obt.first().obt_date_from
+                        obt_total_hours = obt_hours.seconds/60
+                        obt = True
+
+                    dtrsummary = {
+                        "emp_no": user,
+                        "cutoff_code": cutoff_code,
+                        "business_date": dtr_entries.first().schedule_daily_code.business_date,
+                        "shift_name": dtr_entries.first().schedule_daily_code.schedule_shift_code.name,
+                        "duty_in": dtr_entries.first().datetime_bio,
+                        "duty_out": dtr_entries.last().datetime_bio,
+                        "sched_timein": curr_sched_timein,
+                        "sched_timeout": curr_sched_timeout,
+                        "sched_restday": False,
+                        "lates": late,
+                        "total_hours": total_hours,
+                        "reg_ot_total": ot_total_hours,
+                        "nd_ot_total": 0,
+                        "is_obt": obt
+                    }
+                    serializer = DTRSummarySerializer(data=dtrsummary)
+                    if serializer.is_valid():
+                        serializer.save()
+
+                    else:
+                        return Response(serializer.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+                else:
+                    leaves = Leaves.objects.filter(emp_no=employee.emp_no, leave_approval_status = "APD", leave_date_from__gte=date_from, leave_date_from__lte=date_to)
+                    if leaves.exists():
+                        print("bakit ka nagleave na naman?")
+
+                    obt = OBT.objects.filter(emp_no=employee.emp_no, obt_approval_status="APD", obt_date_from__gte=date_from, obt_date_to__lte=date_to)
+                    if obt.exists():
+                        print("Naol nakakagala habang may work")
+
+                    holiday = Holiday.objects.filter(holiday_date__gte=date_from, holiday_date__lte=date_to)
+                    if holiday.exists():
+                        print("Yes, walang pasok kasi holiday!")
+
+                    ua = UnaccountedAttendance.objects.filter(emp_no=employee.emp_no, ua_approval_status="APD", ua_date_from__gte=date_from, ua_date_to__lte=date_to)
+                    if ua.exists():
+                        ua_instance = ua.first()
+                        print(ua_instance.ua_description)
+
+                start_date += delta
             
             
             
