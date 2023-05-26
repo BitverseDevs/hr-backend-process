@@ -178,7 +178,7 @@ class PAGIBIG(models.Model):
 
 class SSS(models.Model):
     emp_no = models.ForeignKey("Employee", to_field="emp_no", on_delete=models.CASCADE)
-    sss_number = models.CharField(max_length=10)
+    sss_no = models.CharField(max_length=10)
     sss_contribution_month = models.FloatField(null=True, blank=True)
     sss_with_cashloan_amount = models.FloatField(null=True, blank=True)
     sss_rem_cashloan_amount = models.FloatField(null=True, blank=True)
@@ -216,7 +216,7 @@ class Employee(models.Model):
     
     date_hired = models.DateField()
     date_resigned = models.DateField(null=True, blank=True)
-    approver = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)])
+    approver = models.PositiveSmallIntegerField(validators=[MaxValueValidator(9990)], default=0)
     date_added = models.DateField(auto_now_add=True)
     date_deleted = models.DateField(null=True, blank=True)
 
@@ -317,12 +317,7 @@ class DTRSummary(models.Model):
     is_sched_restday = models.BooleanField(default=False)
     lunch_out = models.DateTimeField(null=True, blank=True)
     lunch_in = models.DateTimeField(null=True, blank=True)
-    overbreak = models.PositiveSmallIntegerField(null=True, blank=True)
-    lates = models.PositiveSmallIntegerField()
-    adjusted_timein = models.DateTimeField(null=True, blank=True)
-    adjusted_timeout = models.DateTimeField(null=True, blank=True)
     
-    total_hours = models.PositiveSmallIntegerField()
     is_paid_leave = models.BooleanField(default=False)
     paid_leave_type = models.CharField(max_length=50, null=True, blank=True) # choice
     reg_ot_total = models.PositiveSmallIntegerField(default=0)
@@ -330,20 +325,28 @@ class DTRSummary(models.Model):
     is_obt = models.BooleanField(default=False)
     is_sp_holiday = models.BooleanField(default=False)
     is_reg_holiday = models.BooleanField(default=False)
+    is_ua = models.BooleanField(default=False)
     is_absent = models.BooleanField(default=False)
+
+    overbreak = models.PositiveSmallIntegerField(null=True, blank=True)
+    lates = models.PositiveSmallIntegerField()
+    undertime = models.PositiveSmallIntegerField()
+    total_hours = models.PositiveSmallIntegerField()
+
+    adjusted_timein = models.DateTimeField(null=True, blank=True)
+    adjusted_timeout = models.DateTimeField(null=True, blank=True)
     is_computed = models.BooleanField(default=False)
 
     class Meta:
         db_table = "TBL_DTR_SUMMARY"
 
 class DTRCutoff(models.Model):
-    cutoff_code = models.ForeignKey("Cutoff", on_delete=models.CASCADE)
     emp_no = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    cutoff_code = models.ForeignKey("Cutoff", on_delete=models.CASCADE)
+    
     business_date_from = models.DateField()
     business_date_to = models.DateField()
-    hours_total = models.PositiveSmallIntegerField()
-    overbreak_total = models.PositiveSmallIntegerField(null=True, blank=True)
-    lates_total = models.PositiveSmallIntegerField(null=True, blank=True)
+
     paid_leaves_total = models.PositiveSmallIntegerField(null=True, blank=True)
     reg_ot_total = models.PositiveSmallIntegerField(null=True, blank=True)
     nd_ot_total = models.PositiveSmallIntegerField(null=True, blank=True)
@@ -351,6 +354,12 @@ class DTRCutoff(models.Model):
     reg_holiday_total = models.PositiveSmallIntegerField(null=True, blank=True)
     absent_total = models.PositiveSmallIntegerField(null=True, blank=True)
     leaves_type_used = models.CharField(max_length=40, null=True, blank=True)
+
+    overbreak_total = models.PositiveSmallIntegerField(null=True, blank=True)
+    lates_total = models.PositiveSmallIntegerField(null=True, blank=True)
+    undertime_total = models.PositiveSmallIntegerField(null=True, blank=True)
+    total_hours = models.PositiveSmallIntegerField()
+
     is_processed = models.BooleanField(default=False)
     date_deleted = models.DateTimeField(null=True, blank=True)
 

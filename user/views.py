@@ -12,7 +12,8 @@ from rest_framework.response import Response
 from user.models import Branch, Department, Division, PayrollGroup, Position, Rank, Tax, Province, CityMunicipality, PAGIBIG, SSS, Philhealth, Employee, User, AuditTrail, DTR, DTRSummary, DTRCutoff, Holiday, OBT, Overtime, Leaves, LeavesCredit, LeavesType, Adjustment, Cutoff, ScheduleShift, ScheduleDaily, UnaccountedAttendance
 from user.serializers import BranchSerializer, DepartmentSerializer, DivisionSerializer, PayrollGroupSerializer, PositionSerializer, RankSerializer, TaxSerializer, ProvinceSerializer, CityMunicipalitySerializer, PAGIBIGSerializer, SSSSerializer, PhilhealthSerializer, EmployeeSerializer, UserSerializer, AuditTrailSerializer, DTRSerializer, DTRSummarySerializer, DTRCutoffSerializer, HolidaySerializer, OBTSerializer, OvertimeSerializer, LeavesSerializer, LeavesCreditSerializer, LeavesTypeSerializer, AdjustmentSerializer,CutoffSerializer, ScheduleShiftSerializer, ScheduleDailySerializer, UnaccountedAttendanceSerializer
 
-import secret, datetime, jwt, csv, io
+import secret, jwt, csv, io
+from datetime import datetime, timedelta, time, date
 
 # Test API
 
@@ -77,7 +78,7 @@ class LoginView(APIView):
             
         user.failed_login_attempts = 0
         user.is_locked = False
-        user.last_login = datetime.datetime.now()
+        user.last_login = datetime.now()
         user.save()
         user_serializer = UserSerializer(user)
 
@@ -86,8 +87,8 @@ class LoginView(APIView):
 
         payload = {
             "id": user.id,
-            "exp": datetime.datetime.now() + datetime.timedelta(minutes=60),
-            "iat": datetime.datetime.now()
+            "exp": datetime.now() + timedelta(minutes=60),
+            "iat": datetime.now()
         }
         token = jwt.encode(payload=payload, key=secret.JWT_SECRET, algorithm="HS256")
         data = {
@@ -133,7 +134,7 @@ class EmployeesView(APIView):
         
     def delete(self, request, emp_no):
         employee = get_object_or_404(Employee, emp_no=emp_no)
-        employee.date_deleted = datetime.date.today()
+        employee.date_deleted = date.today()
         employee.save()
         
         return Response({"message": "Account successfully deleted"}, status=status.HTTP_204_NO_CONTENT)
@@ -202,7 +203,7 @@ class EmployeeUploadView(APIView):
                     date_hired = row[12],
                     date_resigned = None,
                     approver = 0000,
-                    date_added = datetime.datetime.today(),
+                    date_added = datetime.today(),
                     date_deleted = None,
                 )
             return Response({"message": "File has been read and successfully uploaded to Employee database"}, status=status.HTTP_201_CREATED)
@@ -262,7 +263,7 @@ class TsvFileUploadView(APIView):
                     entry = "DOUT"
 
                 employee = Employee.objects.get(bio_id=row[0])
-                date = datetime.datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S").date()
+                date = datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S").date()
                 sched = ScheduleDaily.objects.get(emp_no=employee.emp_no, business_date=date)
                 dtr = DTR(
                     bio_id = employee,
@@ -271,7 +272,7 @@ class TsvFileUploadView(APIView):
                     flag1_in_out = int(row[3]),
                     flag2_lout_lin = int(row[5]),
                     entry_type = entry,
-                    date_uploaded = datetime.datetime.now(),
+                    date_uploaded = datetime.now(),
 
                     branch_code = Branch.objects.get(branch_name=row[6]),
                     schedule_daily_code = sched                
@@ -299,13 +300,13 @@ class MergeDTREntryView(APIView):
         if user is not None:
             employee = Employee.objects.get(emp_no=request.data["emp_no"])
             cutoff = Cutoff.objects.get(pk=cutoff_code)
-            delta = datetime.timedelta(days=1)
+            delta = timedelta(days=1)
             start_date = cutoff.co_date_from
             end_date = cutoff.co_date_to
 
             while start_date <= end_date:
-                date_from = datetime.datetime(start_date.year, start_date.month, start_date.day)
-                date_to = datetime.datetime(start_date.year, start_date.month, start_date.day, 23, 59, 59)
+                date_from = datetime(start_date.year, start_date.month, start_date.day)
+                date_to = datetime(start_date.year, start_date.month, start_date.day, 23, 59, 59)
                 late = 0
                 
                 dtr_entries = DTR.objects.filter(emp_no=employee.emp_no, datetime_bio__gte=date_from, datetime_bio__lte=date_to).order_by("schedule_daily_code", "datetime_bio")
@@ -316,17 +317,17 @@ class MergeDTREntryView(APIView):
                     sched_timeout = dtr_entries.first().schedule_daily_code.schedule_shift_code.time_out
                     time_in = dtr_entries.first().datetime_bio
                     time_out = dtr_entries.last().datetime_bio
-                    curr_sched_timein = datetime.datetime(time_in.year, time_in.month, time_in.day, sched_timein.hour, sched_timein.minute, sched_timein.second)
-                    curr_sched_timeout = datetime.datetime(time_in.year, time_in.month, time_in.day, sched_timeout.hour, sched_timeout.minute, sched_timeout.second)
+                    curr_sched_timein = datetime(time_in.year, time_in.month, time_in.day, sched_timein.hour, sched_timein.minute, sched_timein.second)
+                    curr_sched_timeout = datetime(time_in.year, time_in.month, time_in.day, sched_timeout.hour, sched_timeout.minute, sched_timeout.second)
                     time = time_in - curr_sched_timein
 
-                    if time >= datetime.timedelta(minutes=0):
+                    if time >= timedelta(minutes=0):
                         late = time.second            
 
                     # Computation for total hours
                     total_hours = 0
                     work_hours = time_out - time_in
-                    if work_hours >= datetime.timedelta(hours=8):
+                    if work_hours >= timedelta(hours=8):
                         total_hours = 480
                     else:
                         total_hours = work_hours.seconds/60 # in minutes
