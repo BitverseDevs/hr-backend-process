@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from user.models import Branch, Department, Division, PayrollGroup, Position, Rank, Tax, Province, CityMunicipality, PAGIBIG, SSS, Philhealth, Employee, User, AuditTrail, DTR, DTRSummary, DTRCutoff, Holiday, OBT, Overtime, Leaves, LeavesCredit, LeavesType, Adjustment, Cutoff, ScheduleShift, ScheduleDaily, UnaccountedAttendance
 from user.serializers import BranchSerializer, DepartmentSerializer, DivisionSerializer, PayrollGroupSerializer, PositionSerializer, RankSerializer, TaxSerializer, ProvinceSerializer, CityMunicipalitySerializer, PAGIBIGSerializer, SSSSerializer, PhilhealthSerializer, EmployeeSerializer, UserSerializer, AuditTrailSerializer, DTRSerializer, DTRSummarySerializer, DTRCutoffSerializer, HolidaySerializer, OBTSerializer, OvertimeSerializer, LeavesSerializer, LeavesCreditSerializer, LeavesTypeSerializer, AdjustmentSerializer,CutoffSerializer, ScheduleShiftSerializer, ScheduleDailySerializer, UnaccountedAttendanceSerializer
 
-import secret, jwt, csv, io
+import secret, jwt, csv, pandas as pd, io
 from datetime import datetime, timedelta, time, date
 
 # Test API
@@ -184,7 +184,7 @@ class EmployeeUploadView(APIView):
         
         try:
             tsv_file = employee_file.read().decode('utf-8')
-            reader = csv.reader(tsv_file.splitlines(), delimiter='\t')
+            reader = csv.reader(tsv_file.splitlines(), delimiter=',')
             for row in reader:
                 employee = Employee.objects.create(
                     emp_no = row[0],
@@ -243,53 +243,91 @@ class DTRView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         
 class TsvFileUploadView(APIView):
-
     def post(self, request, *args, **kwargs):
         tsv_file = request.FILES.get('file')
+
         if not tsv_file:
-            return Response({"error": "No TSV file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            tsv_file_text = tsv_file.read().decode('utf-8')
-            reader = csv.reader(tsv_file_text.splitlines(), delimiter='\t')
-            for row in reader:
-                entry = ""
-                if row[3] == "0" and row[5] == "0":
-                    entry = "DIN"
-                elif row[3] == "0" and row[5] == "1":
-                    entry = "LOUT"
-                elif row[3] == "1":
-                    entry = "DOUT"
-
-                employee = Employee.objects.get(bio_id=row[0])
-                date = datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S").date()
-                sched = ScheduleDaily.objects.get(emp_no=employee.emp_no, business_date=date)
-                dtr = DTR(
-                    bio_id = employee,
-                    emp_no = employee,
-                    datetime_bio = row[1],
-                    flag1_in_out = int(row[3]),
-                    flag2_lout_lin = int(row[5]),
-                    entry_type = entry,
-                    date_uploaded = datetime.now(),
-
-                    branch_code = Branch.objects.get(branch_name=row[6]),
-                    schedule_daily_code = sched                
-                )
-                serializer = DTRSerializer(dtr)
-                content = JSONRenderer().render(serializer.data) 
-                stream = io.BytesIO(content)
-                data = JSONParser().parse(stream)
-                dtr_serializer = DTRSerializer(data=data)
-                if dtr_serializer.is_valid():
-                    dtr_serializer.save()
-                    continue
-                else:
-                    return Response({"error": dtr_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-            return Response({"message": "Successfully uploaded to DTR database"}, status=status.HTTP_201_CREATED)
+            return Response({"message": "No file uploaded"}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
         
-        except Exception as e:
-            return Response({'error':str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        else:
+            stream = io.StringIO(tsv_file.read().decode('utf-8'))
+            dframe = pd.read_csv(stream)
+            print(dframe)
+            return Response({"message": "Test DTR Entry"})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    # def post(self, request, *args, **kwargs):
+    #     tsv_file = request.FILES.get('file')
+    #     if not tsv_file:
+    #         return Response({"error": "No TSV file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
+
+    #     try:
+    #         tsv_file_text = tsv_file.read().decode('utf-8')
+    #         reader = csv.reader(tsv_file_text.splitlines(), delimiter='\t')
+    #         for row in reader:
+    #             entry = ""
+    #             if row[3] == "0" and row[5] == "0":
+    #                 entry = "DIN"
+    #             elif row[3] == "0" and row[5] == "1":
+    #                 entry = "LOUT"
+    #             elif row[3] == "1":
+    #                 entry = "DOUT"
+
+    #             employee = Employee.objects.get(bio_id=row[0])
+    #             date = datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S").date()
+    #             sched = ScheduleDaily.objects.get(emp_no=employee.emp_no, business_date=date)
+                # dtr = DTR(
+                #     bio_id = employee,
+                #     emp_no = employee,
+                #     datetime_bio = row[1],
+                #     flag1_in_out = int(row[3]),
+                #     flag2_lout_lin = int(row[5]),
+                #     entry_type = entry,
+                #     date_uploaded = datetime.now(),
+
+                #     branch_code = Branch.objects.get(branch_name=row[6]),
+                #     schedule_daily_code = sched                
+                # )
+    #             serializer = DTRSerializer(dtr)
+    #             content = JSONRenderer().render(serializer.data) 
+    #             stream = io.BytesIO(content)
+    #             data = JSONParser().parse(stream)
+    #             dtr_serializer = DTRSerializer(data=data)
+    #             if dtr_serializer.is_valid():
+    #                 dtr_serializer.save()
+    #                 continue
+    #             else:
+    #                 return Response({"error": dtr_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+    #         return Response({"message": "Successfully uploaded to DTR database"}, status=status.HTTP_201_CREATED)
+        
+    #     except Exception as e:
+    #         return Response({'error':str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class MergeDTREntryView(APIView):
     def post(self, request):
