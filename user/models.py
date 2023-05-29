@@ -29,14 +29,6 @@ TAX_FREQUENCY = (
     (3, "Annual"),
 )
 
-SUFFIX = [
-    ("sr", "Sr."),
-    ("jr", "Jr."),
-    ("iii", "III/Third"),
-    ("iv", "IV/Fourth"),
-    ("v", "V/Fifth"),
-]
-
 GENDER = [
     ("M", "Male"),
     ("F", "Female"),
@@ -202,7 +194,7 @@ class Employee(models.Model):
     first_name = models.CharField(max_length=25)
     middle_name = models.CharField(max_length=25, null=True, blank=True)
     last_name = models.CharField(max_length=25)
-    suffix = models.CharField(max_length=4, null=True, blank=True, choices=SUFFIX)
+    suffix = models.CharField(max_length=4, null=True, blank=True)
     birthday = models.DateField()
     birth_place = models.CharField(max_length=50, null=True, blank=True)
     civil_status = models.CharField(max_length=2, choices=CIVIL_STATUS)
@@ -406,7 +398,7 @@ class Overtime(models.Model):
     ot_date_from = models.DateTimeField()
     ot_date_to = models.DateTimeField()
     ot_approval_status = models.CharField(max_length=3, choices=APPROVAL_STATUS)
-    ot_reason_disapproval = models.TextField(max_length=100)
+    ot_reason_disapproval = models.TextField(max_length=100, null=True, blank=True)
     ot_total_hours = models.PositiveSmallIntegerField()
     ot_approver1_empno = models.PositiveSmallIntegerField()
     ot_date_approved1 = models.DateTimeField(null=True, blank=True)

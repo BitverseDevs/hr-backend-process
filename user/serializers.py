@@ -173,10 +173,12 @@ class EmployeeSerializer(serializers.ModelSerializer):
             return None
         
 class DTRSerializer(serializers.ModelSerializer):
-    emp_no = EmployeeSerializer()
-    bio_id = EmployeeSerializer()
-    branch_code = BranchSerializer()
-    schedule_daily_code = ScheduleDailySerializer()
+
+    # Di ko alam bakit may ganito
+    # emp_no = EmployeeSerializer()
+    # bio_id = EmployeeSerializer()
+    # branch_code = BranchSerializer()
+    # schedule_daily_code = ScheduleDailySerializer()
 
     class Meta:
         model = DTR
