@@ -250,10 +250,70 @@ class TsvFileUploadView(APIView):
             return Response({"message": "No file uploaded"}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
         
         else:
-            stream = io.StringIO(tsv_file.read().decode('utf-8'))
-            dframe = pd.read_csv(stream)
-            print(dframe)
-            return Response({"message": "Test DTR Entry"})
+            try:
+                stream = io.StringIO(tsv_file.read().decode('utf-8'))
+                dframe = pd.read_csv(stream)
+                dframe = dframe.sort_values(['bio_id', 'datetime_bio'])
+                dframe['datetime_bio'] = pd.to_datetime(dframe['datetime_bio'])
+                dframe['date'] = dframe["datetime_bio"].dt.date
+                dframe['bio_id'] = dframe['bio_id'].astype(int)
+                grouped_df = dframe.groupby(['bio_id', 'date']).agg(datetime_bio_min=("datetime_bio", "min"), datetime_bio_max=("datetime_bio", "max")).reset_index()
+                grouped_df['branch'] = dframe['branch']
+                ids = grouped_df['bio_id'].unique()
+
+                for id in ids:
+                    select_row = grouped_df[grouped_df['bio_id'] == id]
+                    employee = Employee.objects.get(bio_id=id)
+
+                    for i in range(len(select_row)):
+                        duty_in = select_row.iloc[i]['datetime_bio_min']
+                        duty_out = select_row.iloc[i]['datetime_bio_max']
+                        branch = select_row.iloc[i]['branch']
+                        date = select_row.iloc[i]['date']
+                        print(branch)
+                        emp_branch = Branch.objects.get(branch_name=branch)
+                        print(emp_branch)
+                        schedule = ScheduleDaily.objects.get(emp_no=employee.emp_no, business_date=date)
+
+                        dtr_in = {
+                            'emp_no': employee.emp_no,
+                            'bio_id': employee.bio_id,
+                            'datetime_bio': duty_in,
+                            'flag1_in_out': 0,
+                            'entry_type': "DIN",
+                            'date_uploaded': datetime.now(),
+                            'branch_code': emp_branch.pk,
+                            'schedule_daily_code': schedule.pk
+                        }
+
+                        dtr_out = {
+                            'emp_no': employee.emp_no,
+                            'bio_id': employee.bio_id,
+                            'datetime_bio': duty_out,
+                            'flag1_in_out': 1,
+                            'entry_type': "DOUT",
+                            'date_uploaded': datetime.now(),
+                            'branch_code': emp_branch.pk,
+                            'schedule_daily_code': schedule.pk
+                        }
+
+                        dtr_in_serializer = DTRSerializer(data=dtr_in)
+                        dtr_out_serializer = DTRSerializer(data=dtr_out)
+
+                        if dtr_in_serializer.is_valid():
+                            dtr_in_serializer.save()
+                        else:
+                            return Response({"message": "DTR IN", "error": dtr_in_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+                        
+                        if dtr_out_serializer.is_valid():
+                            dtr_out_serializer.save()
+                        else:
+                            return Response({"message": "DTR OUT", "error": dtr_out_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+                return Response({"message": "Successfully uploaded to DTR database"}, status=status.HTTP_201_CREATED)
+            
+            except Exception as e:
+                return Response({"Overall error": str(e)}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
 
 
