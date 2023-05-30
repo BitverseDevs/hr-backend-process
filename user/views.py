@@ -21,12 +21,12 @@ from datetime import datetime, timedelta, time, date
 def test_view(request, pk=None):
     if request.method == 'GET':
         if pk is not None:
-            test = get_object_or_404(LeavesType, pk=pk)
-            serializer = LeavesTypeSerializer(test)
+            test = get_object_or_404(UnaccountedAttendance, pk=pk)
+            serializer = UnaccountedAttendanceSerializer(test)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
-            test = LeavesType.objects.all()
-            serializer = LeavesTypeSerializer(test, many=True)
+            test = UnaccountedAttendance.objects.all()
+            serializer = UnaccountedAttendanceSerializer(test, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
     
     elif request.method == 'POST':
@@ -315,80 +315,6 @@ class TsvFileUploadView(APIView):
             except Exception as e:
                 return Response({"Overall error": str(e)}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    # def post(self, request, *args, **kwargs):
-    #     tsv_file = request.FILES.get('file')
-    #     if not tsv_file:
-    #         return Response({"error": "No TSV file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
-
-    #     try:
-    #         tsv_file_text = tsv_file.read().decode('utf-8')
-    #         reader = csv.reader(tsv_file_text.splitlines(), delimiter='\t')
-    #         for row in reader:
-    #             entry = ""
-    #             if row[3] == "0" and row[5] == "0":
-    #                 entry = "DIN"
-    #             elif row[3] == "0" and row[5] == "1":
-    #                 entry = "LOUT"
-    #             elif row[3] == "1":
-    #                 entry = "DOUT"
-
-    #             employee = Employee.objects.get(bio_id=row[0])
-    #             date = datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S").date()
-    #             sched = ScheduleDaily.objects.get(emp_no=employee.emp_no, business_date=date)
-                # dtr = DTR(
-                #     bio_id = employee,
-                #     emp_no = employee,
-                #     datetime_bio = row[1],
-                #     flag1_in_out = int(row[3]),
-                #     flag2_lout_lin = int(row[5]),
-                #     entry_type = entry,
-                #     date_uploaded = datetime.now(),
-
-                #     branch_code = Branch.objects.get(branch_name=row[6]),
-                #     schedule_daily_code = sched                
-                # )
-    #             serializer = DTRSerializer(dtr)
-    #             content = JSONRenderer().render(serializer.data) 
-    #             stream = io.BytesIO(content)
-    #             data = JSONParser().parse(stream)
-    #             dtr_serializer = DTRSerializer(data=data)
-    #             if dtr_serializer.is_valid():
-    #                 dtr_serializer.save()
-    #                 continue
-    #             else:
-    #                 return Response({"error": dtr_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-    #         return Response({"message": "Successfully uploaded to DTR database"}, status=status.HTTP_201_CREATED)
-        
-    #     except Exception as e:
-    #         return Response({'error':str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 class MergeDTREntryView(APIView):
     def post(self, request):
         user_emp_no = request.data["emp_no"]
@@ -421,50 +347,79 @@ class MergeDTREntryView(APIView):
                     ot_total_hours = 0
                     curr_sched_timein = datetime(duty_in.year, duty_in.month, duty_in.day, sched_timein.hour, sched_timein.minute, sched_timein.second)
                     curr_sched_timeout = datetime(duty_out.year, duty_out.month, duty_out.day, sched_timeout.hour, sched_timeout.minute, sched_timeout.second)
-                    timein_difference = duty_in - curr_sched_timein
-                    timeout_difference = duty_out - curr_sched_timeout
+                    print(business_date)
+                    print(date_from)
+                    print(date_to)
+                    print(duty_in)
+                    print(duty_out)
 
-                    print(f"Normal: {duty_in}")
-                    print(f"Normal: {duty_out}")
-
-                    if curr_sched_timein > duty_in or duty_out < curr_sched_timeout:
+                    if curr_sched_timein <= duty_in or duty_out >= curr_sched_timeout:
                         # create a loop for multiple obt or ua
 
                         # OBT
                         obts = OBT.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, obt_approval_status="APD", obt_date_from__gte=date_from, obt_date_to__lte=date_to)
                         if obts.exists():
-                            is_obt = True
-                            if obts.count == 2:
-                                pass
+                            is_obt = True                            
 
-                            else:
+                            if obts.count() == 1:
                                 if obts.first().obt_date_to >= duty_out:
                                     duty_out = obts.first().obt_date_to
-                                    print(duty_out)
-                                    pass
-                                elif obts.first().obt_date_from <= duty_in:
-                                    duty_in = obts.first().obt_date_from
-                                    print(duty_out)
-                            
-                            # for obt in obts:
-                            #     if obt.obt_date_from < duty_in:
-                            #         duty_in = obt.obt_date_from
-                            #         print(f"OBT: {duty_in}")
 
-                            #     if obt.obt_date_to < duty_out:
-                            #         duty_out = obt.obt_date_to
-                            #         print(f"OBT: {duty_out}")
+                                if obts.first().obt_date_from <= duty_in:
+                                    duty_in = obts.first().obt_date_from
+
+                            elif obts.count() == 2:
+                                if obts.first().obt_date_from <= duty_in:
+                                    duty_in = obts.first().obt_date_from
+                                    print(f"OBT1: {duty_in}")
+
+                                elif obts.last().obt_date_from <= duty_in:
+                                    duty_in = obts.last().obt_date_from
+                                    print(f"OBT2: {duty_in}")
+
+                                if obts.first().obt_date_to >= duty_out:
+                                    duty_out = obts.first().obt_date_to
+                                    print(f"OBT1: {duty_out}")
+
+                                elif obts.last().obt_date_to >= duty_out:
+                                    duty_out = obts.last().obt_date_to
+                                    print(f"OBT2: {duty_out}")
+                                    
                         
                         # Unaccounted Attendance
                         uas = UnaccountedAttendance.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, ua_approval_status="APD", ua_date_from__gte=date_from, ua_date_to__lte=date_to)
+                        print("labas ng ua")
                         if uas.exists():
                             is_ua = True
-                            for ua in uas:
-                                if ua.ua_date_from < duty_in:
-                                    duty_in = ua.ua_date_from                                    
+                            print('gitna ng ua')
 
-                                if ua.ua_date_to < duty_out:
-                                    duty_out = ua.ua_date_to                                    
+                            if uas.count() == 1:
+                                print("pasok sa UA")
+                                if uas.first().ua_date_from <= duty_in:
+                                    duty_in = uas.first().ua_date_from                                    
+                                    print(f"UA: {duty_in}")
+                                    
+
+                                if uas.first().ua_date_to >= duty_out:
+                                    duty_out = uas.first().ua_date_to
+                                    print(f"UA: {duty_out}")
+
+                            elif uas.count() == 2:
+                                if uas.first().ua_date_from <= duty_in:
+                                    duty_in = uas.first().ua_date_from
+                                    print(f"UA1: {duty_in}")
+
+                                elif uas.last().ua_date_from <= duty_in:
+                                    duty_in = uas.last().ua_date_from
+                                    print(f"UA2: {duty_in}")
+
+                                if uas.first().ua_date_to >= duty_out:
+                                    duty_out = uas.first().ua_date_to     
+                                    print(f"UA1: {duty_out}")
+
+                                elif uas.last().ua_date_to >= duty_out:
+                                    duty_out = uas.last().ua_date_to                                                          
+                                    print(f"UA2: {duty_out}")
                     
                     # Overtime 
                     ot = Overtime.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, ot_approval_status="APD", ot_date_from__gte=date_from, ot_date_to__lte=date_to)
@@ -473,6 +428,9 @@ class MergeDTREntryView(APIView):
                         ot_total_hours = ot_total_hours.seconds/60
 
                     # Lates, Undertime, Total hours
+
+                    timein_difference = duty_in - curr_sched_timein
+                    timeout_difference = duty_out - curr_sched_timeout
 
                     if timein_difference >= timedelta(minutes=0):
                         late = timein_difference.seconds/60
@@ -486,7 +444,6 @@ class MergeDTREntryView(APIView):
                     else:
                         total_hours = work_hours.seconds/60
 
-
                     dtr_summary = {
                         "emp_no": employee.emp_no,
                         "cutoff_code": cutoff_code,
@@ -494,8 +451,8 @@ class MergeDTREntryView(APIView):
                         "shift_name": shift_name,
                         "duty_in": duty_in,
                         "duty_out": duty_out,
-                        "sched_timein": curr_sched_timein,
-                        "sched_timeout": curr_sched_timeout,
+                        "sched_timein": sched_timein,
+                        "sched_timeout": sched_timeout,
                         "undertime": int(undertime),
                         "lates": int(late),
                         "total_hours": int(total_hours),
@@ -513,7 +470,100 @@ class MergeDTREntryView(APIView):
                         return Response(serializer.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
                 if not dtr_entries.exists():
-                    pass
+                    shift_name = "RD"
+                    duty_in = None
+                    duty_out = None
+                    sched_timein = None
+                    sched_timeout = None
+                    lates = 0
+                    undertime = 0
+                    total_hours = 0
+                    reg_holiday = False
+                    sp_holiday = False
+                    paid_leave = False
+                    emp_leave_type = ""
+                    is_obt = False
+                    is_ua = False
+                    is_absent = False
+                    is_restday = False
+
+                    schedule_daily = ScheduleDaily.objects.filter(emp_no=employee.emp_no, business_date__gte=date_from, business_date__lte=date_to)
+
+                    if schedule_daily.exists():
+                        business_date = schedule_daily.first().business_date
+                        sched_timein = schedule_daily.first().schedule_shift_code.time_in
+                        sched_timeout = schedule_daily.first().schedule_shift_code.time_out
+
+                        holiday = Holiday.objects.filter(holiday_date__gte=date_from, holiday_date__lte=date_to)                    
+                        
+                        if holiday.exists():                        
+                            if holiday.first().holiday_type == "SH":
+                                sp_holiday = True
+                            elif holiday.first().holiday_type == "LH":
+                                reg_holiday = True
+                            
+                        leaves = Leaves.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, leave_approval_status="APD", leave_date_from__gte=date_from, leave_date_to__lte=date_to)
+
+                        if leaves.exists():
+                            leave_type = LeavesType.objects.get(pk=leaves.first().leave_type)
+                            emp_leave_type = leave_type.name
+                            paid_leave = leave_type.is_paid                        
+
+                        # OBT
+                        obts = OBT.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, obt_approval_status="APD", obt_date_from__gte=date_from, obt_date_to__lte=date_to)
+                        if obts.exists():                                               
+                            shift_name = schedule_daily.first().schedule_shift_code.name                            
+                            duty_in = obts.first().obt_date_from
+                            duty_out = obts.first().obt_date_to                        
+                            total_hours = duty_out - duty_in
+                            total_hours = int(total_hours.seconds/60)                                    
+                            is_obt = True 
+                        
+                        # Unaccounted Attendance
+                        uas = UnaccountedAttendance.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, ua_approval_status="APD", ua_date_from__gte=date_from, ua_date_to__lte=date_to)                        
+                        if uas.exists():
+                            shift_name = schedule_daily.first().schedule_shift_code.name                            
+                            duty_in = uas.first().ua_date_from
+                            duty_out = uas.first().obt_date_to
+                            total_hours = duty_out - duty_in
+                            total_hours = int(total_hours.seconds/60)  
+                            is_ua = True    
+
+                        if reg_holiday == False and sp_holiday == False and paid_leave == False and emp_leave_type == "" and is_obt == False and is_ua == False:
+                            is_absent = True
+
+                    elif not schedule_daily.exists:
+                        business_date = start_date
+                        is_restday = True
+                                        
+                    dtr_summary = {
+                        "emp_no": employee.emp_no,
+                        "cutoff_code": cutoff_code,
+                        "business_date": business_date,
+                        "shift_name": shift_name,
+                        "duty_in": duty_in,
+                        "duty_out": duty_out,
+                        "sched_timein": sched_timein,
+                        "sched_timeout": sched_timeout,
+                        "lates": lates,
+                        "undertime": undertime,
+                        "total_hours": total_hours,
+                        "is_paid_leave": paid_leave,
+                        "paid_leave_type": emp_leave_type,
+                        "is_obt": is_obt,
+                        "is_sp_holiday": sp_holiday,
+                        "is_reg_holiday": reg_holiday,
+                        "is_ua": is_ua,
+                        "is_restday": is_restday,
+                        "is_absent": is_absent
+                    }
+                
+                    serializer = DTRSummarySerializer(data=dtr_summary)
+                    if serializer.is_valid():
+                        serializer.save()
+
+                    else:
+                        return Response(serializer.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
                 start_date += delta
 

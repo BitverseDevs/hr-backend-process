@@ -17,6 +17,7 @@ urlpatterns = [
     path('dtr/<int:pk>', DTRView.as_view()),
     path('mergedtr/', MergeDTREntryView.as_view()),
 
+    path('test_api/', views.test_view),
     path('test_api/<int:pk>', views.test_view)
 ]
 
