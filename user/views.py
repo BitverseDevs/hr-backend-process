@@ -315,6 +315,21 @@ class TsvFileUploadView(APIView):
             except Exception as e:
                 return Response({"Overall error": str(e)}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
+
+class CutoffPeriodListView(APIView):
+    def get(self, request, pk=None):                
+        if pk is not None:
+            cutoff = Cutoff.objects.get(pk=pk)            
+            payroll_group_code = cutoff.payroll_group_code
+            employees = Employee.objects.filter(payroll_group_code=payroll_group_code)
+            serializer = EmployeeSerializer(employees, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        else:
+            cutoff = Cutoff.objects.all()
+            serializer = CutoffSerializer(cutoff, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
 class MergeDTREntryView(APIView):
     def post(self, request):
         user_emp_nos = request.data["emp_no"]
