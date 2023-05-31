@@ -317,257 +317,605 @@ class TsvFileUploadView(APIView):
 
 class MergeDTREntryView(APIView):
     def post(self, request):
-        user_emp_no = request.data["emp_no"]
+        user_emp_nos = request.data["emp_no"]
         cutoff_code = request.data["cutoff_code"]
 
-        if user_emp_no is not None:
-            employee = get_object_or_404(Employee, emp_no=user_emp_no)
-            cutoff = get_object_or_404(Cutoff, pk=cutoff_code)
-            start_date = cutoff.co_date_from
-            end_date = cutoff.co_date_to
-            delta = timedelta(days=1)
+        if user_emp_nos is not None:
+            for user_emp_no in user_emp_nos:
+                print(user_emp_no)
+                try:
+                    employee = get_object_or_404(Employee, emp_no=user_emp_no)
+                    cutoff = get_object_or_404(Cutoff, pk=cutoff_code)
+                    start_date = cutoff.co_date_from
+                    end_date = cutoff.co_date_to
+                    delta = timedelta(days=1)
 
-            while start_date <= end_date:
-                date_from = datetime(start_date.year, start_date.month, start_date.day)
-                date_to = datetime(start_date.year, start_date.month, start_date.day, 23, 59, 59)
-                dtr_entries = DTR.objects.filter(emp_no=employee.emp_no, datetime_bio__gte=date_from, datetime_bio__lte=date_to)
+                    while start_date <= end_date:
+                        dtr_date_from = datetime(start_date.year, start_date.month,start_date.day)
+                        dtr_date_to = datetime(start_date.year, start_date.month, start_date.day, 23, 59, 59)
+                        dtr_entries = DTR.objects.filter(emp_no=employee.emp_no, datetime_bio__gte=dtr_date_from, datetime_bio__lte=dtr_date_to)
 
-                if dtr_entries.exists():
-                    business_date = dtr_entries.first().schedule_daily_code.business_date
-                    shift_name = dtr_entries.first().schedule_daily_code.schedule_shift_code.name
-                    duty_in = dtr_entries.first().datetime_bio
-                    duty_out = dtr_entries.last().datetime_bio
-                    sched_timein = dtr_entries.first().schedule_daily_code.schedule_shift_code.time_in
-                    sched_timeout = dtr_entries.first().schedule_daily_code.schedule_shift_code.time_out
-                    is_obt = False
-                    is_ua = False
-                    late = 0
-                    undertime = 0
-                    total_hours = 0
-                    ot_total_hours = 0
-                    curr_sched_timein = datetime(duty_in.year, duty_in.month, duty_in.day, sched_timein.hour, sched_timein.minute, sched_timein.second)
-                    curr_sched_timeout = datetime(duty_out.year, duty_out.month, duty_out.day, sched_timeout.hour, sched_timeout.minute, sched_timeout.second)
-                    print(business_date)
-                    print(date_from)
-                    print(date_to)
-                    print(duty_in)
-                    print(duty_out)
+                        if dtr_entries.exists():
+                            # Initialization of variables
+                            business_date = dtr_entries.first().schedule_daily_code.business_date
+                            shift_name = dtr_entries.first().schedule_daily_code.schedule_shift_code.name
+                            duty_in = dtr_entries.first().datetime_bio
+                            duty_out = dtr_entries.last().datetime_bio
+                            sched_timein = dtr_entries.first().schedule_daily_code.schedule_shift_code.time_in
+                            sched_timeout = dtr_entries.first().schedule_daily_code.schedule_shift_code.time_out
+                            curr_sched_timein = datetime(duty_in.year, duty_in.month, duty_in.day, sched_timein.hour, sched_timein.minute, sched_timein.second)                        
+                            curr_sched_timeout = datetime(duty_out.year, duty_out.month, duty_out.day, sched_timeout.hour, sched_timeout.minute, sched_timeout.second)
+                            late = 0
+                            undertime = 0
+                            total_hours = 0
+                            reg_ot_total = 0
+                            nd_ot_total = 0
+                            is_obt = False
+                            is_ua = False
+                            is_sp_holiday = False
+                            is_reg_holiday = False
 
-                    if curr_sched_timein <= duty_in or duty_out >= curr_sched_timeout:
-                        # create a loop for multiple obt or ua
+                            # Validation if the employee is late or undertime
+                            if curr_sched_timein < duty_in or sched_timeout > duty_out:
+                                # On Business Trip
+                                obts = OBT.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, obt_approval_status="APD", obt_date_from__gte=dtr_date_from, obt_date_to__lte=dtr_date_to)
+                                
+                                if obts.exists():
+                                    is_obt = True
 
-                        # OBT
-                        obts = OBT.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, obt_approval_status="APD", obt_date_from__gte=date_from, obt_date_to__lte=date_to)
-                        if obts.exists():
-                            is_obt = True                            
+                                    if obts.count() == 1:
+                                        if obts.first().obt_date_from <= duty_in:
+                                            duty_in = obts.first().obt_date_from
 
-                            if obts.count() == 1:
-                                if obts.first().obt_date_to >= duty_out:
-                                    duty_out = obts.first().obt_date_to
-
-                                if obts.first().obt_date_from <= duty_in:
-                                    duty_in = obts.first().obt_date_from
-
-                            elif obts.count() == 2:
-                                if obts.first().obt_date_from <= duty_in:
-                                    duty_in = obts.first().obt_date_from
-                                    print(f"OBT1: {duty_in}")
-
-                                elif obts.last().obt_date_from <= duty_in:
-                                    duty_in = obts.last().obt_date_from
-                                    print(f"OBT2: {duty_in}")
-
-                                if obts.first().obt_date_to >= duty_out:
-                                    duty_out = obts.first().obt_date_to
-                                    print(f"OBT1: {duty_out}")
-
-                                elif obts.last().obt_date_to >= duty_out:
-                                    duty_out = obts.last().obt_date_to
-                                    print(f"OBT2: {duty_out}")
-                                    
-                        
-                        # Unaccounted Attendance
-                        uas = UnaccountedAttendance.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, ua_approval_status="APD", ua_date_from__gte=date_from, ua_date_to__lte=date_to)
-                        print("labas ng ua")
-                        if uas.exists():
-                            is_ua = True
-                            print('gitna ng ua')
-
-                            if uas.count() == 1:
-                                print("pasok sa UA")
-                                if uas.first().ua_date_from <= duty_in:
-                                    duty_in = uas.first().ua_date_from                                    
-                                    print(f"UA: {duty_in}")
-                                    
-
-                                if uas.first().ua_date_to >= duty_out:
-                                    duty_out = uas.first().ua_date_to
-                                    print(f"UA: {duty_out}")
-
-                            elif uas.count() == 2:
-                                if uas.first().ua_date_from <= duty_in:
-                                    duty_in = uas.first().ua_date_from
-                                    print(f"UA1: {duty_in}")
-
-                                elif uas.last().ua_date_from <= duty_in:
-                                    duty_in = uas.last().ua_date_from
-                                    print(f"UA2: {duty_in}")
-
-                                if uas.first().ua_date_to >= duty_out:
-                                    duty_out = uas.first().ua_date_to     
-                                    print(f"UA1: {duty_out}")
-
-                                elif uas.last().ua_date_to >= duty_out:
-                                    duty_out = uas.last().ua_date_to                                                          
-                                    print(f"UA2: {duty_out}")
-                    
-                    # Overtime 
-                    ot = Overtime.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, ot_approval_status="APD", ot_date_from__gte=date_from, ot_date_to__lte=date_to)
-                    if ot.exists():
-                        ot_total_hours = ot.first().ot_date_to - ot.first().ot_date_from
-                        ot_total_hours = ot_total_hours.seconds/60
-
-                    # Lates, Undertime, Total hours
-
-                    timein_difference = duty_in - curr_sched_timein
-                    timeout_difference = duty_out - curr_sched_timeout
-
-                    if timein_difference >= timedelta(minutes=0):
-                        late = timein_difference.seconds/60
-
-                    if timeout_difference >= timedelta(minutes=0):
-                        undertime = timeout_difference.seconds/60
-                    
-                    work_hours = duty_out - duty_in
-                    if work_hours >= timedelta(hours=8):
-                        total_hours = 480
-                    else:
-                        total_hours = work_hours.seconds/60
-
-                    dtr_summary = {
-                        "emp_no": employee.emp_no,
-                        "cutoff_code": cutoff_code,
-                        "business_date": business_date,
-                        "shift_name": shift_name,
-                        "duty_in": duty_in,
-                        "duty_out": duty_out,
-                        "sched_timein": sched_timein,
-                        "sched_timeout": sched_timeout,
-                        "undertime": int(undertime),
-                        "lates": int(late),
-                        "total_hours": int(total_hours),
-                        "reg_ot_total": int(ot_total_hours),
-                        "nd_ot_total": 0,
-                        "is_obt": is_obt,
-                        "is_ua": is_ua
-                    }
-
-                    serializer = DTRSummarySerializer(data=dtr_summary)
-                    if serializer.is_valid():
-                        serializer.save()
-
-                    else:
-                        return Response(serializer.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-                if not dtr_entries.exists():
-                    shift_name = "RD"
-                    duty_in = None
-                    duty_out = None
-                    sched_timein = None
-                    sched_timeout = None
-                    lates = 0
-                    undertime = 0
-                    total_hours = 0
-                    reg_holiday = False
-                    sp_holiday = False
-                    paid_leave = False
-                    emp_leave_type = ""
-                    is_obt = False
-                    is_ua = False
-                    is_absent = False
-                    is_restday = False
-
-                    schedule_daily = ScheduleDaily.objects.filter(emp_no=employee.emp_no, business_date__gte=date_from, business_date__lte=date_to)
-
-                    if schedule_daily.exists():
-                        business_date = schedule_daily.first().business_date
-                        sched_timein = schedule_daily.first().schedule_shift_code.time_in
-                        sched_timeout = schedule_daily.first().schedule_shift_code.time_out
-
-                        holiday = Holiday.objects.filter(holiday_date__gte=date_from, holiday_date__lte=date_to)                    
-                        
-                        if holiday.exists():                        
-                            if holiday.first().holiday_type == "SH":
-                                sp_holiday = True
-                            elif holiday.first().holiday_type == "LH":
-                                reg_holiday = True
-                            
-                        leaves = Leaves.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, leave_approval_status="APD", leave_date_from__gte=date_from, leave_date_to__lte=date_to)
-
-                        if leaves.exists():
-                            leave_type = LeavesType.objects.get(pk=leaves.first().leave_type)
-                            emp_leave_type = leave_type.name
-                            paid_leave = leave_type.is_paid                        
-
-                        # OBT
-                        obts = OBT.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, obt_approval_status="APD", obt_date_from__gte=date_from, obt_date_to__lte=date_to)
-                        if obts.exists():                                               
-                            shift_name = schedule_daily.first().schedule_shift_code.name                            
-                            duty_in = obts.first().obt_date_from
-                            duty_out = obts.first().obt_date_to                        
-                            total_hours = duty_out - duty_in
-                            total_hours = int(total_hours.seconds/60)                                    
-                            is_obt = True 
-                        
-                        # Unaccounted Attendance
-                        uas = UnaccountedAttendance.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, ua_approval_status="APD", ua_date_from__gte=date_from, ua_date_to__lte=date_to)                        
-                        if uas.exists():
-                            shift_name = schedule_daily.first().schedule_shift_code.name                            
-                            duty_in = uas.first().ua_date_from
-                            duty_out = uas.first().obt_date_to
-                            total_hours = duty_out - duty_in
-                            total_hours = int(total_hours.seconds/60)  
-                            is_ua = True    
-
-                        if reg_holiday == False and sp_holiday == False and paid_leave == False and emp_leave_type == "" and is_obt == False and is_ua == False:
-                            is_absent = True
-
-                    elif not schedule_daily.exists:
-                        business_date = start_date
-                        is_restday = True
+                                        if obts.first().obt_date_to >= duty_out:
+                                            duty_out = obts.first().obt_date_to
                                         
-                    dtr_summary = {
-                        "emp_no": employee.emp_no,
-                        "cutoff_code": cutoff_code,
-                        "business_date": business_date,
-                        "shift_name": shift_name,
-                        "duty_in": duty_in,
-                        "duty_out": duty_out,
-                        "sched_timein": sched_timein,
-                        "sched_timeout": sched_timeout,
-                        "lates": lates,
-                        "undertime": undertime,
-                        "total_hours": total_hours,
-                        "is_paid_leave": paid_leave,
-                        "paid_leave_type": emp_leave_type,
-                        "is_obt": is_obt,
-                        "is_sp_holiday": sp_holiday,
-                        "is_reg_holiday": reg_holiday,
-                        "is_ua": is_ua,
-                        "is_restday": is_restday,
-                        "is_absent": is_absent
-                    }
-                
-                    serializer = DTRSummarySerializer(data=dtr_summary)
-                    if serializer.is_valid():
-                        serializer.save()
+                                    elif obts.count() == 2:
+                                        if obts.first().obt_date_from <= duty_in:
+                                            duty_in = obts.first().obt_date_from
 
-                    else:
-                        return Response(serializer.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                                        elif obts.last().obt_date_from <= duty_in:
+                                            duty_in = obts.last().obt_date_from 
 
-                start_date += delta
+                                        if obts.first().obt_date_to >= duty_out:
+                                            duty_out = obts.first().obt_date_to
+                                            
+                                        elif obts.last().obt_date_to >= duty_out:
+                                            duty_out = obts.last().obt_date_to
 
-            return Response({"message": "Testing API"})
-        
-        else:
-            pass
+                                #  Unaccounted Attendance
+                                uas = UnaccountedAttendance.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, ua_approval_status="APD", ua_date_from__gte=dtr_date_from, ua_date_to__lte=dtr_date_to)
+
+                                if uas.exists():
+                                    is_ua = True
+
+                                    if uas.count() == 1:
+                                        if uas.first().ua_date_from <= duty_in:
+                                            duty_in = uas.first().ua_date_from
+
+                                        if uas.first().ua_date_to >= duty_out:
+                                            duty_out = uas.first().ua_date_to
+
+                                    elif uas.count() == 2:
+                                        if uas.first().ua_date_from <= duty_in:
+                                            duty_in = uas.first().ua_date_from
+
+                                        elif uas.last().ua_date_from <= duty_in:
+                                            duty_in = uas.last().ua_date_from
+
+                                        if uas.first().ua_date_to >= duty_out:
+                                            duty_out = uas.first().ua_date_to
+
+                                        elif uas.last().ua_date_to >= duty_out:
+                                            duty_out = uas.last().ua_date_to
+
+                            # Overtime
+                            ot = Overtime.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, ot_approval_status="APD", ot_date_from__gte=dtr_date_from, ot_date_to__lte=dtr_date_to)
+
+                            if ot.exists():
+                                reg_ot_total = ot.first().ot_date_to = ot.first().ot_date_from
+                                reg_ot_total = reg_ot_total.seconds/60
+
+                            # Late
+                            timein_difference = duty_in - curr_sched_timein
+
+                            if timein_difference > timedelta(minutes=0):
+                                late = timein_difference.seconds/60
+                            
+                            # Undertime 
+                            timeout_difference = curr_sched_timeout - duty_out
+
+                            if timeout_difference > timedelta(minutes=0):
+                                undertime = timeout_difference.seconds/60
+
+                            # Total work hours
+                            work_hours = duty_out - duty_in
+
+                            if work_hours >= timedelta(hours=8):
+                                total_hours = 480
+
+                            else:
+                                total_hours = int(work_hours.seconds/60)
+
+                            # Holiday
+                            holiday = Holiday.objects.filter(holiday_date__gte=dtr_date_from, holiday_date__lte=dtr_date_to)
+
+                            if holiday.exists():
+                                if holiday.first().holiday_type == "SH":
+                                    is_sp_holiday = True
+                                
+                                elif holiday.first().holiday_type == "LH":
+                                    is_reg_holiday = True
+
+                            dtr_summary = {
+                                "emp_no": employee.emp_no,
+                                "cutoff_code": cutoff_code,
+                                "business_date": business_date,
+                                "shift_name": shift_name,
+                                "duty_in": duty_in,
+                                "duty_out": duty_out,
+                                "sched_timein": sched_timein,
+                                "sched_timeout": sched_timeout,
+                                "lates": late,
+                                "undertime": undertime,
+                                "total_hours": total_hours,
+                                "reg_ot_total": reg_ot_total,
+                                "nd_ot_total": nd_ot_total,
+                                "is_obt": is_obt,
+                                "is_ua": is_ua,
+                                "is_reg_holiday": is_reg_holiday,
+                                "is_sp_holiday": is_sp_holiday
+                            }
+                             
+                            serializer = DTRSerializer(data=dtr_summary)
+
+                            if serializer.is_valid():
+                                serializer.save()
+
+                            else:
+                                return Response({"Location": "DTR Entry", "Error": serializer.errors}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+
+
+                        elif not dtr_entries.exists():
+                            
+                            schedule_daily = ScheduleDaily.objects.filter(emp_no=employee.emp_no, business_date__gte=dtr_date_from, business_date__lte=dtr_date_to)
+
+                            if schedule_daily.exists():
+                                business_date = schedule_daily.first().business_date
+                                shift_name = schedule_daily.first().schedule_shift_code.name
+                                duty_in = None
+                                duty_out = None
+                                sched_timein = schedule_daily.first().schedule_shift_code.time_in
+                                sched_timeout = schedule_daily.first().schedule_shift_code.time_out
+                                total_hours = 0
+                                paid_leave = False
+                                leave_type = ""
+                                is_obt = False
+                                is_ua = False
+                                is_sp_holiday = False
+                                is_reg_holiday = False
+                                is_absent = False
+
+                                # Holiday
+                                holiday = Holiday.objects.filter(holiday_date__gte=dtr_date_from, holiday_date__lte=dtr_date_to)                                
+
+                                if holiday.exists():
+                                    if holiday.first().holiday_type == "SH":
+                                        is_sp_holiday = True
+                                    
+                                    elif holiday.first().holiday_type == "LH":
+                                        is_reg_holiday = True
+
+                                # Leave Application
+                                leaves = Leaves.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, leave_approval_status="APD", leave_date_from__gte=dtr_date_from, leave_date_to__lte=dtr_date_to)
+
+                                if leaves.exists():
+                                    leave_type = leaves.first().leave_type.name
+                                    paid_leave = leaves.first().leave_type.is_paid
+
+                                # On Business Trip
+                                obts = OBT.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, obt_approval_status="APD", obt_date_from__gte=dtr_date_from, obt_date_to__lte=dtr_date_to)
+
+                                if obts.exists():
+                                    is_obt = True
+                                    duty_in = obts.first().obt_date_from
+                                    duty_out = obts.first().obt_date_to
+                                    total_hours = duty_out - duty_in
+                                    total_hours = int(total_hours.seconds/60)
+
+                                # Unaccounted Attendance
+                                uas = UnaccountedAttendance.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, ua_approval_status="APD", ua_date_from__gte=dtr_date_from, ua_date_to__lte=dtr_date_to)
+                                if uas.exists():
+                                    is_ua = True
+                                    duty_in = uas.first().ua_date_from
+                                    duty_out = uas.first().ua_date_to
+                                    total_hours = duty_out - duty_in
+                                    total_hours = int(total_hours.seconds/60)
+
+                                # Absent                                
+                                if is_sp_holiday == False and is_reg_holiday == False and leave_type == "" and is_obt == False and is_ua == False:
+                                    is_absent = True
+
+                                dtr_summary = {
+                                    "emp_no": employee.emp_no,
+                                    "cutoff_code": cutoff_code,
+                                    "business_date": business_date,
+                                    "shift_name": shift_name,
+                                    "duty_in": duty_in,
+                                    "duty_out": duty_out,
+                                    "sched_timein": sched_timein,
+                                    "sched_timeout": sched_timeout,
+                                    "undertime": 0,
+                                    "lates": 0,
+                                    "total_hours": total_hours,
+                                    "is_paid_leave": paid_leave,
+                                    "paid_leave_type": leave_type,
+                                    "reg_ot_total": 0,
+                                    "nd_ot_total": 0,
+                                    "is_obt": is_obt,
+                                    "is_ua": is_ua,
+                                    "is_sp_holiday": is_sp_holiday,
+                                    "is_reg_holiday": is_reg_holiday,
+                                    "is_absent": is_absent,
+                                }
+
+                                serializer = DTRSerializer(data=dtr_summary)
+
+                                if serializer.is_valid():
+                                    serializer.save()
+
+                                else:
+                                    return Response({"Location": "Schedule Shift", "Error": serializer.errors}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+                            elif not schedule_daily.exists():
+                                is_restday = True
+
+                                dtr_summary = {
+                                    "emp_no": employee.emp_no,
+                                    "cutoff_code": cutoff_code,
+                                    "business_date": date(start_date.year, start_date.month, start_date.day),
+                                    "shift_name": "RD",
+                                    "duty_in": None,
+                                    "duty_out": None,
+                                    "sched_timein": None,
+                                    "sched_timeout": None,
+                                    "undertime": 0,
+                                    "lates": 0,
+                                    "total_hours": 0,
+                                    "is_paid_leave": False,
+                                    "paid_leave_type": "",
+                                    "reg_ot_total": 0,
+                                    "nd_ot_total": 0,
+                                    "is_obt": False,
+                                    "is_ua": False,
+                                    "is_sp_holiday": False,
+                                    "is_reg_holiday": False,
+                                    "is_absent": False,
+                                    "is_sched_restday": is_restday
+                                }
+                                
+                                serializer = DTRSerializer(data=dtr_summary)
+
+                                if serializer.is_valid():
+                                    serializer.save()
+
+                                else:
+                                    return Response({"Location": "Restday", "Error": serializer.errors}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)                                            
+
+
+
+                        start_date += delta
+                    
+
+                    return Response({"Message": "Successfully merge DTR of selected employees"}, status=status.HTTP_201_CREATED)
+
+
+                except Exception as e:
+                    return Response({"Exception Message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        elif user_emp_nos is None:
+            # print("Non User Emp Nos")            
+            cutoff = Cutoff.objects.get(pk=cutoff_code)
+            payroll_group_code = cutoff.payroll_group_code
+            employees = Employee.objects.filter(payroll_group_code=payroll_group_code)
+
+            for employee in employees:
+                print(employee)
+                try:
+                    employee = get_object_or_404(Employee, emp_no=user_emp_no)
+                    cutoff = get_object_or_404(Cutoff, pk=cutoff_code)
+                    start_date = cutoff.co_date_from
+                    end_date = cutoff.co_date_to
+                    delta = timedelta(days=1)
+
+                    while start_date <= end_date:
+                        dtr_date_from = datetime(start_date.year, start_date.month,start_date.day)
+                        dtr_date_to = datetime(start_date.year, start_date.month, start_date.day, 23, 59, 59)
+                        dtr_entries = DTR.objects.filter(emp_no=employee.emp_no, datetime_bio__gte=dtr_date_from, datetime_bio__lte=dtr_date_to)
+
+                        if dtr_entries.exists():
+                            # Initialization of variables
+                            business_date = dtr_entries.first().schedule_daily_code.business_date
+                            shift_name = dtr_entries.first().schedule_daily_code.schedule_shift_code.name
+                            duty_in = dtr_entries.first().datetime_bio
+                            duty_out = dtr_entries.last().datetime_bio
+                            sched_timein = dtr_entries.first().schedule_daily_code.schedule_shift_code.time_in
+                            sched_timeout = dtr_entries.first().schedule_daily_code.schedule_shift_code.time_out
+                            curr_sched_timein = datetime(duty_in.year, duty_in.month, duty_in.day, sched_timein.hour, sched_timein.minute, sched_timein.second)                        
+                            curr_sched_timeout = datetime(duty_out.year, duty_out.month, duty_out.day, sched_timeout.hour, sched_timeout.minute, sched_timeout.second)
+                            late = 0
+                            undertime = 0
+                            total_hours = 0
+                            reg_ot_total = 0
+                            nd_ot_total = 0
+                            is_obt = False
+                            is_ua = False
+                            is_sp_holiday = False
+                            is_reg_holiday = False
+
+                            # Validation if the employee is late or undertime
+                            if curr_sched_timein < duty_in or sched_timeout > duty_out:
+                                # On Business Trip
+                                obts = OBT.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, obt_approval_status="APD", obt_date_from__gte=dtr_date_from, obt_date_to__lte=dtr_date_to)
+                                
+                                if obts.exists():
+                                    is_obt = True
+
+                                    if obts.count() == 1:
+                                        if obts.first().obt_date_from <= duty_in:
+                                            duty_in = obts.first().obt_date_from
+
+                                        if obts.first().obt_date_to >= duty_out:
+                                            duty_out = obts.first().obt_date_to
+                                        
+                                    elif obts.count() == 2:
+                                        if obts.first().obt_date_from <= duty_in:
+                                            duty_in = obts.first().obt_date_from
+
+                                        elif obts.last().obt_date_from <= duty_in:
+                                            duty_in = obts.last().obt_date_from 
+
+                                        if obts.first().obt_date_to >= duty_out:
+                                            duty_out = obts.first().obt_date_to
+                                            
+                                        elif obts.last().obt_date_to >= duty_out:
+                                            duty_out = obts.last().obt_date_to
+
+                                #  Unaccounted Attendance
+                                uas = UnaccountedAttendance.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, ua_approval_status="APD", ua_date_from__gte=dtr_date_from, ua_date_to__lte=dtr_date_to)
+
+                                if uas.exists():
+                                    is_ua = True
+
+                                    if uas.count() == 1:
+                                        if uas.first().ua_date_from <= duty_in:
+                                            duty_in = uas.first().ua_date_from
+
+                                        if uas.first().ua_date_to >= duty_out:
+                                            duty_out = uas.first().ua_date_to
+
+                                    elif uas.count() == 2:
+                                        if uas.first().ua_date_from <= duty_in:
+                                            duty_in = uas.first().ua_date_from
+
+                                        elif uas.last().ua_date_from <= duty_in:
+                                            duty_in = uas.last().ua_date_from
+
+                                        if uas.first().ua_date_to >= duty_out:
+                                            duty_out = uas.first().ua_date_to
+
+                                        elif uas.last().ua_date_to >= duty_out:
+                                            duty_out = uas.last().ua_date_to
+
+                            # Overtime
+                            ot = Overtime.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, ot_approval_status="APD", ot_date_from__gte=dtr_date_from, ot_date_to__lte=dtr_date_to)
+
+                            if ot.exists():
+                                reg_ot_total = ot.first().ot_date_to = ot.first().ot_date_from
+                                reg_ot_total = reg_ot_total.seconds/60
+
+                            # Late
+                            timein_difference = duty_in - curr_sched_timein
+
+                            if timein_difference > timedelta(minutes=0):
+                                late = timein_difference.seconds/60
+                            
+                            # Undertime 
+                            timeout_difference = curr_sched_timeout - duty_out
+
+                            if timeout_difference > timedelta(minutes=0):
+                                undertime = timeout_difference.seconds/60
+
+                            # Total work hours
+                            work_hours = duty_out - duty_in
+
+                            if work_hours >= timedelta(hours=8):
+                                total_hours = 480
+
+                            else:
+                                total_hours = int(work_hours.seconds/60)
+
+                            # Holiday
+                            holiday = Holiday.objects.filter(holiday_date__gte=dtr_date_from, holiday_date__lte=dtr_date_to)
+
+                            if holiday.exists():
+                                if holiday.first().holiday_type == "SH":
+                                    is_sp_holiday = True
+                                
+                                elif holiday.first().holiday_type == "LH":
+                                    is_reg_holiday = True
+
+                            dtr_summary = {
+                                "emp_no": employee.emp_no,
+                                "cutoff_code": cutoff_code,
+                                "business_date": business_date,
+                                "shift_name": shift_name,
+                                "duty_in": duty_in,
+                                "duty_out": duty_out,
+                                "sched_timein": sched_timein,
+                                "sched_timeout": sched_timeout,
+                                "lates": late,
+                                "undertime": undertime,
+                                "total_hours": total_hours,
+                                "reg_ot_total": reg_ot_total,
+                                "nd_ot_total": nd_ot_total,
+                                "is_obt": is_obt,
+                                "is_ua": is_ua,
+                                "is_reg_holiday": is_reg_holiday,
+                                "is_sp_holiday": is_sp_holiday
+                            }
+                             
+                            serializer = DTRSerializer(data=dtr_summary)
+
+                            if serializer.is_valid():
+                                serializer.save()
+
+                            else:
+                                return Response({"Location": "DTR Entry", "Error": serializer.errors}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+
+
+                        elif not dtr_entries.exists():
+                            
+                            schedule_daily = ScheduleDaily.objects.filter(emp_no=employee.emp_no, business_date__gte=dtr_date_from, business_date__lte=dtr_date_to)
+
+                            if schedule_daily.exists():
+                                business_date = schedule_daily.first().business_date
+                                shift_name = schedule_daily.first().schedule_shift_code.name
+                                duty_in = None
+                                duty_out = None
+                                sched_timein = schedule_daily.first().schedule_shift_code.time_in
+                                sched_timeout = schedule_daily.first().schedule_shift_code.time_out
+                                total_hours = 0
+                                paid_leave = False
+                                leave_type = ""
+                                is_obt = False
+                                is_ua = False
+                                is_sp_holiday = False
+                                is_reg_holiday = False
+                                is_absent = False
+
+                                # Holiday
+                                holiday = Holiday.objects.filter(holiday_date__gte=dtr_date_from, holiday_date__lte=dtr_date_to)                                
+
+                                if holiday.exists():
+                                    if holiday.first().holiday_type == "SH":
+                                        is_sp_holiday = True
+                                    
+                                    elif holiday.first().holiday_type == "LH":
+                                        is_reg_holiday = True
+
+                                # Leave Application
+                                leaves = Leaves.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, leave_approval_status="APD", leave_date_from__gte=dtr_date_from, leave_date_to__lte=dtr_date_to)
+
+                                if leaves.exists():
+                                    leave_type = leaves.first().leave_type.name
+                                    paid_leave = leaves.first().leave_type.is_paid
+
+                                # On Business Trip
+                                obts = OBT.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, obt_approval_status="APD", obt_date_from__gte=dtr_date_from, obt_date_to__lte=dtr_date_to)
+
+                                if obts.exists():
+                                    is_obt = True
+                                    duty_in = obts.first().obt_date_from
+                                    duty_out = obts.first().obt_date_to
+                                    total_hours = duty_out - duty_in
+                                    total_hours = int(total_hours.seconds/60)
+
+                                # Unaccounted Attendance
+                                uas = UnaccountedAttendance.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, ua_approval_status="APD", ua_date_from__gte=dtr_date_from, ua_date_to__lte=dtr_date_to)
+                                if uas.exists():
+                                    is_ua = True
+                                    duty_in = uas.first().ua_date_from
+                                    duty_out = uas.first().ua_date_to
+                                    total_hours = duty_out - duty_in
+                                    total_hours = int(total_hours.seconds/60)
+
+                                # Absent                                
+                                if is_sp_holiday == False and is_reg_holiday == False and leave_type == "" and is_obt == False and is_ua == False:
+                                    is_absent = True
+
+                                dtr_summary = {
+                                    "emp_no": employee.emp_no,
+                                    "cutoff_code": cutoff_code,
+                                    "business_date": business_date,
+                                    "shift_name": shift_name,
+                                    "duty_in": duty_in,
+                                    "duty_out": duty_out,
+                                    "sched_timein": sched_timein,
+                                    "sched_timeout": sched_timeout,
+                                    "undertime": 0,
+                                    "lates": 0,
+                                    "total_hours": total_hours,
+                                    "is_paid_leave": paid_leave,
+                                    "paid_leave_type": leave_type,
+                                    "reg_ot_total": 0,
+                                    "nd_ot_total": 0,
+                                    "is_obt": is_obt,
+                                    "is_ua": is_ua,
+                                    "is_sp_holiday": is_sp_holiday,
+                                    "is_reg_holiday": is_reg_holiday,
+                                    "is_absent": is_absent,
+                                }
+
+                                serializer = DTRSerializer(data=dtr_summary)
+
+                                if serializer.is_valid():
+                                    serializer.save()
+
+                                else:
+                                    return Response({"Location": "Schedule Shift", "Error": serializer.errors}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+                            elif not schedule_daily.exists():
+                                is_restday = True
+
+                                dtr_summary = {
+                                    "emp_no": employee.emp_no,
+                                    "cutoff_code": cutoff_code,
+                                    "business_date": date(start_date.year, start_date.month, start_date.day),
+                                    "shift_name": "RD",
+                                    "duty_in": None,
+                                    "duty_out": None,
+                                    "sched_timein": None,
+                                    "sched_timeout": None,
+                                    "undertime": 0,
+                                    "lates": 0,
+                                    "total_hours": 0,
+                                    "is_paid_leave": False,
+                                    "paid_leave_type": "",
+                                    "reg_ot_total": 0,
+                                    "nd_ot_total": 0,
+                                    "is_obt": False,
+                                    "is_ua": False,
+                                    "is_sp_holiday": False,
+                                    "is_reg_holiday": False,
+                                    "is_absent": False,
+                                    "is_sched_restday": is_restday
+                                }
+                                
+                                serializer = DTRSerializer(data=dtr_summary)
+
+                                if serializer.is_valid():
+                                    serializer.save()
+
+                                else:
+                                    return Response({"Location": "Restday", "Error": serializer.errors}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)                                            
+
+
+
+                        start_date += delta
+                    
+
+                    return Response({"Message": "Successfully merge DTR of selected employees"}, status=status.HTTP_201_CREATED)
+
+
+                except Exception as e:
+                    return Response({"Exception Message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+        return Response({"Message": "Successfully merge DTR of all employees with the same payroll group code"}, status=status.HTTP_201_CREATED)
