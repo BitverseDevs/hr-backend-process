@@ -333,7 +333,8 @@ class MergeDTREntryView(APIView):
                     while start_date <= end_date:
                         dtr_date_from = datetime(start_date.year, start_date.month,start_date.day)
                         dtr_date_to = datetime(start_date.year, start_date.month, start_date.day, 23, 59, 59)
-                        dtr_entries = DTR.objects.filter(emp_no=employee.emp_no, datetime_bio__gte=dtr_date_from, datetime_bio__lte=dtr_date_to)
+                        # dtr_entries = DTR.objects.filter(emp_no=employee.emp_no, datetime_bio__gte=dtr_date_from, datetime_bio__lte=dtr_date_to)
+                        dtr_entries = DTR.objects.filter(emp_no=employee.emp_no, datetime_bio__gte=dtr_date_from, datetime_bio__lte=dtr_date_to, is_processed=False)
 
                         if dtr_entries.exists():
                             # Initialization of variables
@@ -466,6 +467,21 @@ class MergeDTREntryView(APIView):
                                 "is_reg_holiday": is_reg_holiday,
                                 "is_sp_holiday": is_sp_holiday
                             }
+
+                            # Changing the DTR Entry is_processed to True
+                            # print(dtr_entries.first().datetime_bio)
+                            # print(dtr_entries.last().datetime_bio)
+
+                            # dtr_entry_in = DTR.objects.get(pk=dtr_entries.first().pk)
+                            # dtr_entry_in.is_processed = True
+                            # dtr_entry_in.save()
+                            # print(dtr_entry_in)
+
+                            # dtr_entry_out = DTR.objects.get(pk=dtr_entries.last().pk)
+                            # dtr_entry_out.is_processed = True
+                            # dtr_entry_out.save()
+                            # print(dtr_entry_out)
+
                              
                             serializer = DTRSummarySerializer(data=dtr_summary)
 
@@ -632,7 +648,8 @@ class MergeDTREntryView(APIView):
                     while start_date <= end_date:
                         dtr_date_from = datetime(start_date.year, start_date.month,start_date.day)
                         dtr_date_to = datetime(start_date.year, start_date.month, start_date.day, 23, 59, 59)
-                        dtr_entries = DTR.objects.filter(emp_no=employee.emp_no, datetime_bio__gte=dtr_date_from, datetime_bio__lte=dtr_date_to)
+                        # dtr_entries = DTR.objects.filter(emp_no=employee.emp_no, datetime_bio__gte=dtr_date_from, datetime_bio__lte=dtr_date_to)
+                        dtr_entries = DTR.objects.filter(emp_no=employee.emp_no, datetime_bio__gte=dtr_date_from, datetime_bio__lte=dtr_date_to, is_processed=False)
 
                         if dtr_entries.exists():
                             # Initialization of variables
@@ -766,6 +783,19 @@ class MergeDTREntryView(APIView):
                                 "is_sp_holiday": is_sp_holiday
                             }
                             
+                            # Changing the DTR Entry is_processed to True
+                            # print(dtr_entries.first().datetime_bio)
+                            # print(dtr_entries.last().datetime_bio)
+
+                            # dtr_entry_in = DTR.objects.get(pk=dtr_entries.first().pk)
+                            # dtr_entry_in.is_processed = True
+                            # dtr_entry_in.save()
+                            # print(dtr_entry_in)
+
+                            # dtr_entry_out = DTR.objects.get(pk=dtr_entries.last().pk)
+                            # dtr_entry_out.is_processed = True
+                            # dtr_entry_out.save()
+                            # print(dtr_entry_out)
                              
                             serializer = DTRSummarySerializer(data=dtr_summary)
 
