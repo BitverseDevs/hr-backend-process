@@ -177,38 +177,108 @@ class AnniversaryView(APIView):
 
 class EmployeeUploadView(APIView):
     def post(self, request, *args, **kwargs):
-        employee_file = request.FILES.get('file')
+        file = request.FILES.get('file')
+        filename = str(file)
+        existing = []
+        non_existing = []
+        error_row = []
 
-        if not employee_file:
-            return Response({'message': "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
+        if not file:
+            return Response({"Message": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
         
-        try:
-            tsv_file = employee_file.read().decode('utf-8')
-            reader = csv.reader(tsv_file.splitlines(), delimiter=',')
-            for row in reader:
-                employee = Employee.objects.create(
-                    emp_no = row[0],
-                    first_name = row[1],
-                    middle_name = None if row[2] == "" else row[2],
-                    last_name = row[3],
-                    suffix = None if row[4] == "" else row[4],
-                    birthday = row[5],
-                    birth_place = row[6],
-                    civil_status = 7,
-                    gender = 8,
-                    address = row[9],
-                    provincial_address = None if row[10] == "" else row[10],
-                    mobile_phone = row[11],
-                    email_address = f"{row[1]}.{row[3]}@sample.com",
-                    date_hired = row[12],
-                    date_resigned = None,
-                    date_added = datetime.today(),
-                    date_deleted = None,
-                )
-            return Response({"message": "File has been read and successfully uploaded to Employee database"}, status=status.HTTP_201_CREATED)
+        else:
+            print(file)
+            if filename.endswith('.csv'):
+                print("may tama ka")
+                csv_file = file.read().decode('utf-8')
+                reader = csv.reader(csv_file.splitlines(),delimiter=',')
+
+                for row in reader:
+                    emp_no = row[0]
+
+                    if Employee.objects.filter(emp_no=emp_no).exists():
+                        existing.append(row)
+                        continue
+
+                    else:
+                        employee = {
+                            "emp_no": row[0],
+                            "first_name": row[1],
+                            "middle_name": None if row[2] == "" else row[2],
+                            "last_name": row[3],
+                            "suffix": None if row[4] == "" else row[4],
+                            "birthday": row[5],
+                            "birth_place": row[6],
+                            "civil_status": row[7],
+                            "gender": row[8],
+                            "address": row[9],
+                            "provincial_address": None if row[10] == "" else row[10],
+                            "mobile_phone": row[11],
+                            "email_address": f"{row[1]}.{row[3]}@sample.com",
+                            "date_hired": row[12],
+                            "date_resigned": None,
+                            "date_added": datetime.now(),
+                            "date_deleted": None,                            
+                        }
+
+                        serializer = EmployeeSerializer(data=employee)
+
+                        if serializer.is_valid():
+                            serializer.save()
+                            non_existing.append(row)
+
+                        else:
+                            error_row.append(row)
+
+                if error_row is not None:
+                    return Response({"Message": "There are employee data with incorrect format", "Error rows": error_row, "error": "Succesful import": non_existing}, status=status.HTTP_306_RESERVED)
+                
+                
+                elif existing is not None:
+                    return Response({"Message": "There are employees with existing employee number", "Existing rows": existing, "Succesfull import": non_existing}, status=status.HTTP_226_IM_USED)
+                
+                else:
+                    return Response({"Message": "All employee data has been imported to the database"}, status=status.HTTP_201_CREATED)
+
+            else:
+                print("mali ang sinend mong file")
+                return Response({"Message": "The file you uploaded cannot be processed due to incorrect file extension"}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)            
+            
+
+# class EmployeeUploadView(APIView):
+#     def post(self, request, *args, **kwargs):
+#         employee_file = request.FILES.get('file')
+
+#         if not employee_file:
+#             return Response({'message': "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
         
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+#         try:
+            # tsv_file = employee_file.read().decode('utf-8')
+            # reader = csv.reader(tsv_file.splitlines(), delimiter='\t')
+            # for row in reader:
+            #     employee = Employee.objects.create(
+            #         emp_no = row[0],
+            #         first_name = row[1],
+            #         middle_name = None if row[2] == "" else row[2],
+            #         last_name = row[3],
+            #         suffix = None if row[4] == "" else row[4],
+            #         birthday = row[5],
+            #         birth_place = row[6],
+            #         civil_status = 7,
+            #         gender = 8,
+            #         address = row[9],
+            #         provincial_address = None if row[10] == "" else row[10],
+            #         mobile_phone = row[11],
+            #         email_address = f"{row[1]}.{row[3]}@sample.com",
+            #         date_hired = row[12],
+            #         date_resigned = None,
+            #         date_added = datetime.today(),
+            #         date_deleted = None,
+            #     )
+#             return Response({"message": "File has been read and successfully uploaded to Employee database"}, status=status.HTTP_201_CREATED)
+        
+#         except Exception as e:
+#             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
 class ExportEmployeeView(APIView):
     def post(self, request, number_of_employee=None, order=None, *args, **kwargs):
