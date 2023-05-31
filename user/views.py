@@ -322,8 +322,8 @@ class MergeDTREntryView(APIView):
 
         if user_emp_nos is not None:
             for user_emp_no in user_emp_nos:
-                print(user_emp_no)
                 try:
+                    print(user_emp_no)
                     employee = get_object_or_404(Employee, emp_no=user_emp_no)
                     cutoff = get_object_or_404(Cutoff, pk=cutoff_code)
                     start_date = cutoff.co_date_from
@@ -356,7 +356,7 @@ class MergeDTREntryView(APIView):
                             is_reg_holiday = False
 
                             # Validation if the employee is late or undertime
-                            if curr_sched_timein < duty_in or sched_timeout > duty_out:
+                            if curr_sched_timein < duty_in or curr_sched_timeout > duty_out:
                                 # On Business Trip
                                 obts = OBT.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, obt_approval_status="APD", obt_date_from__gte=dtr_date_from, obt_date_to__lte=dtr_date_to)
                                 
@@ -413,7 +413,7 @@ class MergeDTREntryView(APIView):
                             ot = Overtime.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, ot_approval_status="APD", ot_date_from__gte=dtr_date_from, ot_date_to__lte=dtr_date_to)
 
                             if ot.exists():
-                                reg_ot_total = ot.first().ot_date_to = ot.first().ot_date_from
+                                reg_ot_total = ot.first().ot_date_to - ot.first().ot_date_from
                                 reg_ot_total = reg_ot_total.seconds/60
 
                             # Late
@@ -429,7 +429,7 @@ class MergeDTREntryView(APIView):
                                 undertime = timeout_difference.seconds/60
 
                             # Total work hours
-                            work_hours = duty_out - duty_in
+                            work_hours = duty_out - duty_in - timedelta(minutes=60)
 
                             if work_hours >= timedelta(hours=8):
                                 total_hours = 480
@@ -467,7 +467,7 @@ class MergeDTREntryView(APIView):
                                 "is_sp_holiday": is_sp_holiday
                             }
                              
-                            serializer = DTRSerializer(data=dtr_summary)
+                            serializer = DTRSummarySerializer(data=dtr_summary)
 
                             if serializer.is_valid():
                                 serializer.save()
@@ -490,7 +490,7 @@ class MergeDTREntryView(APIView):
                                 sched_timeout = schedule_daily.first().schedule_shift_code.time_out
                                 total_hours = 0
                                 paid_leave = False
-                                leave_type = ""
+                                leave_type = None
                                 is_obt = False
                                 is_ua = False
                                 is_sp_holiday = False
@@ -534,7 +534,7 @@ class MergeDTREntryView(APIView):
                                     total_hours = int(total_hours.seconds/60)
 
                                 # Absent                                
-                                if is_sp_holiday == False and is_reg_holiday == False and leave_type == "" and is_obt == False and is_ua == False:
+                                if is_sp_holiday == False and is_reg_holiday == False and leave_type == None and is_obt == False and is_ua == False:
                                     is_absent = True
 
                                 dtr_summary = {
@@ -560,7 +560,7 @@ class MergeDTREntryView(APIView):
                                     "is_absent": is_absent,
                                 }
 
-                                serializer = DTRSerializer(data=dtr_summary)
+                                serializer = DTRSummarySerializer(data=dtr_summary)
 
                                 if serializer.is_valid():
                                     serializer.save()
@@ -586,7 +586,7 @@ class MergeDTREntryView(APIView):
                                     "lates": 0,
                                     "total_hours": 0,
                                     "is_paid_leave": False,
-                                    "paid_leave_type": "",
+                                    "paid_leave_type": None,
                                     "reg_ot_total": 0,
                                     "nd_ot_total": 0,
                                     "is_obt": False,
@@ -597,7 +597,7 @@ class MergeDTREntryView(APIView):
                                     "is_sched_restday": is_restday
                                 }
                                 
-                                serializer = DTRSerializer(data=dtr_summary)
+                                serializer = DTRSummarySerializer(data=dtr_summary)
 
                                 if serializer.is_valid():
                                     serializer.save()
@@ -607,14 +607,13 @@ class MergeDTREntryView(APIView):
 
 
 
-                        start_date += delta
-                    
-
-                    return Response({"Message": "Successfully merge DTR of selected employees"}, status=status.HTTP_201_CREATED)
+                        start_date += delta                                        
 
 
                 except Exception as e:
                     return Response({"Exception Message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                
+            return Response({"Message": "Successfully merge DTR of selected employees"}, status=status.HTTP_201_CREATED)
 
         elif user_emp_nos is None:
             # print("Non User Emp Nos")            
@@ -624,8 +623,7 @@ class MergeDTREntryView(APIView):
 
             for employee in employees:
                 print(employee)
-                try:
-                    employee = get_object_or_404(Employee, emp_no=user_emp_no)
+                try:                    
                     cutoff = get_object_or_404(Cutoff, pk=cutoff_code)
                     start_date = cutoff.co_date_from
                     end_date = cutoff.co_date_to
@@ -657,7 +655,7 @@ class MergeDTREntryView(APIView):
                             is_reg_holiday = False
 
                             # Validation if the employee is late or undertime
-                            if curr_sched_timein < duty_in or sched_timeout > duty_out:
+                            if curr_sched_timein < duty_in or curr_sched_timeout > duty_out:
                                 # On Business Trip
                                 obts = OBT.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, obt_approval_status="APD", obt_date_from__gte=dtr_date_from, obt_date_to__lte=dtr_date_to)
                                 
@@ -714,7 +712,7 @@ class MergeDTREntryView(APIView):
                             ot = Overtime.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, ot_approval_status="APD", ot_date_from__gte=dtr_date_from, ot_date_to__lte=dtr_date_to)
 
                             if ot.exists():
-                                reg_ot_total = ot.first().ot_date_to = ot.first().ot_date_from
+                                reg_ot_total = ot.first().ot_date_to - ot.first().ot_date_from
                                 reg_ot_total = reg_ot_total.seconds/60
 
                             # Late
@@ -730,7 +728,7 @@ class MergeDTREntryView(APIView):
                                 undertime = timeout_difference.seconds/60
 
                             # Total work hours
-                            work_hours = duty_out - duty_in
+                            work_hours = duty_out - duty_in - timedelta(minutes=60)
 
                             if work_hours >= timedelta(hours=8):
                                 total_hours = 480
@@ -767,8 +765,9 @@ class MergeDTREntryView(APIView):
                                 "is_reg_holiday": is_reg_holiday,
                                 "is_sp_holiday": is_sp_holiday
                             }
+                            
                              
-                            serializer = DTRSerializer(data=dtr_summary)
+                            serializer = DTRSummarySerializer(data=dtr_summary)
 
                             if serializer.is_valid():
                                 serializer.save()
@@ -791,7 +790,7 @@ class MergeDTREntryView(APIView):
                                 sched_timeout = schedule_daily.first().schedule_shift_code.time_out
                                 total_hours = 0
                                 paid_leave = False
-                                leave_type = ""
+                                leave_type = None
                                 is_obt = False
                                 is_ua = False
                                 is_sp_holiday = False
@@ -835,7 +834,7 @@ class MergeDTREntryView(APIView):
                                     total_hours = int(total_hours.seconds/60)
 
                                 # Absent                                
-                                if is_sp_holiday == False and is_reg_holiday == False and leave_type == "" and is_obt == False and is_ua == False:
+                                if is_sp_holiday == False and is_reg_holiday == False and leave_type == None and is_obt == False and is_ua == False:
                                     is_absent = True
 
                                 dtr_summary = {
@@ -861,7 +860,7 @@ class MergeDTREntryView(APIView):
                                     "is_absent": is_absent,
                                 }
 
-                                serializer = DTRSerializer(data=dtr_summary)
+                                serializer = DTRSummarySerializer(data=dtr_summary)
 
                                 if serializer.is_valid():
                                     serializer.save()
@@ -887,7 +886,7 @@ class MergeDTREntryView(APIView):
                                     "lates": 0,
                                     "total_hours": 0,
                                     "is_paid_leave": False,
-                                    "paid_leave_type": "",
+                                    "paid_leave_type": None,
                                     "reg_ot_total": 0,
                                     "nd_ot_total": 0,
                                     "is_obt": False,
@@ -898,7 +897,7 @@ class MergeDTREntryView(APIView):
                                     "is_sched_restday": is_restday
                                 }
                                 
-                                serializer = DTRSerializer(data=dtr_summary)
+                                serializer = DTRSummarySerializer(data=dtr_summary)
 
                                 if serializer.is_valid():
                                     serializer.save()
@@ -909,13 +908,10 @@ class MergeDTREntryView(APIView):
 
 
                         start_date += delta
-                    
-
-                    return Response({"Message": "Successfully merge DTR of selected employees"}, status=status.HTTP_201_CREATED)
 
 
                 except Exception as e:
                     return Response({"Exception Message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-        return Response({"Message": "Successfully merge DTR of all employees with the same payroll group code"}, status=status.HTTP_201_CREATED)
+            return Response({"Message": "Successfully merge DTR of all employees with the same payroll group code"}, status=status.HTTP_201_CREATED)
