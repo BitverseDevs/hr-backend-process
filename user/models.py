@@ -29,19 +29,6 @@ TAX_FREQUENCY = (
     (3, "Annual"),
 )
 
-GENDER = [
-    ("M", "Male"),
-    ("F", "Female"),
-]
-
-CIVIL_STATUS = [
-    ("S", "Single"),
-    ("M", "Married"),
-    ("A", "Annulled"),
-    ("W", "Widowed"),
-    ("SE", "Separated"),
-]
-
 HOLIDAY_TYPE = [
     ("SH", "Special Non-working Holiday"),
     ("LH", "Legal Working Holiday"),
@@ -197,8 +184,8 @@ class Employee(models.Model):
     suffix = models.CharField(max_length=4, null=True, blank=True)
     birthday = models.DateField()
     birth_place = models.CharField(max_length=50, null=True, blank=True)
-    civil_status = models.CharField(max_length=2, choices=CIVIL_STATUS)
-    gender = models.CharField(max_length=1, choices=GENDER)
+    civil_status = models.CharField(max_length=2)
+    gender = models.CharField(max_length=1)
     address = models.TextField(max_length=50)
     provincial_address = models.TextField(max_length=50, null=True, blank=True)
     mobile_phone = models.CharField(max_length=15)
