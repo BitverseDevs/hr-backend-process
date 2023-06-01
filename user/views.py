@@ -181,7 +181,6 @@ class EmployeeUploadView(APIView):
         filename = str(file)
         existing = []
         non_existing = []
-        error_row = []
 
         if not file:
             return Response({"Message": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
@@ -201,6 +200,19 @@ class EmployeeUploadView(APIView):
                         continue
 
                     else:
+                        gender = {
+                            "Male": "M",
+                            "Female": "F"
+                        }
+
+                        civil_status = {
+                            "Single": "S",
+                            "Married": "M",
+                            "Annulled": "A",
+                            "Widowed": "W",
+                            "Separated": "SA"
+                        }
+                        
                         employee = {
                             "emp_no": row[0],
                             "first_name": row[1],
@@ -209,8 +221,8 @@ class EmployeeUploadView(APIView):
                             "suffix": None if row[4] == "" else row[4],
                             "birthday": row[5],
                             "birth_place": row[6],
-                            "civil_status": row[7],
-                            "gender": row[8],
+                            "civil_status": civil_status[row[7]] if row[7] in civil_status.keys() else row[7],
+                            "gender": gender[row[8]] if row[8] in gender.keys() else row[8],
                             "address": row[9],
                             "provincial_address": None if row[10] == "" else row[10],
                             "mobile_phone": row[11],
@@ -228,17 +240,31 @@ class EmployeeUploadView(APIView):
                             non_existing.append(row)
 
                         else:
-                            error_row.append(row)
+                            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-                if error_row is not None:
-                    return Response({"Message": "There are employee data with incorrect format", "Error rows": error_row, "error": "Succesful import": non_existing}, status=status.HTTP_306_RESERVED)
+                if existing:
+                    return Response({
+                        "Message": "Uploaded employee data contains employee number that already exists in the sysyem. Unique employee data is successfully uploaded in the database", 
+                        "Existing employee/s": existing, 
+                        "Unique employee/s": non_existing
+                        }, status=status.HTTP_200_OK)
+            
+                elif not existing:
+                    return Response({
+                        "Message": "All employee data is unique and is successfully uploaded into the database",
+                        "Unique employee/s": non_existing
+                    }, status=status.HTTP_202_ACCEPTED)
+
+
+                # if error_row is not None:
+                #     return Response({"Message": "There are employee data with incorrect format", "Error rows": error_row, "Succesful import": non_existing}, status=status.HTTP_306_RESERVED)
                 
                 
-                elif existing is not None:
-                    return Response({"Message": "There are employees with existing employee number", "Existing rows": existing, "Succesfull import": non_existing}, status=status.HTTP_226_IM_USED)
+                # elif existing is not None:
+                #     return Response({"Message": "There are employees with existing employee number", "Existing rows": existing, "Succesfull import": non_existing}, status=status.HTTP_226_IM_USED)
                 
-                else:
-                    return Response({"Message": "All employee data has been imported to the database"}, status=status.HTTP_201_CREATED)
+                # else:
+                #     return Response({"Message": "All employee data has been imported to the database"}, status=status.HTTP_201_CREATED)
 
             else:
                 print("mali ang sinend mong file")
