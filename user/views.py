@@ -334,17 +334,18 @@ class DTRView(APIView):
         
 class UploadDTREntryView(APIView):
     def post(self, request, *args, **kwargs):
-        csv_file = request.FILES.get('file')
-        csv_filename = str(csv_file)
+        tsv_file = request.FILES.get('file')
+        tsv_filename = str(tsv_file)
 
-        if not csv_file:
+        if not tsv_file:
             return Response({"message": "No file uploaded"}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
         
         else:
-            if csv_filename.endswith(".csv"):
+            if tsv_filename.endswith(".tsv"):
                 try:
-                    stream = io.StringIO(csv_file.read().decode('utf-8'))
-                    dframe = pd.read_csv(stream)
+                    stream = io.StringIO(tsv_file.read().decode('utf-8'))
+                    columns = ['bio_id', 'datetime_bio', 'duty_in', 'duty_out', 'lunch_in', 'lunch_out', 'branch']
+                    dframe = pd.read_table(stream, header=None, names=columns)
                     dframe = dframe.sort_values(['bio_id', 'datetime_bio'])
                     dframe['datetime_bio'] = pd.to_datetime(dframe['datetime_bio'])
                     dframe['date'] = dframe["datetime_bio"].dt.date
@@ -529,13 +530,13 @@ class MergeDTRSummaryView(APIView):
                             timein_difference = duty_in - curr_sched_timein
 
                             if timein_difference > timedelta(minutes=0):
-                                late = timein_difference.seconds/60
+                                late = int(timein_difference.seconds/60)
                             
                             # Undertime 
                             timeout_difference = curr_sched_timeout - duty_out
 
                             if timeout_difference > timedelta(minutes=0):
-                                undertime = timeout_difference.seconds/60
+                                undertime = int(timeout_difference.seconds/60)
 
                             # Total work hours
                             work_hours = duty_out - duty_in - timedelta(minutes=60)
@@ -844,13 +845,13 @@ class MergeDTRSummaryView(APIView):
                             timein_difference = duty_in - curr_sched_timein
 
                             if timein_difference > timedelta(minutes=0):
-                                late = timein_difference.seconds/60
+                                late = int(timein_difference.seconds/60)
                             
                             # Undertime 
                             timeout_difference = curr_sched_timeout - duty_out
 
                             if timeout_difference > timedelta(minutes=0):
-                                undertime = timeout_difference.seconds/60
+                                undertime = int(timeout_difference.seconds/60)
 
                             # Total work hours
                             work_hours = duty_out - duty_in - timedelta(minutes=60)
