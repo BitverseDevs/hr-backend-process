@@ -173,131 +173,91 @@ class AnniversaryView(APIView):
             }
             data.append(employee_data)
 
-        return Response(data, status=status.HTTP_200_OK)
-
-# Employee Upload TSV
-
-class EmployeeUploadView(APIView):
-    def post(self, request, *args, **kwargs):
-        employee_file = request.FILES.get('file')
-        print(employee_file)
-
-        if not employee_file:
-            return Response({'message': "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        try:
-            tsv_file = employee_file.read().decode('utf-8')
-            reader = csv.reader(tsv_file.splitlines(), delimiter='\t')
-            for row in reader:
-                employee = Employee.objects.create(
-                    emp_no = row[0],
-                    first_name = row[1],
-                    middle_name = None if row[2] == "" else row[2],
-                    last_name = row[3],
-                    suffix = None if row[4] == "" else row[4],
-                    birthday = row[5],
-                    birth_place = row[6],
-                    civil_status = 7,
-                    gender = 8,
-                    address = row[9],
-                    provincial_address = None if row[10] == "" else row[10],
-                    mobile_phone = row[11],
-                    email_address = f"{row[1]}.{row[3]}@sample.com",
-                    date_hired = row[12],
-                    date_resigned = None,
-                    approver = 0000,
-                    date_added = datetime.today(),
-                    date_deleted = None,
-                )
-            return Response({"message": "File has been read and successfully uploaded to Employee database"}, status=status.HTTP_201_CREATED)
-        
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
+        return Response(data, status=status.HTTP_200_OK)        
         
 
 # Employee Upload CSV
 
-# class EmployeeUploadView(APIView):
-#     def post(self, request, *args, **kwargs):
-#         file = request.FILES.get('file')
-#         filename = str(file)
-#         existing = []
-#         non_existing = []
+class EmployeeUploadView(APIView):
+    def post(self, request, *args, **kwargs):
+        file = request.FILES.get('file')
+        filename = str(file)
+        existing = []
+        non_existing = []
 
-#         if not file:
-#             return Response({"Message": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
+        if not file:
+            return Response({"Message": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
         
-#         else:
-#             if filename.endswith('.csv'):
-#                 csv_file = file.read().decode('utf-8')
-#                 reader = csv.reader(csv_file.splitlines(),delimiter=',')
+        else:
+            if filename.endswith('.csv'):
+                csv_file = file.read().decode('utf-8')
+                reader = csv.reader(csv_file.splitlines(),delimiter=',')
 
-#                 for row in reader:
-#                     emp_no = row[0]
+                for row in reader:
+                    emp_no = row[0]
 
-#                     if Employee.objects.filter(emp_no=emp_no).exists():
-#                         existing.append(row)
-#                         continue
+                    if Employee.objects.filter(emp_no=emp_no).exists():
+                        existing.append(row)
+                        continue
 
-#                     else:
-#                         gender = {
-#                             "Male": "M",
-#                             "Female": "F"
-#                         }
+                    else:
+                        gender = {
+                            "Male": "M",
+                            "Female": "F"
+                        }
 
-#                         civil_status = {
-#                             "Single": "S",
-#                             "Married": "M",
-#                             "Annulled": "A",
-#                             "Widowed": "W",
-#                             "Separated": "SA"
-#                         }
+                        civil_status = {
+                            "Single": "S",
+                            "Married": "M",
+                            "Annulled": "A",
+                            "Widowed": "W",
+                            "Separated": "SA"
+                        }
                         
-#                         employee = {
-#                             "emp_no": row[0],
-#                             "first_name": row[1],
-#                             "middle_name": None if row[2] == "" else row[2],
-#                             "last_name": row[3],
-#                             "suffix": None if row[4] == "" else row[4],
-#                             "birthday": row[5],
-#                             "birth_place": row[6],
-#                             "civil_status": civil_status[row[7]] if row[7] in civil_status.keys() else row[7],
-#                             "gender": gender[row[8]] if row[8] in gender.keys() else row[8],
-#                             "address": row[9],
-#                             "provincial_address": None if row[10] == "" else row[10],
-#                             "mobile_phone": row[11],
-#                             "email_address": f"{row[1].lower()}.{row[3].replace(' ', '_').lower()}@sample.com",
-#                             "date_hired": row[12],
-#                             "date_resigned": None,
-#                             "date_added": datetime.now(),
-#                             "date_deleted": None,                            
-#                         }
+                        employee = {
+                            "emp_no": row[0],
+                            "first_name": row[1],
+                            "middle_name": None if row[2] == "" else row[2],
+                            "last_name": row[3],
+                            "suffix": None if row[4] == "" else row[4],
+                            "birthday": row[5],
+                            "birth_place": row[6],
+                            "civil_status": civil_status[row[7]] if row[7] in civil_status.keys() else row[7],
+                            "gender": gender[row[8]] if row[8] in gender.keys() else row[8],
+                            "address": row[9],
+                            "provincial_address": None if row[10] == "" else row[10],
+                            "mobile_phone": row[11],
+                            "email_address": f"{row[1].lower()}.{row[3].replace(' ', '_').lower()}@sample.com",
+                            "date_hired": row[12],
+                            "date_resigned": None,
+                            "date_added": datetime.now(),
+                            "date_deleted": None,                            
+                        }
 
-#                         serializer = EmployeeSerializer(data=employee)
+                        serializer = EmployeeSerializer(data=employee)
 
-#                         if serializer.is_valid():
-#                             serializer.save()
-#                             non_existing.append(row)
+                        if serializer.is_valid():
+                            serializer.save()
+                            non_existing.append(row)
 
-#                         else:
-#                             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                        else:
+                            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-#                 if existing:
-#                     return Response({
-#                         "Message": "Uploaded employee data contains employee number that already exists in the sysyem. Unique employee data is successfully uploaded in the database", 
-#                         "Existing employee/s": existing, 
-#                         "Unique employee/s": non_existing
-#                         }, status=status.HTTP_200_OK)
+                if existing:
+                    return Response({
+                        "Message": "Uploaded employee data contains employee number that already exists in the sysyem. Unique employee data is successfully uploaded in the database", 
+                        "Existing employee/s": existing, 
+                        "Unique employee/s": non_existing
+                        }, status=status.HTTP_200_OK)
             
-#                 elif not existing:
-#                     return Response({
-#                         "Message": "All employee data is unique and is successfully uploaded into the database",
-#                         "Unique employee/s": non_existing
-#                     }, status=status.HTTP_202_ACCEPTED)
+                elif not existing:
+                    return Response({
+                        "Message": "All employee data is unique and is successfully uploaded into the database",
+                        "Unique employee/s": non_existing
+                    }, status=status.HTTP_202_ACCEPTED)
 
-            # else:                
-            #     return Response({"Message": "The file you uploaded cannot be processed due to incorrect file extension"}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)            
+            else:                
+                return Response({"Message": "The file you uploaded cannot be processed due to incorrect file extension"}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)            
             
         
 class ExportEmployeeView(APIView):
@@ -1102,8 +1062,7 @@ class CreateDTRCutoffSummaryView(APIView):
                             # dtr_summary.save()
 
                         if leave_types_used_list:
-                            cutoff_leave_types_used.join(leave_types_used_list)
-                            print(cutoff_leave_types_used)
+                            cutoff_leave_types_used.join(leave_types_used_list)                            
                         else:
                             cutoff_leave_types_used = None
                     
@@ -1181,13 +1140,10 @@ class CreateDTRCutoffSummaryView(APIView):
                             # dtr_summary.is_computed = True
                             # dtr_summary.save()
 
-                        if leave_types_used_list:
-                            print(leave_types_used_list)
-                            cutoff_leave_types_used = cutoff_leave_types_used.join(leave_types_used_list)
-                            print(cutoff_leave_types_used)
+                        if leave_types_used_list:                            
+                            cutoff_leave_types_used = cutoff_leave_types_used.join(leave_types_used_list)                            
                         else:
-                            cutoff_leave_types_used = None
-                            print("samepl")
+                            cutoff_leave_types_used = None                            
 
                         dtr_cutoff_summary = {
                             "emp_no": employee.emp_no,
