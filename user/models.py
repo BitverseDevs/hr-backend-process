@@ -320,7 +320,7 @@ class DTRSummary(models.Model):
         db_table = "TBL_DTR_SUMMARY"
 
 class DTRCutoff(models.Model):
-    emp_no = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    emp_no = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE)
     cutoff_code = models.ForeignKey("Cutoff", on_delete=models.CASCADE)
     
     business_date_from = models.DateField()
@@ -332,7 +332,7 @@ class DTRCutoff(models.Model):
     sp_holiday_total = models.PositiveSmallIntegerField(null=True, blank=True)
     reg_holiday_total = models.PositiveSmallIntegerField(null=True, blank=True)
     absent_total = models.PositiveSmallIntegerField(null=True, blank=True)
-    leaves_type_used = models.CharField(max_length=40, null=True, blank=True)
+    leaves_type_used = models.TextField(max_length=100, null=True, blank=True)
 
     overbreak_total = models.PositiveSmallIntegerField(null=True, blank=True)
     lates_total = models.PositiveSmallIntegerField(null=True, blank=True)

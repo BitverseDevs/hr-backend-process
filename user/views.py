@@ -18,7 +18,7 @@ from datetime import datetime, timedelta, time, date
 # Test API
 
 @api_view(['GET', 'POST'])
-def test_view(request, pk=None):
+def test_view(request, pk=None, *args, **kwargs):
     if request.method == 'GET':
         if pk is not None:
             test = get_object_or_404(UnaccountedAttendance, pk=pk)
@@ -41,7 +41,7 @@ def test_view(request, pk=None):
 # Create new user based on existing employee data
 
 class UserView(APIView):
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
@@ -104,7 +104,7 @@ class LoginView(APIView):
 class EmployeesView(APIView):
     parser_classes = [MultiPartParser, FormParser]
 
-    def get(self, request, emp_no=None):
+    def get(self, request, emp_no=None, *args, **kwargs):
         if emp_no is not None:
             employee = get_object_or_404(Employee, emp_no=emp_no, date_deleted__isnull=True)
             serializer = EmployeeSerializer(employee)
@@ -122,7 +122,7 @@ class EmployeesView(APIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
-    def put(self, request, emp_no):
+    def put(self, request, emp_no, *args, **kwargs):
         employee = get_object_or_404(Employee, emp_no=emp_no)
         serializer = EmployeeSerializer(employee, data=request.data)
 
@@ -132,7 +132,7 @@ class EmployeesView(APIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
-    def delete(self, request, emp_no):
+    def delete(self, request, emp_no, *args, **kwargs):
         employee = get_object_or_404(Employee, emp_no=emp_no)
         employee.date_deleted = date.today()
         employee.save()
@@ -140,7 +140,7 @@ class EmployeesView(APIView):
         return Response({"message": "Account successfully deleted"}, status=status.HTTP_204_NO_CONTENT)
 
 class BirthdayView(APIView):
-    def get(self, request):
+    def get(self, request, *args, **kwargs):
         employees = Employee.objects.all()
         employees = sorted(employees, key=lambda e: e.days_before(e.birthday))
         employees = employees[:50]
@@ -158,7 +158,7 @@ class BirthdayView(APIView):
         return Response(data, status=status.HTTP_200_OK)
     
 class AnniversaryView(APIView):
-    def get(self, request):
+    def get(self, request, *args, **kwargs):
         employees = Employee.objects.all()
         employees = sorted(employees, key=lambda e: e.days_before(e.date_hired))
         employees = employees[:50]
@@ -206,13 +206,15 @@ class EmployeeUploadView(APIView):
                     date_hired = row[12],
                     date_resigned = None,
                     approver = 0000,
-                    date_added = datetime.datetime.today(),
+                    date_added = datetime.today(),
                     date_deleted = None,
                 )
             return Response({"message": "File has been read and successfully uploaded to Employee database"}, status=status.HTTP_201_CREATED)
         
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        
 
 # Employee Upload CSV
 
@@ -320,7 +322,7 @@ class ExportEmployeeView(APIView):
 # DTR Dashboard
 
 class DTRView(APIView):
-    def get(self, request, pk=None):
+    def get(self, request, pk=None, *args, **kwargs):
         if pk is not None:
             dtr = get_object_or_404(DTR, pk=pk)
             serializer = DTRSerializer(dtr)
@@ -330,7 +332,7 @@ class DTRView(APIView):
             serializer = DTRSerializer(dtr)
             return Response(serializer.data, status=status.HTTP_200_OK)
         
-class TsvFileUploadView(APIView):
+class UploadDTREntryView(APIView):
     def post(self, request, *args, **kwargs):
         csv_file = request.FILES.get('file')
         csv_filename = str(csv_file)
@@ -408,7 +410,7 @@ class TsvFileUploadView(APIView):
 
 
 class CutoffPeriodListView(APIView):
-    def get(self, request, pk=None):                
+    def get(self, request, pk=None, *args, **kwargs):                
         if pk is not None:
             cutoff = Cutoff.objects.get(pk=pk)            
             payroll_group_code = cutoff.payroll_group_code
@@ -421,12 +423,12 @@ class CutoffPeriodListView(APIView):
             serializer = CutoffSerializer(cutoff, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
-class MergeDTREntryView(APIView):
-    def post(self, request):
+class MergeDTRSummaryView(APIView):
+    def post(self, request, *args, **kwargs):
         user_emp_nos = request.data["emp_no"]
         cutoff_code = request.data["cutoff_code"]
 
-        if user_emp_nos is not None:
+        if user_emp_nos:
             for user_emp_no in user_emp_nos:
                 try:
                     # print(user_emp_no)
@@ -1051,3 +1053,168 @@ class MergeDTREntryView(APIView):
 
 
             return Response({"Message": "Successfully merge DTR of all employees with the same payroll group code"}, status=status.HTTP_201_CREATED)
+        
+
+class CreateDTRCutoffSummaryView(APIView):
+    def post(self, request, *args, **kwargs):
+        user_emp_nos = request.data['emp_no']
+        cutoff_code = request.data['cutoff_code']
+
+        if user_emp_nos:
+            for user_emp_no in user_emp_nos:                
+                try:
+                    employee = get_object_or_404(Employee, emp_no=user_emp_no)
+                    cutoff = get_object_or_404(Cutoff, pk=cutoff_code)
+                    cutoff_start_date = cutoff.co_date_from
+                    cutoff_end_date = cutoff.co_date_to
+                    dtr_summaries = DTRSummary.objects.filter(emp_no=user_emp_no, cutoff_code=cutoff_code, business_date__gte=cutoff_start_date, business_date__lte=cutoff_end_date)
+
+                    cutoff_total_hours = 0
+                    cutoff_lates = 0
+                    cutoff_undertime = 0
+                    cutoff_paid_leaves_total = 0
+                    cutoff_leave_types_used = "."
+                    leave_types_used_list = []
+                    cutoff_reg_ot_total = 0
+                    cutoff_nd_ot_total = 0
+                    cutoff_sp_holiday_total = 0
+                    cutoff_reg_holiday_total = 0
+                    cutoff_absent_total = 0
+
+                    if dtr_summaries.exists():
+                        for dtr_summary in dtr_summaries:                            
+                            cutoff_total_hours += dtr_summary.total_hours
+                            cutoff_lates += dtr_summary.lates
+                            cutoff_undertime += dtr_summary.undertime
+                            cutoff_paid_leaves_total += int(dtr_summary.is_paid_leave)                            
+                            cutoff_reg_ot_total += dtr_summary.reg_ot_total
+                            cutoff_nd_ot_total += dtr_summary.nd_ot_total
+                            cutoff_sp_holiday_total += int(dtr_summary.is_sp_holiday)
+                            cutoff_reg_holiday_total += int(dtr_summary.is_reg_holiday)
+                            cutoff_absent_total += int(dtr_summary.is_absent)
+
+                            if dtr_summary.paid_leave_type:
+                                leave_types_used_list.append(dtr_summary.paid_leave_type)
+
+                            # Changing the DTR Summary is_computed to True
+                            # dtr_summary.is_computed = True
+                            # dtr_summary.save()
+
+                        if leave_types_used_list:
+                            cutoff_leave_types_used.join(leave_types_used_list)
+                            print(cutoff_leave_types_used)
+                        else:
+                            cutoff_leave_types_used = None
+                    
+                    dtr_cutoff_summary = {
+                        "emp_no": employee.emp_no,
+                        "cutoff_code": cutoff_code,
+                        "business_date_from": cutoff_start_date.date(),
+                        "business_date_to": cutoff_end_date.date(),
+                        "total_hours": cutoff_total_hours,
+                        "lates_total": cutoff_lates,
+                        "undertime_total": cutoff_undertime,
+                        "paid_leaves_total": cutoff_paid_leaves_total,
+                        "paid_leaves_type_used": cutoff_leave_types_used,
+                        "reg_ot_total": cutoff_reg_ot_total,
+                        "nd_ot_total": cutoff_nd_ot_total,
+                        "sp_holiday_total": cutoff_sp_holiday_total,
+                        "reg_holiday_total": cutoff_reg_holiday_total,
+                        "absent_total": cutoff_absent_total
+                    }
+
+                    serializer = DTRCutoffSerializer(data=dtr_cutoff_summary)
+
+                    if serializer.is_valid():
+                        serializer.save()
+                    
+                    else:
+                        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+                except Exception as e:
+                    return Response({"Error Message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            
+            return Response({"Message": "Successfully Created DTR Cutoff Summary for selected employee/s"}, status=status.HTTP_201_CREATED)
+
+        else:
+            cutoff = Cutoff.objects.get(pk=cutoff_code)
+            payroll_group_code = cutoff.payroll_group_code
+            employees = Employee.objects.filter(payroll_group_code=payroll_group_code)
+
+            for employee in employees:
+                try:                                        
+                    cutoff = get_object_or_404(Cutoff, pk=cutoff_code)
+                    cutoff_start_date = cutoff.co_date_from
+                    cutoff_end_date = cutoff.co_date_to
+                    dtr_summaries = DTRSummary.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, business_date__gte=cutoff_start_date, business_date__lte=cutoff_end_date)
+
+                    cutoff_total_hours = 0
+                    cutoff_lates = 0
+                    cutoff_undertime = 0
+                    cutoff_paid_leaves_total = 0
+                    cutoff_leave_types_used = "."
+                    leave_types_used_list = []
+                    cutoff_reg_ot_total = 0
+                    cutoff_nd_ot_total = 0
+                    cutoff_sp_holiday_total = 0
+                    cutoff_reg_holiday_total = 0
+                    cutoff_absent_total = 0
+
+                    if dtr_summaries.exists():
+                        for dtr_summary in dtr_summaries:
+                            cutoff_total_hours += dtr_summary.total_hours
+                            cutoff_lates += dtr_summary.lates
+                            cutoff_undertime += dtr_summary.undertime
+                            cutoff_paid_leaves_total += int(dtr_summary.is_paid_leave)                            
+                            cutoff_reg_ot_total += dtr_summary.reg_ot_total
+                            cutoff_nd_ot_total += dtr_summary.nd_ot_total
+                            cutoff_sp_holiday_total += int(dtr_summary.is_sp_holiday)
+                            cutoff_reg_holiday_total += int(dtr_summary.is_reg_holiday)
+                            cutoff_absent_total += int(dtr_summary.is_absent)
+
+                            if dtr_summary.paid_leave_type:
+                                leave_types_used_list.append(dtr_summary.paid_leave_type)
+
+                            # Changing the DTR Summary is_computed to True
+                            # dtr_summary.is_computed = True
+                            # dtr_summary.save()
+
+                        if leave_types_used_list:
+                            print(leave_types_used_list)
+                            cutoff_leave_types_used = cutoff_leave_types_used.join(leave_types_used_list)
+                            print(cutoff_leave_types_used)
+                        else:
+                            cutoff_leave_types_used = None
+                            print("samepl")
+
+                        dtr_cutoff_summary = {
+                            "emp_no": employee.emp_no,
+                            "cutoff_code": cutoff_code,
+                            "business_date_from": cutoff_start_date.date(),
+                            "business_date_to": cutoff_end_date.date(),
+                            "total_hours": cutoff_total_hours,
+                            "lates_total": cutoff_lates,
+                            "undertime_total": cutoff_undertime,
+                            "paid_leaves_total": cutoff_paid_leaves_total,
+                            "leaves_type_used": cutoff_leave_types_used,
+                            "reg_ot_total": cutoff_reg_ot_total,
+                            "nd_ot_total": cutoff_nd_ot_total,
+                            "sp_holiday_total": cutoff_sp_holiday_total,
+                            "reg_holiday_total": cutoff_reg_holiday_total,
+                            "absent_total": cutoff_absent_total
+                        }
+
+                        serializer = DTRCutoffSerializer(data=dtr_cutoff_summary)
+
+                        if serializer.is_valid():
+                            serializer.save()
+                        
+                        else:
+                            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+                except Exception as e:
+                    return Response({"Error Message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            
+            return Response({"Message": "Successfully created  DTR Cutoff Summary for all employees with the same payroll group code"}, status=status.HTTP_201_CREATED)
