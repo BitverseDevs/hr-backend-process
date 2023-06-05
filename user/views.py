@@ -1177,3 +1177,42 @@ class CreateDTRCutoffSummaryView(APIView):
                     return Response({"Error Message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
             
             return Response({"Message": "Successfully created  DTR Cutoff Summary for all employees with the same payroll group code"}, status=status.HTTP_201_CREATED)
+        
+
+class DTRSummaryView(APIView):
+    def get(self, request, emp_no=None, cutoff_code=None, *args, **kwargs):
+        if emp_no is None:
+            return Response({"Message": "I need an employee number to proceed"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        employee = get_object_or_404(Employee, emp_no=emp_no, date_deleted__exact=None)
+        cutoff_code = request.data['cutoff_code']
+        if cutoff_code is not None:    
+            cutoff = get_object_or_404(Cutoff, pk=cutoff_code)            
+            date_from = cutoff.co_date_from
+            date_to = cutoff.co_date_to
+            dtr_summary = DTRSummary.objects.filter(emp_no=employee.emp_no, business_date__gte=date_from, business_date__lte=date_to).order_by('-business_date')
+            dtr_summary_serializer = DTRSummarySerializer(dtr_summary, many=True)
+            return Response(dtr_summary_serializer.data, status=status.HTTP_200_OK)
+        
+        dtr_summary = DTRSummary.objects.filter(emp_no=employee.emp_no).order_by('-business_date')
+        dtr_summary_serializer = DTRSummarySerializer(dtr_summary, many=True)
+        return Response(dtr_summary_serializer.data, status=status.HTTP_200_OK)
+    
+class DTRCutoffSummaryView(APIView):
+    def get(self, request, emp_no=None, *args, **kwargs):
+        if emp_no is None:
+            return Response({"Message": "I need an employee number to proceed"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        employee = get_object_or_404(Employee, emp_no=emp_no, date_deleted__exact=None)
+        cutoff_code = request.data['cutoff_code']
+        if cutoff_code is not None:    
+            cutoff = get_object_or_404(Cutoff, pk=cutoff_code)            
+            date_from = cutoff.co_date_from
+            date_to = cutoff.co_date_to
+            dtr_cutoff_summary = DTRCutoff.objects.filter(emp_no=employee.emp_no, business_date_from__gte=date_from, business_date_to__lte=date_to)
+            dtr_cutoff_summary_serializer = DTRCutoffSerializer(dtr_cutoff_summary, many=True)
+            return Response(dtr_cutoff_summary_serializer.data, status=status.HTTP_200_OK)
+        
+        dtr_cutoff_summary = DTRCutoff.objects.filter(emp_no=employee.emp_no)
+        dtr_cutoff_summary_serializer = DTRCutoffSerializer(dtr_cutoff_summary, many=True)
+        return Response(dtr_cutoff_summary_serializer.data, status=status.HTTP_200_OK)
