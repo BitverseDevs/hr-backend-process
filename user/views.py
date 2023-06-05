@@ -10,7 +10,7 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
 
 from user.models import Branch, Department, Division, PayrollGroup, Position, Rank, Tax, Province, CityMunicipality, PAGIBIG, SSS, Philhealth, Employee, User, AuditTrail, DTR, DTRSummary, DTRCutoff, Holiday, OBT, Overtime, Leaves, LeavesCredit, LeavesType, Adjustment, Cutoff, ScheduleShift, ScheduleDaily, UnaccountedAttendance
-from user.serializers import BranchSerializer, DepartmentSerializer, DivisionSerializer, PayrollGroupSerializer, PositionSerializer, RankSerializer, TaxSerializer, ProvinceSerializer, CityMunicipalitySerializer, PAGIBIGSerializer, SSSSerializer, PhilhealthSerializer, EmployeeSerializer, UserSerializer, AuditTrailSerializer, DTRSerializer, DTRSummarySerializer, DTRCutoffSerializer, HolidaySerializer, OBTSerializer, OvertimeSerializer, LeavesSerializer, LeavesCreditSerializer, LeavesTypeSerializer, AdjustmentSerializer,CutoffSerializer, ScheduleShiftSerializer, ScheduleDailySerializer, UnaccountedAttendanceSerializer
+from user.serializers import BranchSerializer, DepartmentSerializer, DivisionSerializer, PayrollGroupSerializer, PositionSerializer, RankSerializer, TaxSerializer, ProvinceSerializer, CityMunicipalitySerializer, PAGIBIGSerializer, SSSSerializer, PhilhealthSerializer, EmployeeSerializer, UserSerializer, AuditTrailSerializer, DTRSerializer, DTRSummarySerializer, DTRCutoffSerializer, HolidaySerializer, OBTSerializer, OvertimeSerializer, LeavesSerializer, LeavesCreditSerializer, LeavesTypeSerializer, AdjustmentSerializer,CutoffSerializer, ScheduleShiftSerializer, ScheduleDailySerializer, UnaccountedAttendanceSerializer, SpecificEmployeeSerializer
 
 import secret, jwt, csv, pandas as pd, io
 from datetime import datetime, timedelta, time, date
@@ -107,7 +107,7 @@ class EmployeesView(APIView):
     def get(self, request, emp_no=None, *args, **kwargs):
         if emp_no is not None:
             employee = get_object_or_404(Employee, emp_no=emp_no, date_deleted__isnull=True)
-            serializer = EmployeeSerializer(employee)
+            serializer = SpecificEmployeeSerializer(employee)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             employees = Employee.objects.filter(date_deleted__exact=None)
@@ -260,36 +260,38 @@ class EmployeeUploadView(APIView):
                 return Response({"Message": "The file you uploaded cannot be processed due to incorrect file extension"}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)            
             
         
-class ExportEmployeeView(APIView):
-    def post(self, request, number_of_employee=None, order=None, *args, **kwargs):
-        if number_of_employee is None and order is None:
-            employees = Employee.objects.all()
-            serializer = EmployeeSerializer(employees)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        elif number_of_employee is not None and order is None:
-            employees = Employee.objects.all()[:number_of_employee]
-            serializer = EmployeeSerializer(employees)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        elif order is not None and number_of_employee is None:
-            employees = Employee.objects.order_by(order)
-            serializer = EmployeeSerializer(employees)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        elif number_of_employee is not None and order is not None:
-            employees = Employee.objects.order_by(order)[:number_of_employee]
-            serializer = EmployeeSerializer(employees)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+# class ExportEmployeeView(APIView):
+#     def get(self, request, number_of_employee=None, order=None, *args, **kwargs):
+#         number_of_employee = request.data['number_of_employee']
+#         order = request.data['order']
+#         if number_of_employee is None and order is None:
+#             employees = Employee.objects.all()
+#             serializer = ExportEmployeeSerializer(employees, many=True)
+#             return Response(serializer.data, status=status.HTTP_200_OK)
+#         elif number_of_employee is not None and order is None:
+#             employees = Employee.objects.all()[:number_of_employee]
+#             serializer = ExportEmployeeSerializer(employees, many=True)
+#             return Response(serializer.data, status=status.HTTP_200_OK)
+#         elif order is not None and number_of_employee is None:
+#             employees = Employee.objects.order_by(order)
+#             serializer = ExportEmployeeSerializer(employees, many=True)
+#             return Response(serializer.data, status=status.HTTP_200_OK)
+#         elif number_of_employee is not None and order is not None:
+#             employees = Employee.objects.order_by(order)[:number_of_employee]
+#             serializer = ExportEmployeeSerializer(employees, many=True)
+#             return Response(serializer.data, status=status.HTTP_200_OK)
 
 # DTR Dashboard
 
 class DTRView(APIView):
-    def get(self, request, pk=None, *args, **kwargs):
-        if pk is not None:
-            dtr = get_object_or_404(DTR, pk=pk)
-            serializer = DTRSerializer(dtr)
+    def get(self, request, emp_no=None, *args, **kwargs):
+        if emp_no is not None:
+            dtr = DTR.objects.filter(emp_no=emp_no)
+            serializer = DTRSerializer(dtr, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             dtr = DTR.objects.all()
-            serializer = DTRSerializer(dtr)
+            serializer = DTRSerializer(dtr, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         
 class UploadDTREntryView(APIView):

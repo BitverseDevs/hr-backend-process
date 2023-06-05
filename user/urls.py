@@ -1,6 +1,7 @@
 from django.urls import path
 from user import views
-from .views import UserView, LoginView, EmployeesView, BirthdayView, AnniversaryView, EmployeeUploadView, ExportEmployeeView, DTRView, UploadDTREntryView, CutoffPeriodListView, MergeDTRSummaryView, CreateDTRCutoffSummaryView
+from .views import UserView, LoginView, EmployeesView, BirthdayView, AnniversaryView, EmployeeUploadView, DTRView, UploadDTREntryView, CutoffPeriodListView, MergeDTRSummaryView, CreateDTRCutoffSummaryView
+# ExportEmployeeView,
 
 from rest_framework.urlpatterns import format_suffix_patterns
 
@@ -12,8 +13,9 @@ urlpatterns = [
     path('birthdays/', BirthdayView.as_view()),
     path('anniversary/', AnniversaryView.as_view()),
     path('import_employee/', EmployeeUploadView.as_view()),
-    path('export_employee/', ExportEmployeeView.as_view()),
-    path('dtr/<int:pk>/', DTRView.as_view()),
+    # path('export_employee/', ExportEmployeeView.as_view()),
+    path('dtr/', DTRView.as_view()),
+    path('dtr/<int:emp_no>/', DTRView.as_view()),
     path('upload_dtr_logs/', UploadDTREntryView.as_view()),
     path('cutoff_period/', CutoffPeriodListView.as_view()),
     path('cutoff_period/<int:pk>/', CutoffPeriodListView.as_view()),
