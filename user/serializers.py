@@ -158,7 +158,7 @@ class UserSerializer(serializers.ModelSerializer):
 
         return instance
     
-class EmployeeSerializer(serializers.ModelSerializer):
+class SpecificEmployeeSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
     employee_image = serializers.ImageField(max_length=None, allow_empty_file=True, use_url=True, required=False)
     class Meta:
@@ -171,6 +171,12 @@ class EmployeeSerializer(serializers.ModelSerializer):
             return UserSerializer(user).data
         except User.DoesNotExist:
             return None
+        
+class EmployeeSerializer(serializers.ModelSerializer):
+    employee_image = serializers.ImageField(max_length=None, allow_empty_file=True, use_url=True, required=False)
+    class Meta:
+        model = Employee
+        fields = "__all__"
         
 class DTRSerializer(serializers.ModelSerializer):
 
