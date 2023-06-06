@@ -212,6 +212,11 @@ class Employee(models.Model):
     sssid_code = models.ForeignKey(SSS, on_delete=models.CASCADE, null=True, blank=True)
     philhealth_code = models.ForeignKey(Philhealth, on_delete=models.CASCADE, null=True, blank=True)
 
+    emp_salary_basic = models.FloatField()
+    emp_salary_allowance = models.FloatField()
+    emp_salary_other = models.FloatField()
+    emp_salary_type = models.CharField(max_length=7)
+
     def days_before(self, date):
         today = datetime.date.today()
         next_day = datetime.date(today.year, date.month, date.day)
@@ -460,6 +465,7 @@ class Cutoff(models.Model):
     co_description = models.TextField(max_length=75)
     co_date_from = models.DateTimeField()
     co_date_to = models.DateTimeField()
+    reg_days_total = models.PositiveSmallIntegerField()
     payroll_group_code = models.ForeignKey(PayrollGroup, on_delete=models.CASCADE)
     division_code = models.ForeignKey(Division, on_delete=models.CASCADE)
     co_is_processed = models.BooleanField()
