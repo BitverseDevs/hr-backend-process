@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from user.models import User, Employee, AuditTrail, DTR, DTRSummary, DTRCutoff, Holiday, OBT, Overtime, Leaves, LeavesType, LeavesCredit, Adjustment, Cutoff, ScheduleShift, ScheduleDaily, UnaccountedAttendance
+from user.models import User, Employee, AuditTrail, DTR, DTRSummary, DTRCutoff, Holiday, OBT, Overtime, Leaves, LeavesType, LeavesCredit, Adjustment, Cutoff, ScheduleShift, ScheduleDaily, UnaccountedAttendance, Payroll
 from user.models import Branch, Department, Division, PayrollGroup, Rank, Position, Tax, Province, CityMunicipality, PAGIBIG, SSS, Philhealth
 class BranchSerializer(serializers.ModelSerializer):
     class Meta:
@@ -198,4 +198,9 @@ class DTRSummarySerializer(serializers.ModelSerializer):
 class DTRCutoffSerializer(serializers.ModelSerializer):
     class Meta:
         model = DTRCutoff
+        fields = "__all__"
+
+class PayrollSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Payroll
         fields = "__all__"

@@ -513,3 +513,43 @@ class UnaccountedAttendance(models.Model):
 
     class Meta:
         db_table = "TBL_UNACCOUNTED_ATT"
+
+class Payroll(models.Model):
+    pr_cutoff_code = models.ForeignKey(Cutoff, on_delete=models.CASCADE)
+    emp_no = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE)
+    emp_cname = models.CharField(max_length=50)
+    run_date = models.DateField(auto_now_add=True)
+    accnt_no = models.CharField(max_length=25)
+    salary_basic = models.FloatField()
+    salary_allowance = models.FloatField()
+    salary_other = models.FloatField()
+    salary_type = models.CharField(max_length=7)
+    gross_pay = models.FloatField()
+    work_days_total = models.PositiveSmallIntegerField()
+    daily_summary_basic = models.FloatField()
+    daily_summary_allowance = models.FloatField()
+    daily_summary_other = models.FloatField()
+
+    leaves_amount_a = models.FloatField()
+    ot_amount_a = models.FloatField()
+    holiday_amount_a = models.FloatField()
+    nd_amount_a = models.FloatField()
+    
+    lates_amount_d = models.FloatField()
+    utime_amount_d = models.FloatField()
+    absent_amount_d = models.FloatField()
+    tax_amount_d = models.FloatField()
+    sss_amount_d = models.FloatField()
+    pagibig_amount_d = models.FloatField()
+    philhealth_amount_d = models.FloatField()
+    cash_advance_amount_d = models.FloatField()
+    pagibig_other_d = models.FloatField()
+    sss_other_d = models.FloatField()
+    insurance_d = models.FloatField()
+    other_d = models.FloatField()
+
+    date_deleted = models.DateTimeField(null=True, blank=True)
+    is_payslip_printed = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = "TBL_PAYROLL_RUN"
