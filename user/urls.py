@@ -20,6 +20,7 @@ urlpatterns = [
     path('cutoff_period/', CutoffPeriodListView.as_view()),
     path('cutoff_period/<int:pk>/', CutoffPeriodListView.as_view()),
     path('mergedtr/', MergeDTRSummaryView.as_view()),    
+    path('dtr_summary/', DTRSummaryView.as_view()),
     path('dtr_summary/<int:emp_no>/', DTRSummaryView.as_view()),
     path('create_summary/', CreateDTRCutoffSummaryView.as_view()),
     path('dtr_cutoff_summary/<int:emp_no>/', DTRCutoffSummaryView.as_view()),

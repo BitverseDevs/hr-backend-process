@@ -259,27 +259,6 @@ class EmployeeUploadView(APIView):
             else:                
                 return Response({"Message": "The file you uploaded cannot be processed due to incorrect file extension"}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)            
             
-        
-# class ExportEmployeeView(APIView):
-#     def get(self, request, number_of_employee=None, order=None, *args, **kwargs):
-#         number_of_employee = request.data['number_of_employee']
-#         order = request.data['order']
-#         if number_of_employee is None and order is None:
-#             employees = Employee.objects.all()
-#             serializer = ExportEmployeeSerializer(employees, many=True)
-#             return Response(serializer.data, status=status.HTTP_200_OK)
-#         elif number_of_employee is not None and order is None:
-#             employees = Employee.objects.all()[:number_of_employee]
-#             serializer = ExportEmployeeSerializer(employees, many=True)
-#             return Response(serializer.data, status=status.HTTP_200_OK)
-#         elif order is not None and number_of_employee is None:
-#             employees = Employee.objects.order_by(order)
-#             serializer = ExportEmployeeSerializer(employees, many=True)
-#             return Response(serializer.data, status=status.HTTP_200_OK)
-#         elif number_of_employee is not None and order is not None:
-#             employees = Employee.objects.order_by(order)[:number_of_employee]
-#             serializer = ExportEmployeeSerializer(employees, many=True)
-#             return Response(serializer.data, status=status.HTTP_200_OK)
 
 # DTR Dashboard
 
@@ -1182,7 +1161,9 @@ class CreateDTRCutoffSummaryView(APIView):
 class DTRSummaryView(APIView):
     def get(self, request, emp_no=None, cutoff_code=None, *args, **kwargs):
         if emp_no is None:
-            return Response({"Message": "I need an employee number to proceed"}, status=status.HTTP_400_BAD_REQUEST)
+            dtr_summary = DTRSummary.objects.all()
+            dtr_summary_serializer = DTRSummarySerializer(dtr_summary, many=True)
+            return Response(dtr_summary_serializer.data, status=status.HTTP_200_OK)            
         
         employee = get_object_or_404(Employee, emp_no=emp_no, date_deleted__exact=None)
         cutoff_code = request.data['cutoff_code']
