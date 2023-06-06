@@ -23,6 +23,7 @@ urlpatterns = [
     path('dtr_summary/', DTRSummaryView.as_view()),
     path('dtr_summary/<int:emp_no>/', DTRSummaryView.as_view()),
     path('create_summary/', CreateDTRCutoffSummaryView.as_view()),
+    path('dtr_cutoff_summary/', DTRCutoffSummaryView.as_view()),
     path('dtr_cutoff_summary/<int:emp_no>/', DTRCutoffSummaryView.as_view()),
 
     path('payrolls/', PayrollView.as_view()),

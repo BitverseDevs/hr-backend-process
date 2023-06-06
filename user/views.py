@@ -1182,7 +1182,9 @@ class DTRSummaryView(APIView):
 class DTRCutoffSummaryView(APIView):
     def get(self, request, emp_no=None, *args, **kwargs):
         if emp_no is None:
-            return Response({"Message": "I need an employee number to proceed"}, status=status.HTTP_400_BAD_REQUEST)
+            dtr_cutoff_summary = DTRCutoff.objects.all()
+            dtr_cutoff_summary_serializer = DTRCutoffSerializer(dtr_cutoff_summary, many=True)
+            return Response(dtr_cutoff_summary_serializer.data, status=status.HTTP_200_OK) 
         
         employee = get_object_or_404(Employee, emp_no=emp_no, date_deleted__exact=None)
         cutoff_code = request.data['cutoff_code']
