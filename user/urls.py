@@ -1,6 +1,6 @@
 from django.urls import path
 from user import views
-from .views import UserView, LoginView, EmployeesView, BirthdayView, AnniversaryView, EmployeeUploadView, DTRView, UploadDTREntryView, CutoffPeriodListView, MergeDTRSummaryView, CreateDTRCutoffSummaryView, DTRSummaryView, DTRCutoffSummaryView, PayrollView
+from .views import UserView, LoginView, EmployeesView, BirthdayView, AnniversaryView, EmployeeUploadView, DTRView, UploadDTREntryView, CutoffPeriodListView, MergeDTRSummaryView, CreateDTRCutoffSummaryView, DTRSummaryView, DTRCutoffSummaryView, PayrollView, CreatePayrollView
 # ExportEmployeeView,
 
 from rest_framework.urlpatterns import format_suffix_patterns
@@ -26,7 +26,9 @@ urlpatterns = [
     path('dtr_cutoff_summary/', DTRCutoffSummaryView.as_view()),
     path('dtr_cutoff_summary/<int:emp_no>/', DTRCutoffSummaryView.as_view()),
 
-    path('payrolls/', PayrollView.as_view()),
+    path('create_payrolls/', CreatePayrollView.as_view()),
+    path('payroll/', PayrollView.as_view()),
+    # path('payroll/<int:emp_no>', PayrollView.as_view()),
 
     path('test_api/', views.test_view),
     path('test_api/<int:pk>', views.test_view)

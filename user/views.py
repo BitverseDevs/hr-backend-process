@@ -1206,3 +1206,128 @@ class PayrollView(APIView):
         payrolls = Payroll.objects.all()
         serializer = PayrollSerializer(payrolls, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class CreatePayrollView(APIView):
+    def post(self, request, *args, **kwargs):
+        cutoff_code = request.data['cutoff_code']
+        user_emp_nos = request.data['emp_no']
+
+        if user_emp_nos:
+            for user_emp_no in user_emp_nos:
+                try:                                       
+                    employee = Employee.objects.get(emp_no=user_emp_no)
+                    cutoff = get_object_or_404(Cutoff, pk=cutoff_code)
+                    pagibig = get_object_or_404(PAGIBIG, emp_no=employee.emp_no)
+                    tax = get_object_or_404(Tax, emp_no=employee.emp_no)
+                    sss = get_object_or_404(SSS, emp_no=employee.emp_no)
+                    philhealth = get_object_or_404(Philhealth, emp_no=employee.emp_no)
+                    dtr_cutoff = DTRCutoff.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff.pk).first()
+
+                    fname = employee.first_name.upper()
+                    mname = employee.middle_name.upper() if employee.middle_name else ""
+                    lname = employee.last_name.upper()
+                    suffix = employee.suffix.upper() if employee.suffix else ""
+
+                    if mname and suffix:
+                        cname = f"{fname} {mname} {lname} {suffix}"                    
+                    elif mname:
+                        cname = f"{fname} {mname} {lname}"
+                    elif suffix:
+                        cname = f"{fname} {lname} {suffix}"
+                    else:
+                        cname = f"{fname} {lname}"
+                    
+                    run_date = datetime.now()
+                    accnt_no = employee.accnt_no if employee.accnt_no else ""
+                    salary_basic = employee.emp_salary_basic if employee.emp_salary_basic else 0.00
+                    salary_allowance = employee.emp_salary_allowance if employee.emp_salary_allowance else 0.00
+                    salary_other = employee.emp_salary_other if employee.emp_salary_other else 0.00
+                    salary_type = employee.emp_salary_type
+                    gross_pay = salary_basic + salary_allowance + salary_other
+                    work_days_total = cutoff.reg_days_total
+
+                    if salary_type == "daily":
+                        daily_salary_basic = salary_basic
+                        daily_salary_allowance = salary_allowance
+                        daily_salary_other = salary_other
+                    else:
+                        daily_salary_basic = salary_basic/work_days_total
+                        daily_salary_allowance = salary_allowance/work_days_total if salary_allowance != 0 else 0
+                        daily_salary_other = salary_other/work_days_total if salary_other != 0 else 0
+
+                    daily_total = daily_salary_basic + daily_salary_allowance + daily_salary_other
+                    daily_salary_basic_hour = daily_salary_basic/8
+                    daily_salary_basic_minute = daily_salary_basic_hour/60
+
+                    leaves_amount = dtr_cutoff.paid_leaves_total * (daily_total)
+                    ot_amount = dtr_cutoff.reg_ot_total * (daily_salary_basic_hour * 1.1)
+                    holiday_amount = (dtr_cutoff.reg_holiday_total + dtr_cutoff.sp_holiday_total) * daily_total 
+                    nd_amount = 0.00
+
+                    lates_amount = dtr_cutoff.lates_total * daily_salary_basic_minute
+                    utime_amount = dtr_cutoff.undertime_total * daily_salary_basic_minute
+                    absent_amount = dtr_cutoff.absent_total * daily_salary_basic
+
+                    sss_contribution = sss.sss_contribution_month
+                    sss_cashloan = sss.sss_with_cashloan_amount
+                    sss_calloan = sss.sss_with_calloan_amount
+
+                    pagibig_contribution = pagibig.pagibig_contribution_month
+                    pagibig_cloan = pagibig.pagibig_with_cloan_amount
+                    pagibig_hloan = pagibig.pagibig_with_hloan_amount
+
+                    philhealth_contribution = philhealth.ph_contribution_month
+
+                    cash_advance = 0.00
+                    insurance = employee.insurance_life
+                    other_deduction = employee.other_deductible
+
+                    tax_amount = 0.00
+                    additions = leaves_amount + ot_amount + holiday_amount + nd_amount
+                    deductions = lates_amount + utime_amount + absent_amount + sss_contribution + sss_cashloan + sss_calloan + pagibig_contribution + pagibig_cloan + pagibig_hloan + philhealth_contribution + cash_advance + insurance + other_deduction
+                    
+                    initial_net_pay = gross_pay + additions - deductions
+                    net_pay = initial_net_pay - tax_amount
+
+                    payroll = {
+                        "pr_cutoff_code": cutoff_code,
+                        "emp_no": employee.emp_no,
+                        'emp_cname': cname,
+                        'run_date': run_date,
+                        'accnt_no': accnt_no,
+                        "salary_basic": salary_basic,
+                        "salary_allowance": salary_allowance,
+                        "salary_other": salary_other,
+                        "salary_type": salary_type,
+                        "gross_pay": gross_pay,
+                        "work_days_total": work_days_total,
+                        "daily_salary_basic": daily_salary_basic,
+                        "daily_salary_allowance": daily_salary_allowance,
+                        "daily_salary_other": daily_salary_other,
+                        "leaves_amount_a": leaves_amount,
+                        "ot_amount_a": ot_amount,
+                        "holiday_amount_a": holiday_amount,
+                        "nd_amount_a": nd_amount,
+                        "lates_amount_d": lates_amount,
+                        "utime_amount_d": utime_amount,
+                        "absent_amount_d": absent_amount,
+                        "tax_amount_d": tax_amount,
+                        "sssc_amount_d": sss_contribution,
+                        "sss_cashloan_d": sss_cashloan,
+                        "sss_calloan_d": sss_calloan,
+                        "pagibigc_amount_d": pagibig_contribution,
+                        "pagibig_cloan_d": pagibig_cloan,
+                        "pagibig_hloan_d": pagibig_hloan,
+                        "cash_advance_amount_d": cash_advance,
+                        "philhealthc_amount_d": philhealth_contribution,
+                        "insurnace_d": insurance,
+                        "other_d": other_deduction,
+                        "net_pay": net_pay
+                    }
+
+                    return Response({"Message": "Testing Create Payroll", "Payroll": payroll}, status=status.HTTP_200_OK)
+
+                except Exception as e:
+                    return Response({"Exception Error": str(e)})
+
+        return Response({"Message": "Testing Create Payroll"}, status=status.HTTP_200_OK)
