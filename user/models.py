@@ -339,6 +339,7 @@ class DTRCutoff(models.Model):
     reg_ot_total = models.PositiveSmallIntegerField(null=True, blank=True)
     nd_ot_total = models.PositiveSmallIntegerField(null=True, blank=True)
     sp_holiday_total = models.PositiveSmallIntegerField(null=True, blank=True)
+    sp_holiday_total_hours = models.PositiveSmallIntegerField(null=True, blank=True)
     reg_holiday_total = models.PositiveSmallIntegerField(null=True, blank=True)
     absent_total = models.PositiveSmallIntegerField(null=True, blank=True)
     leaves_type_used = models.TextField(max_length=100, null=True, blank=True)
@@ -539,12 +540,13 @@ class Payroll(models.Model):
 
     leaves_amount_a = models.FloatField()
     ot_amount_a = models.FloatField()
-    holiday_amount_a = models.FloatField()
+    reg_holiday_amount_a = models.FloatField()
+    sp_holiday_amount_a = models.FloatField()
     nd_amount_a = models.FloatField()
     
     lates_amount_d = models.FloatField()
     utime_amount_d = models.FloatField()
-    absent_amount_d = models.FloatField()
+    
     tax_amount_d = models.FloatField()
     
     sssc_amount_d = models.FloatField()
@@ -562,8 +564,22 @@ class Payroll(models.Model):
     insurance_d = models.FloatField()
     other_d = models.FloatField()
 
+    absent_amount = models.FloatField()
     date_deleted = models.DateTimeField(null=True, blank=True)
     is_payslip_printed = models.BooleanField(default=False)
 
     class Meta:
         db_table = "TBL_PAYROLL_RUN"
+
+class CashAdvance(models.Model):
+    emp_no = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE)
+    date_added = models.DateTimeField(auto_now_add=True)
+    cash_advance_total = models.FloatField()
+    cash_advance_remaining = models.FloatField()
+    payment_monthly = models.FloatField()
+    is_fully_paid = models.BooleanField(default=False)
+    last_payment_amount = models.FloatField(null=True, blank=True)
+    date_last_payment = models.DateField(null=True, blank=True)
+
+    class Meta:
+        db_table = "TBL_CASH_ADVANCE"
