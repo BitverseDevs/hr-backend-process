@@ -124,7 +124,6 @@ class Tax(models.Model):
     tax_form = models.CharField(max_length=15, null=True, blank=True)
     tax_description = models.TextField(max_length=75, null=True, blank=True)
     tax_percentage = models.FloatField(null=True, blank=True)
-    tax_amount = models.FloatField(null=True, blank=True)
     payment_frequency = models.PositiveSmallIntegerField(validators=[MaxValueValidator(4)], choices=TAX_FREQUENCY, null=True, blank=True)
 
     class Meta:
@@ -216,6 +215,10 @@ class Employee(models.Model):
     emp_salary_allowance = models.FloatField()
     emp_salary_other = models.FloatField()
     emp_salary_type = models.CharField(max_length=7)
+
+    insurance_life = models.FloatField(null=True, blank=True)
+    other_deductible = models.FloatField(null=True, blank=True)
+
 
     def days_before(self, date):
         today = datetime.date.today()
@@ -524,11 +527,14 @@ class Payroll(models.Model):
     salary_allowance = models.FloatField()
     salary_other = models.FloatField()
     salary_type = models.CharField(max_length=7)
+    
     gross_pay = models.FloatField()
     work_days_total = models.PositiveSmallIntegerField()
-    daily_summary_basic = models.FloatField()
-    daily_summary_allowance = models.FloatField()
-    daily_summary_other = models.FloatField()
+    
+    net_pay = models.FloatField()
+    daily_salary_basic = models.FloatField()
+    daily_salary_allowance = models.FloatField()
+    daily_salary_other = models.FloatField()
 
     leaves_amount_a = models.FloatField()
     ot_amount_a = models.FloatField()
@@ -539,12 +545,19 @@ class Payroll(models.Model):
     utime_amount_d = models.FloatField()
     absent_amount_d = models.FloatField()
     tax_amount_d = models.FloatField()
-    sss_amount_d = models.FloatField()
-    pagibig_amount_d = models.FloatField()
-    philhealth_amount_d = models.FloatField()
+    
+    sssc_amount_d = models.FloatField()
+    sss_cashloan_d = models.FloatField(default=0)
+    sss_calloan_d = models.FloatField(default=0)
+    
+    pagibigc_amount_d = models.FloatField()
+    pagibig_cloan_d = models.FloatField(default=0)
+    pagibig_hloan_d = models.FloatField(default=0)
+
+    philhealthc_amount_d = models.FloatField()
+    
     cash_advance_amount_d = models.FloatField()
-    pagibig_other_d = models.FloatField()
-    sss_other_d = models.FloatField()
+
     insurance_d = models.FloatField()
     other_d = models.FloatField()
 
