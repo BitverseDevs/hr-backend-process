@@ -6,13 +6,18 @@ from rest_framework import  status
 from user.models import *
 from user.serializers import *
 
-from datetime import datetime, date, time, timedelta
+from datetime import datetime, date, timedelta
 
 
 
-def merge_dtr_entries(employees, cutoff_code, start_date, end_date, delta, operation):
+def merge_dtr_entries(employees, cutoff_code, operation):
     try:
         for employee in employees:
+            print(employee)
+            cutoff = Cutoff.objects.get(pk=cutoff_code)
+            start_date = cutoff.co_date_from
+            end_date = cutoff.co_date_to
+            delta = timedelta(days=1)
             while start_date <= end_date:
                 dtr_date_from = datetime(start_date.year, start_date.month,start_date.day)
                 dtr_date_to = datetime(start_date.year, start_date.month, start_date.day, 23, 59, 59)                
@@ -321,6 +326,7 @@ def merge_dtr_entries(employees, cutoff_code, start_date, end_date, delta, opera
 def create_dtr_cutoff_summary(employees, cutoff_code, cutoff_start_date, cutoff_end_date, operation):
     try:
         for employee in employees:
+            print(employee)
             # dtr_summaries = DTRSummary.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, business_date__gte=cutoff_start_date, business_date__lte=cutoff_end_date)
             dtr_summaries = DTRSummary.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, business_date__gte=cutoff_start_date, business_date__lte=cutoff_end_date, is_computed=False)
             dtr_summaries_checker = DTRSummary.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, business_date__gte=cutoff_start_date, business_date__lte=cutoff_end_date, is_computed=True)

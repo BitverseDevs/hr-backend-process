@@ -530,24 +530,20 @@ class Payroll(models.Model):
     salary_other = models.FloatField()
     salary_type = models.CharField(max_length=7)
     
-    gross_pay = models.FloatField()
     work_days_total = models.PositiveSmallIntegerField()
     
-    net_pay = models.FloatField()
     daily_salary_basic = models.FloatField()
     daily_salary_allowance = models.FloatField()
     daily_salary_other = models.FloatField()
 
     leaves_amount_a = models.FloatField()
     ot_amount_a = models.FloatField()
+    nd_amount_a = models.FloatField()
     reg_holiday_amount_a = models.FloatField()
     sp_holiday_amount_a = models.FloatField()
-    nd_amount_a = models.FloatField()
     
     lates_amount_d = models.FloatField()
     utime_amount_d = models.FloatField()
-    
-    tax_amount_d = models.FloatField()
     
     sssc_amount_d = models.FloatField()
     sss_cashloan_d = models.FloatField(default=0)
@@ -563,6 +559,10 @@ class Payroll(models.Model):
 
     insurance_d = models.FloatField()
     other_d = models.FloatField()
+
+    gross_pay = models.FloatField()
+    tax_amount_d = models.FloatField()
+    net_pay = models.FloatField()
 
     absent_amount = models.FloatField()
     date_deleted = models.DateTimeField(null=True, blank=True)
