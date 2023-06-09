@@ -379,16 +379,14 @@ class MergeDTRSummaryView(APIView):
         delta = timedelta(days=1)
 
         if user_emp_nos:
-            employees = Employee.objects.filter(emp_no__in=user_emp_nos, payroll_group_code=payroll_group_code, date_deleted=None)
-            operation = "list"
-            response = merge_dtr_entries(employees, cutoff_code, operation)
+            employees = Employee.objects.filter(emp_no__in=user_emp_nos, payroll_group_code=payroll_group_code, date_deleted=None)            
+            response = merge_dtr_entries(employees, cutoff_code, operation="list")
 
             return response
 
         else:
-            employees = Employee.objects.filter(payroll_group_code=payroll_group_code, date_deleted=None)
-            operation = "null"
-            response = merge_dtr_entries(employees, cutoff_code, operation)
+            employees = Employee.objects.filter(payroll_group_code=payroll_group_code, date_deleted=None)        
+            response = merge_dtr_entries(employees, cutoff_code, operation="null")
 
             return response
         
@@ -469,8 +467,19 @@ class PayrollView(APIView):
 
 class CreatePayrollView(APIView):
     def post(self, request, *args, **kwargs):
-        employees = Employee.objects.filter(emp_no=9990)
-        cutoff = Cutoff.objects.get(pk=1)
-        response = create_payroll(employees, cutoff, operation="monthly")
+        user_emp_nos = request.data['emp_no']
+        cutoff_code = request.data['cutoff_code']
+        cutoff = Cutoff.objects.get(pk=cutoff_code)
 
-        return response
+        if user_emp_nos:
+            employees = Employee.objects.filter(emp_no__in=user_emp_nos, payroll_group_code=cutoff.payroll_group_code, date_deleted=None)
+            response = create_payroll(employees, cutoff, operation="list")
+
+            return response
+        
+        else:
+            employees = Employee.objects.filter(payroll_group_code=cutoff.payroll_group_code, date_deleted=None)
+            response = create_payroll(employees, cutoff, operation="null")
+
+            return response
+

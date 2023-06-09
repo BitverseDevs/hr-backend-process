@@ -161,7 +161,7 @@ class SSS(models.Model):
     sss_with_cashloan_amount = models.FloatField(null=True, blank=True)
     sss_rem_cashloan_amount = models.FloatField(null=True, blank=True)
     sss_with_calloan_amount = models.FloatField(null=True, blank=True)
-    sss_rem_callloan_amount = models.FloatField(null=True, blank=True)
+    sss_rem_calloan_amount = models.FloatField(null=True, blank=True)
 
     class Meta:
         db_table = "TBL_SSS_CODE"
@@ -530,7 +530,7 @@ class Payroll(models.Model):
     salary_other = models.FloatField()
     salary_type = models.CharField(max_length=7)
     
-    work_days_total = models.PositiveSmallIntegerField()
+    work_days_total = models.FloatField()
     
     daily_salary_basic = models.FloatField()
     daily_salary_allowance = models.FloatField()
