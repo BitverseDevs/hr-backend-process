@@ -1,6 +1,8 @@
 from rest_framework import serializers
-from user.models import User, Employee, AuditTrail, DTR, DTRSummary, DTRCutoff, Holiday, OBT, Overtime, Leaves, LeavesType, LeavesCredit, Adjustment, Cutoff, ScheduleShift, ScheduleDaily, UnaccountedAttendance, Payroll
-from user.models import Branch, Department, Division, PayrollGroup, Rank, Position, Tax, Province, CityMunicipality, PAGIBIG, SSS, Philhealth
+from user.models import *
+
+
+
 class BranchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Branch

@@ -1,7 +1,8 @@
 from django.urls import path
 from user import views
-from .views import UserView, LoginView, EmployeesView, BirthdayView, AnniversaryView, EmployeeUploadView, DTRView, UploadDTREntryView, CutoffPeriodListView, MergeDTRSummaryView, CreateDTRCutoffSummaryView, DTRSummaryView, DTRCutoffSummaryView, PayrollView, CreatePayrollView
-# ExportEmployeeView,
+from .views import *
+
+
 
 from rest_framework.urlpatterns import format_suffix_patterns
 
@@ -29,9 +30,6 @@ urlpatterns = [
     path('create_payrolls/', CreatePayrollView.as_view()),
     path('payroll/', PayrollView.as_view()),
     # path('payroll/<int:emp_no>', PayrollView.as_view()),
-
-    path('test_api/', views.test_view),
-    path('test_api/<int:pk>', views.test_view)
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

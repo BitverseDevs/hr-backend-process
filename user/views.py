@@ -1,45 +1,24 @@
-from django.shortcuts import render, get_object_or_404
-from django.db.models import Q
+from django.shortcuts import get_object_or_404
 
-from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
-from rest_framework.renderers import JSONRenderer
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import  status
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
 
-from user.models import Branch, Department, Division, PayrollGroup, Position, Rank, Tax, Province, CityMunicipality, PAGIBIG, SSS, Philhealth, Employee, User, AuditTrail, DTR, DTRSummary, DTRCutoff, Holiday, OBT, Overtime, Leaves, LeavesCredit, LeavesType, Adjustment, Cutoff, ScheduleShift, ScheduleDaily, UnaccountedAttendance, Payroll
-from user.serializers import BranchSerializer, DepartmentSerializer, DivisionSerializer, PayrollGroupSerializer, PositionSerializer, RankSerializer, TaxSerializer, ProvinceSerializer, CityMunicipalitySerializer, PAGIBIGSerializer, SSSSerializer, PhilhealthSerializer, EmployeeSerializer, UserSerializer, AuditTrailSerializer, DTRSerializer, DTRSummarySerializer, DTRCutoffSerializer, HolidaySerializer, OBTSerializer, OvertimeSerializer, LeavesSerializer, LeavesCreditSerializer, LeavesTypeSerializer, AdjustmentSerializer,CutoffSerializer, ScheduleShiftSerializer, ScheduleDailySerializer, UnaccountedAttendanceSerializer, SpecificEmployeeSerializer, PayrollSerializer
+from user.models import *
+from user.serializers import *
 
 import secret, jwt, csv, pandas as pd, io
 from datetime import datetime, timedelta, time, date
 
-from user.dtr_process import merge_dtr_entries, create_dtr_cutoff_summary
+from user.employee_process import upload_csv_file_employee
+from user.dtr_process import dtr_logs_upload, merge_dtr_entries, create_dtr_cutoff_summary
 from user.payroll_process import create_payroll
 
-# Test API
 
-@api_view(['GET', 'POST'])
-def test_view(request, pk=None, *args, **kwargs):
-    if request.method == 'GET':
-        if pk is not None:
-            test = get_object_or_404(UnaccountedAttendance, pk=pk)
-            serializer = UnaccountedAttendanceSerializer(test)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        else:
-            test = UnaccountedAttendance.objects.all()
-            serializer = UnaccountedAttendanceSerializer(test, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-    
-    elif request.method == 'POST':
-        data = JSONParser().parse(request.data)
-        serializer = LeavesTypeSerializer(data=data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 # Create new user based on existing employee data
 
@@ -77,7 +56,7 @@ class LoginView(APIView):
             else:
                 user.failed_login_attempts += 1
                 user.save()
-                raise AuthenticationFailed("Incorrect password!")
+                raise AuthenticationFailed(f"Incorrect password! You only have {3 - user.failed_login_attempts} attempts left")
             
         user.failed_login_attempts = 0
         user.is_locked = False
@@ -185,80 +164,14 @@ class EmployeeUploadView(APIView):
     def post(self, request, *args, **kwargs):
         file = request.FILES.get('file')
         filename = str(file)
-        existing = []
-        non_existing = []
 
         if not file:
             return Response({"Message": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
         
         else:
             if filename.endswith('.csv'):
-                csv_file = file.read().decode('utf-8')
-                reader = csv.reader(csv_file.splitlines(),delimiter=',')
-
-                for row in reader:
-                    emp_no = row[0]
-
-                    if Employee.objects.filter(emp_no=emp_no).exists():
-                        existing.append(row)
-                        continue
-
-                    else:
-                        gender = {
-                            "Male": "M",
-                            "Female": "F"
-                        }
-
-                        civil_status = {
-                            "Single": "S",
-                            "Married": "M",
-                            "Annulled": "A",
-                            "Widowed": "W",
-                            "Separated": "SA"
-                        }
-                        
-                        employee = {
-                            "emp_no": row[0],
-                            "first_name": row[1],
-                            "middle_name": None if row[2] == "" else row[2],
-                            "last_name": row[3],
-                            "suffix": None if row[4] == "" else row[4],
-                            "birthday": row[5],
-                            "birth_place": row[6],
-                            "civil_status": civil_status[row[7]] if row[7] in civil_status.keys() else row[7],
-                            "gender": gender[row[8]] if row[8] in gender.keys() else row[8],
-                            "address": row[9],
-                            "provincial_address": None if row[10] == "" else row[10],
-                            "mobile_phone": row[11],
-                            "email_address": f"{row[1].lower()}.{row[3].replace(' ', '_').lower()}@sample.com",
-                            "date_hired": row[12],
-                            "date_resigned": None,
-                            "date_added": datetime.now(),
-                            "date_deleted": None,                            
-                        }
-
-                        serializer = EmployeeSerializer(data=employee)
-
-                        if serializer.is_valid():
-                            serializer.save()
-                            non_existing.append(row)
-
-                        else:
-                            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-                if existing:
-                    return Response({
-                        "Message": "Uploaded employee data contains employee number that already exists in the sysyem. Unique employee data is successfully uploaded in the database", 
-                        "Existing employee/s": existing, 
-                        "Unique employee/s": non_existing
-                        }, status=status.HTTP_200_OK)
-            
-                elif not existing:
-                    return Response({
-                        "Message": "All employee data is unique and is successfully uploaded into the database",
-                        "Unique employee/s": non_existing
-                    }, status=status.HTTP_202_ACCEPTED)
-
+                response = upload_csv_file_employee(file)
+                return response
             else:                
                 return Response({"Message": "The file you uploaded cannot be processed due to incorrect file extension"}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)            
             
@@ -286,69 +199,8 @@ class UploadDTREntryView(APIView):
         
         else:
             if tsv_filename.endswith(".tsv"):
-                try:
-                    stream = io.StringIO(tsv_file.read().decode('utf-8'))
-                    columns = ['bio_id', 'datetime_bio', 'duty_in', 'duty_out', 'lunch_in', 'lunch_out', 'branch']
-                    dframe = pd.read_table(stream, header=None, names=columns)
-                    dframe = dframe.sort_values(['bio_id', 'datetime_bio'])
-                    dframe['datetime_bio'] = pd.to_datetime(dframe['datetime_bio'])
-                    dframe['date'] = dframe["datetime_bio"].dt.date
-                    dframe['bio_id'] = dframe['bio_id'].astype(int)
-                    grouped_df = dframe.groupby(['bio_id', 'date']).agg(datetime_bio_min=("datetime_bio", "min"), datetime_bio_max=("datetime_bio", "max")).reset_index()
-                    grouped_df['branch'] = dframe['branch']
-                    ids = grouped_df['bio_id'].unique()
-
-                    for id in ids:
-                        select_row = grouped_df[grouped_df['bio_id'] == id]
-                        employee = Employee.objects.get(bio_id=id)
-
-                        for i in range(len(select_row)):
-                            duty_in = select_row.iloc[i]['datetime_bio_min']
-                            duty_out = select_row.iloc[i]['datetime_bio_max']
-                            branch = select_row.iloc[i]['branch']
-                            date = select_row.iloc[i]['date']
-                            emp_branch = Branch.objects.get(branch_name=branch)                        
-                            schedule = ScheduleDaily.objects.get(emp_no=employee.emp_no, business_date=date)
-
-                            dtr_in = {
-                                'emp_no': employee.emp_no,
-                                'bio_id': employee.bio_id,
-                                'datetime_bio': duty_in,
-                                'flag1_in_out': 0,
-                                'entry_type': "DIN",
-                                'date_uploaded': datetime.now(),
-                                'branch_code': emp_branch.pk,
-                                'schedule_daily_code': schedule.pk
-                            }
-
-                            dtr_out = {
-                                'emp_no': employee.emp_no,
-                                'bio_id': employee.bio_id,
-                                'datetime_bio': duty_out,
-                                'flag1_in_out': 1,
-                                'entry_type': "DOUT",
-                                'date_uploaded': datetime.now(),
-                                'branch_code': emp_branch.pk,
-                                'schedule_daily_code': schedule.pk
-                            }
-
-                            dtr_in_serializer = DTRSerializer(data=dtr_in)
-                            dtr_out_serializer = DTRSerializer(data=dtr_out)
-
-                            if dtr_in_serializer.is_valid():
-                                dtr_in_serializer.save()
-                            else:
-                                return Response({"message": "DTR IN", "error": dtr_in_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-                            
-                            if dtr_out_serializer.is_valid():
-                                dtr_out_serializer.save()
-                            else:
-                                return Response({"message": "DTR OUT", "error": dtr_out_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-
-                    return Response({"message": "Successfully uploaded to DTR database"}, status=status.HTTP_201_CREATED)
-                
-                except Exception as e:
-                    return Response({"Overall error": str(e)}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+                response = dtr_logs_upload(tsv_file)
+                return response
 
             else:
                 return Response({"Message": "The file you uploaded cannot be processed due to incorrect file extension"}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)                
@@ -374,9 +226,6 @@ class MergeDTRSummaryView(APIView):
         cutoff_code = request.data["cutoff_code"]
         cutoff = get_object_or_404(Cutoff, pk=cutoff_code)
         payroll_group_code = cutoff.payroll_group_code
-        start_date = cutoff.co_date_from
-        end_date = cutoff.co_date_to
-        delta = timedelta(days=1)
 
         if user_emp_nos:
             employees = Employee.objects.filter(emp_no__in=user_emp_nos, payroll_group_code=payroll_group_code, date_deleted=None)            
