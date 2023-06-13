@@ -211,7 +211,7 @@ class Employee(models.Model):
     sssid_code = models.ForeignKey(SSS, on_delete=models.CASCADE, null=True, blank=True)
     philhealth_code = models.ForeignKey(Philhealth, on_delete=models.CASCADE, null=True, blank=True)
 
-    accnt_no = models.CharField(max_length=25)
+    accnt_no = models.CharField(max_length=25, unique=True)
     emp_salary_basic = models.FloatField()
     emp_salary_allowance = models.FloatField()
     emp_salary_other = models.FloatField()
