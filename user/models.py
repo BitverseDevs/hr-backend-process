@@ -588,9 +588,12 @@ class CashAdvance(models.Model):
 class AllowanceType(models.Model):
     allowance_name = models.CharField(max_length=50)
     taxable = models.BooleanField(default=False)
-    
+
     date_added = models.DateTimeField(auto_now_add=True)
     date_deleted = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "TBL_ALLOWANCE_TYPE"
     
 
 class AllowanceEntry(models.Model):
@@ -602,6 +605,9 @@ class AllowanceEntry(models.Model):
     date_added = models.DateTimeField(auto_now_add=True)
     date_deleted = models.DateTimeField(null=True, blank=True)
     
+    class Meta:
+        db_table = "TBL_ALLOWANCE_ENTRY"
+    
 
 class TaxCollected(models.Model):
     emp_no = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE)
@@ -611,4 +617,7 @@ class TaxCollected(models.Model):
     amount_deducted = models.FloatField()
 
     date_added = models.DateTimeField(auto_now_add=True)    
+
+    class Meta:
+        db_table = "TBL_TAX_COLLECTED"
     
