@@ -213,12 +213,13 @@ class Employee(models.Model):
 
     accnt_no = models.CharField(max_length=25, unique=True)
     emp_salary_basic = models.FloatField()
-    emp_salary_allowance = models.FloatField()
-    emp_salary_other = models.FloatField()
+    # emp_salary_allowance = models.FloatField() # omitted
+    # emp_salary_other = models.FloatField() # omitted
     emp_salary_type = models.CharField(max_length=7)
 
     insurance_life = models.FloatField(null=True, blank=True)
     other_deductible = models.FloatField(null=True, blank=True)
+    ecola = models.FloatField(null=True, blank=True)
 
 
     def days_before(self, date):
@@ -583,3 +584,31 @@ class CashAdvance(models.Model):
 
     class Meta:
         db_table = "TBL_CASH_ADVANCE"
+
+class AllowanceType(models.Model):
+    allowance_name = models.CharField(max_length=50)
+    taxable = models.BooleanField(default=False)
+    
+    date_added = models.DateTimeField(auto_now_add=True)
+    date_deleted = models.DateTimeField(null=True, blank=True)
+    
+
+class AllowanceEntry(models.Model):
+    emp_no = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE)
+    allowance_code = models.ForeignKey(AllowanceType, on_delete=models.CASCADE)
+    amount = models.FloatField()
+    tax_rate = models.FloatField(null=True, blank=True)
+
+    date_added = models.DateTimeField(auto_now_add=True)
+    date_deleted = models.DateTimeField(null=True, blank=True)
+    
+
+class TaxCollected(models.Model):
+    emp_no = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE)
+    cutoff_code = models.ForeignKey(Cutoff, on_delete=models.CASCADE)
+    allowance_entry_code = models.ForeignKey(AllowanceEntry, on_delete=models.CASCADE)
+    tax_rate_used = models.FloatField()
+    amount_deducted = models.FloatField()
+
+    date_added = models.DateTimeField(auto_now_add=True)    
+    

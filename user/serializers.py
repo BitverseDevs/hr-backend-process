@@ -206,3 +206,18 @@ class PayrollSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payroll
         fields = "__all__"
+
+class AllowanceEntrySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AllowanceEntry
+        fields = "__all__"
+
+class AllowanceTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AllowanceType
+        fields = "__all__"
+
+class TaxCollectedSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TaxCollected
+        fields = "__all__"
