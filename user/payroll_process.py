@@ -232,7 +232,7 @@ def create_payroll(employees, cutoff, operation):
                         cash_advance_instance.cash_advance_remaining -= cash_advance_instance.payment_monthly / 2 if cash_advance_instance.payment_monthly else 0.00
                         cash_advance_instance.last_payment_amount = cash_advance_instance.payment_monthly / 2
                         cash_advance_instance.date_last_payment = datetime.now()
-                    elif cash_advance_instance.cash_advance_remaining == 1:
+                    elif cash_advance_instance.cash_advance_remaining == 0:
                         cash_advance_instance.is_fully_paid = True
 
                     cash_advance_instance.save()
@@ -420,6 +420,45 @@ def create_payroll_updated(employees, cutoff, operation):
                 dtr_cutoff.is_processed = True
                 dtr_cutoff.save()
                 
+                if sss.exists():
+                    sss_instance = sss.first()
+                    if sss_instance.sss_rem_cashloan_amount != 0 and sss_instance.sss_rem_cashloan_amount != None:
+                        sss_instance.sss_rem_cashloan_amount -= sss_cashloan
+                    elif sss_instance.sss_rem_cashloan_amount == 0:
+                        sss_instance.sss_with_cashloan_amount = 0
+
+                    if sss_instance.sss_rem_calloan_amount != 0 and sss_instance.sss_rem_calloan_amount != None:
+                        sss_instance.sss_rem_calloan_amount -= sss_calloan
+                    elif sss_instance.sss_rem_calloan_amount == 0:
+                        sss_instance.sss_with_calloan_amount = 0
+
+                    sss_instance.save()
+
+                if pagibig.exists():
+                    pagibig_instance = pagibig.first()
+                    if pagibig_instance.pagibig_rem_cloan_amount != 0 and pagibig_instance.pagibig_rem_cloan_amount != None:
+                        pagibig_instance.pagibig_rem_cloan_amount -= pagibig_cloan
+                    elif pagibig_instance.pagibig_rem_cloan_amount == 0:
+                        pagibig_instance.pagibig_with_cloan_amount = 0
+
+                    if pagibig_instance.pagibig_rem_hloan_amount != 0 and pagibig_instance.pagibig_rem_hloan_amount != None:
+                        pagibig_instance.pagibig_rem_hloan_amount -= pagibig_hloan
+                    elif pagibig_instance.pagibig_rem_hloan_amount == 0:
+                        pagibig_instance.pagibig_with_hloan_amount = 0
+
+                    pagibig_instance.save()
+
+                if cash_advance.exists():
+                    cash_advance_instance = cash_advance.first()
+                    if cash_advance_instance.cash_advance_remaining != 0:
+                        cash_advance_instance.cash_advance_remaining -= cash_advance_amount
+                        cash_advance_instance.last_payment_amount = cash_advance_amount
+                        cash_advance_instance.date_last_payment = datetime.now()
+                    elif cash_advance_instance.cash_advance_remaining == 0:
+                        cash_advance_instance.is_fully_paid = True
+
+                    cash_advance_instance.save()
+
                 serializer.save()
             
             else:
