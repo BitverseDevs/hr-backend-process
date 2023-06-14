@@ -595,7 +595,6 @@ class AllowanceType(models.Model):
     class Meta:
         db_table = "TBL_ALLOWANCE_TYPE"
     
-
 class AllowanceEntry(models.Model):
     emp_no = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE)
     allowance_code = models.ForeignKey(AllowanceType, on_delete=models.CASCADE)
@@ -607,7 +606,6 @@ class AllowanceEntry(models.Model):
     
     class Meta:
         db_table = "TBL_ALLOWANCE_ENTRY"
-    
 
 class TaxCollected(models.Model):
     emp_no = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE)
@@ -620,4 +618,33 @@ class TaxCollected(models.Model):
 
     class Meta:
         db_table = "TBL_TAX_COLLECTED"
-    
+
+class SSSBracket(models.Model):
+    ramount_from = models.FloatField()
+    ramount_to = models.FloatField()
+    amount_rate = models.FloatField()
+    date_added = models.DateTimeField(auto_now_add=True)
+    date_deleted = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "TBL_SSS_BRACKET"
+
+class TaxBasicBracket(models.Model):
+    ramount_from = models.FloatField()
+    ramount_to = models.FloatField()
+    amount_rate = models.FloatField()
+    date_added = models.DateTimeField(auto_now_add=True)
+    date_deleted = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "TBL_TAX_BASIC_BRACKET"
+
+class TaxAllowanceBracket(models.Model):
+    ramount_from = models.FloatField()
+    ramount_to = models.FloatField()
+    amount_rate = models.FloatField()
+    date_added = models.DateTimeField(auto_now_add=True)
+    date_deleted = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "TBL_ALLOWA_BRACKET"

@@ -221,3 +221,18 @@ class TaxCollectedSerializer(serializers.ModelSerializer):
     class Meta:
         model = TaxCollected
         fields = "__all__"
+
+class SSSBracketSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SSSBracket
+        fields = "__all__"
+
+class TaxBasicBracket(serializers.ModelSerializer):
+    class Meta:
+        model = TaxBasicBracket
+        fields = "__all__"
+
+class TaxAllowanceBracket(serializers.ModelSerializer):
+    class Meta:
+        model = TaxAllowanceBracket
+        fields = "__all__"
