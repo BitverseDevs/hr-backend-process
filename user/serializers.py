@@ -227,12 +227,12 @@ class SSSBracketSerializer(serializers.ModelSerializer):
         model = SSSBracket
         fields = "__all__"
 
-class TaxBasicBracket(serializers.ModelSerializer):
+class TaxBasicBracketSerializer(serializers.ModelSerializer):
     class Meta:
         model = TaxBasicBracket
         fields = "__all__"
 
-class TaxAllowanceBracket(serializers.ModelSerializer):
+class TaxAllowanceBracketSerializer(serializers.ModelSerializer):
     class Meta:
         model = TaxAllowanceBracket
         fields = "__all__"
