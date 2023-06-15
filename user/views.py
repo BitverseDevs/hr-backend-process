@@ -13,9 +13,9 @@ from user.serializers import *
 import secret, jwt, csv, pandas as pd, io
 from datetime import datetime, timedelta, time, date
 
-from user.functions.employee_process import upload_csv_file_employee
-from user.functions.dtr_process import dtr_logs_upload, merge_dtr_entries, create_dtr_cutoff_summary
-from user.functions.payroll_process import create_payroll, create_payroll_updated
+from user.functionalities.employee_process import upload_csv_file_employee
+from user.functionalities.dtr_process import dtr_logs_upload, merge_dtr_entries, create_dtr_cutoff_summary
+from user.functionalities.payroll_process import create_payroll, create_payroll_updated
 
 
 

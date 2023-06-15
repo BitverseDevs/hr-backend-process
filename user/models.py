@@ -640,6 +640,7 @@ class TaxBasicBracket(models.Model):
         db_table = "TBL_TAX_BASIC_BRACKET"
 
 class TaxAllowanceBracket(models.Model):
+    frequency = models.CharField(max_length=1)
     ramount_from = models.FloatField()
     ramount_to = models.FloatField()
     amount_rate = models.FloatField()
