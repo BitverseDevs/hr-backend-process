@@ -265,6 +265,7 @@ def create_payroll_updated(employees, cutoff, operation):
             sss = SSS.objects.filter(emp_no=employee.emp_no)
             pagibig = PAGIBIG.objects.filter(emp_no=employee.emp_no)
             philhealth = Philhealth.objects.filter(emp_no=employee.emp_no)
+            payroll_group = PayrollGroup.objects.get(pk=cutoff.payroll_group_code.pk)           
             tax = Tax.objects.filter(emp_no=employee.emp_no)
             cash_advance = CashAdvance.objects.filter(emp_no=employee.emp_no, is_fully_paid=False)
 
@@ -357,14 +358,19 @@ def create_payroll_updated(employees, cutoff, operation):
 
             deductions = lates_amount + utime_amount + sss_contribution + pagibig_contribution + philhealth_contribution
             net_before_tax = gross_pay - deductions            
-            
-            if tax.exists():
-                if tax.first().tax_percentage > 0:
-                    tax_amount = net_before_tax * (tax.first().tax_percentage/100)
-                else:
-                    tax_amount = 0.00
 
-            net_after_tax = net_before_tax - tax_amount        
+            tax_basic_bracket = TaxBasicBracket.objects.get(frequency=payroll_group.payroll_freq, ramount_from__lte=net_before_tax, ramount_to__gte=net_before_tax)            
+
+            tax_amount = net_before_tax * tax_basic_bracket.amount_rate
+            tax_amount += tax_basic_bracket.fix_tax_amount
+
+            # if tax.exists():
+            #     if tax.first().tax_percentage > 0:
+            #         tax_amount = net_before_tax * (tax.first().tax_percentage/100)
+            #     else:
+            #         tax_amount = 0.00
+
+            net_after_tax = net_before_tax - tax_amount
 
             if cash_advance.exists():
                 if cash_advance.first().cash_advance_remaining != 0:
@@ -417,8 +423,8 @@ def create_payroll_updated(employees, cutoff, operation):
             print(payroll)
             serializer = PayrollSerializer(data=payroll)
             if serializer.is_valid():
-                dtr_cutoff.is_processed = True
-                dtr_cutoff.save()
+                # dtr_cutoff.is_processed = True
+                # dtr_cutoff.save()
                 
                 if sss.exists():
                     sss_instance = sss.first()
