@@ -630,9 +630,12 @@ class SSSBracket(models.Model):
         db_table = "TBL_SSS_BRACKET"
 
 class TaxBasicBracket(models.Model):
+    frequency = models.CharField(max_length=1)
     ramount_from = models.FloatField()
     ramount_to = models.FloatField()
     amount_rate = models.FloatField()
+    fix_tax_amount = models.FloatField(default=0)
+
     date_added = models.DateTimeField(auto_now_add=True)
     date_deleted = models.DateTimeField(null=True, blank=True)
 
@@ -640,7 +643,6 @@ class TaxBasicBracket(models.Model):
         db_table = "TBL_TAX_BASIC_BRACKET"
 
 class TaxAllowanceBracket(models.Model):
-    frequency = models.CharField(max_length=1)
     ramount_from = models.FloatField()
     ramount_to = models.FloatField()
     amount_rate = models.FloatField()
@@ -648,4 +650,4 @@ class TaxAllowanceBracket(models.Model):
     date_deleted = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        db_table = "TBL_ALLOWA_BRACKET"
+        db_table = "TBL_TAX_ALLOWA_BRACKET"
