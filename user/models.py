@@ -630,7 +630,7 @@ class SSSBracket(models.Model):
         db_table = "TBL_SSS_BRACKET"
 
 class TaxBasicBracket(models.Model):
-    frequency = models.CharField(max_length=1)
+    frequency = models.PositiveSmallIntegerField()
     ramount_from = models.FloatField()
     ramount_to = models.FloatField()
     amount_rate = models.FloatField()
