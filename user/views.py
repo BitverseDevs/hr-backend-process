@@ -15,7 +15,7 @@ from datetime import datetime, timedelta, time, date
 
 from user.functionalities.employee_process import upload_csv_file_employee
 from user.functionalities.dtr_process import dtr_logs_upload, merge_dtr_entries, create_dtr_cutoff_summary
-from user.functionalities.payroll_process import create_payroll, create_payroll_updated
+from user.functionalities.payroll_process import create_payroll
 
 
 
@@ -322,13 +322,13 @@ class CreatePayrollView(APIView):
 
         if user_emp_nos:
             employees = Employee.objects.filter(emp_no__in=user_emp_nos, payroll_group_code=cutoff.payroll_group_code, date_deleted=None)
-            response = create_payroll_updated(employees, cutoff, operation="list")
+            response = create_payroll(employees, cutoff, operation="list")
 
             return response
         
         else:
             employees = Employee.objects.filter(payroll_group_code=cutoff.payroll_group_code, date_deleted=None)
-            response = create_payroll_updated(employees, cutoff, operation="null")
+            response = create_payroll(employees, cutoff, operation="null")
 
             return response
 
