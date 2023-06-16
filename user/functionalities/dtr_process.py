@@ -36,42 +36,42 @@ def dtr_logs_upload(tsv_file):
                 emp_branch = Branch.objects.get(branch_name=branch)                        
                 schedule = ScheduleDaily.objects.get(emp_no=employee.emp_no, business_date=date)
 
-            dtr_in = {
-                'emp_no': employee.emp_no,
-                'bio_id': employee.bio_id,
-                'datetime_bio': duty_in,
-                'flag1_in_out': 0,
-                'entry_type': "DIN",
-                'date_uploaded': datetime.now(),
-                'branch_code': emp_branch.pk,
-                'schedule_daily_code': schedule.pk
-            }
+                dtr_in = {
+                    'emp_no': employee.emp_no,
+                    'bio_id': employee.bio_id,
+                    'datetime_bio': duty_in,
+                    'flag1_in_out': 0,
+                    'entry_type': "DIN",
+                    'date_uploaded': datetime.now(),
+                    'branch_code': emp_branch.pk,
+                    'schedule_daily_code': schedule.pk
+                }
 
-            dtr_out = {
-                'emp_no': employee.emp_no,
-                'bio_id': employee.bio_id,
-                'datetime_bio': duty_out,
-                'flag1_in_out': 1,
-                'entry_type': "DOUT",
-                'date_uploaded': datetime.now(),
-                'branch_code': emp_branch.pk,
-                'schedule_daily_code': schedule.pk
-            }
+                dtr_out = {
+                    'emp_no': employee.emp_no,
+                    'bio_id': employee.bio_id,
+                    'datetime_bio': duty_out,
+                    'flag1_in_out': 1,
+                    'entry_type': "DOUT",
+                    'date_uploaded': datetime.now(),
+                    'branch_code': emp_branch.pk,
+                    'schedule_daily_code': schedule.pk
+                }
 
-            dtr_in_serializer = DTRSerializer(data=dtr_in)
-            dtr_out_serializer = DTRSerializer(data=dtr_out)
+                dtr_in_serializer = DTRSerializer(data=dtr_in)
+                dtr_out_serializer = DTRSerializer(data=dtr_out)
 
-            if dtr_in_serializer.is_valid():
-                dtr_in_serializer.save()
-            else:
-                return Response({"message": "DTR IN", "error": dtr_in_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-        
-            if dtr_out_serializer.is_valid():
-                dtr_out_serializer.save()
-            else:
-                return Response({"message": "DTR OUT", "error": dtr_out_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+                if dtr_in_serializer.is_valid():
+                    dtr_in_serializer.save()
+                else:
+                    return Response({"message": "DTR IN", "error": dtr_in_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            
+                if dtr_out_serializer.is_valid():
+                    dtr_out_serializer.save()
+                else:
+                    return Response({"message": "DTR OUT", "error": dtr_out_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
-            return Response({"message": "Successfully uploaded to DTR database"}, status=status.HTTP_201_CREATED)
+        return Response({"message": "Successfully uploaded to DTR database"}, status=status.HTTP_201_CREATED)
 
     except Exception as e:
         return Response({"Overall error": str(e)}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
