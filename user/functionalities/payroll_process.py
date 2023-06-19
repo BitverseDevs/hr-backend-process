@@ -6,7 +6,7 @@ from rest_framework import  status
 from user.models import *
 from user.serializers import *
 
-from datetime import datetime, date, time, timedelta
+from datetime import datetime
 
 import math
 
@@ -34,6 +34,7 @@ def create_payroll(employees, cutoff, operation):
             salary_allowance = 0.00
             salary_other = 0.00
             daily_salary_other = 0.00
+            cash_advance_amount = 0.00
 
 
 
@@ -70,40 +71,43 @@ def create_payroll(employees, cutoff, operation):
             reg_holiday_amount = dtr_cutoff.reg_holiday_total * daily_total
             sp_holiday_amount = (dtr_cutoff.sp_holiday_total * daily_total) + (dtr_cutoff.sp_holiday_total_hours * (daily_total_minute * 0.3))
             
+            work_days_total = dtr_cutoff.total_hours/480
 
-
-            if (dtr_cutoff.total_hours % 60) / 60 >= 0.5:
-                init_work_days_total = (dtr_cutoff.total_hours // 60) + 0.5
-            else:
-                init_work_days_total = dtr_cutoff.total_hours // 60
+            # Deduction of lates and undertime is per 30mins
+            # if (dtr_cutoff.total_hours % 60) / 60 >= 0.5:
+            #     init_work_days_total = (dtr_cutoff.total_hours // 60) + 0.5
+            # else:
+            #     init_work_days_total = dtr_cutoff.total_hours // 60
         
-            work_days_total = init_work_days_total / 8
+            # work_days_total = init_work_days_total / 8          
+
+            lates_amount = dtr_cutoff.lates_total * daily_total_minute
+            utime_amount = dtr_cutoff.undertime_total * daily_total_minute
 
             additions = leave_amount + ot_amount + nd_amount + reg_holiday_amount + sp_holiday_amount            
-            gross_pay = (work_days_total * daily_total) + additions            
+            gross_pay = (work_days_total * daily_total) + additions  + lates_amount + utime_amount
 
+            # Deduction of lates and undertime is per 30mins
+            # lates_time_30 = dtr_cutoff.lates_total//30
+            # # print(f"dtr_cutoff.lates_total: {dtr_cutoff.lates_total}")
+            # # print(f"lates_time: {lates_time_30}")
+            # lates_remainder = (dtr_cutoff.lates_total%30)
+            # # print(f"lates_remainder: {lates_remainder}")
+            # lates_amount = lates_time_30 * (daily_total_minute * 30)
+            # # lates_amount = dtr_cutoff.lates_total * daily_total_minute
 
+            # utime_time_30 = math.ceil((dtr_cutoff.undertime_total + lates_remainder)/30)
+            # # print(f"dtr_cutoff.undertime_total: {dtr_cutoff.undertime_total}")
+            # # print(f"utime_time: {utime_time_30}")
+            # utime_amount = utime_time_30 * (daily_total_minute * 30)
+            # # utime_amount = dtr_cutoff.undertime_total * daily_total_minute
 
-            lates_time_30 = dtr_cutoff.lates_total//30
-            # print(f"dtr_cutoff.lates_total: {dtr_cutoff.lates_total}")
-            # print(f"lates_time: {lates_time_30}")
-            lates_remainder = (dtr_cutoff.lates_total%30)
-            # print(f"lates_remainder: {lates_remainder}")
-            lates_amount = lates_time_30 * (daily_total_minute * 30)
-            # lates_amount = dtr_cutoff.lates_total * daily_total_minute
-
-            utime_time_30 = math.ceil((dtr_cutoff.undertime_total + lates_remainder)/30)
-            # print(f"dtr_cutoff.undertime_total: {dtr_cutoff.undertime_total}")
-            # print(f"utime_time: {utime_time_30}")
-            utime_amount = utime_time_30 * (daily_total_minute * 30)
-            # utime_amount = dtr_cutoff.undertime_total * daily_total_minute
-
-            lates_utime_total = math.ceil((dtr_cutoff.lates_total + dtr_cutoff.undertime_total)/30)
-            # print(f"lates and utime: {dtr_cutoff.lates_total + dtr_cutoff.undertime_total}")
-            # print(f"lates_utime_time: {lates_utime_time}")
-            lates_utime_amount = lates_utime_total * (daily_total_minute * 30)
-            # print(f"lates_utime_deduction: {lates_utime_amound}")
-            lates_utime_amount = lates_amount + utime_amount
+            # lates_utime_total = math.ceil((dtr_cutoff.lates_total + dtr_cutoff.undertime_total)/30)
+            # # print(f"lates and utime: {dtr_cutoff.lates_total + dtr_cutoff.undertime_total}")
+            # # print(f"lates_utime_time: {lates_utime_time}")
+            # lates_utime_amount = lates_utime_total * (daily_total_minute * 30)
+            # # print(f"lates_utime_deduction: {lates_utime_amound}")
+            # lates_utime_amount = lates_amount + utime_amount
 
 
 
@@ -126,7 +130,7 @@ def create_payroll(employees, cutoff, operation):
 
 
 
-            deductions = sss_contribution + pagibig_contribution + philhealth_contribution
+            deductions = sss_contribution + pagibig_contribution + philhealth_contribution + lates_amount + utime_amount
             net_before_tax = gross_pay - deductions            
 
             tax_basic_bracket = TaxBasicBracket.objects.get(frequency=payroll_group.payroll_freq, ramount_from__lte=net_before_tax, ramount_to__gte=net_before_tax)            
@@ -188,8 +192,8 @@ def create_payroll(employees, cutoff, operation):
             # print(payroll)
             serializer = PayrollSerializer(data=payroll)
             if serializer.is_valid():
-                # dtr_cutoff.is_processed = True
-                # dtr_cutoff.save()
+                dtr_cutoff.is_processed = True
+                dtr_cutoff.save()
                 
                 if sss.exists():
                     sss_instance = sss.first()

@@ -359,7 +359,7 @@ class DTRCutoff(models.Model):
 class Holiday(models.Model):
     holiday_date = models.DateField()
     holiday_description = models.TextField(max_length=75, null=True, blank=True)
-    holiday_type = models.CharField(unique=True, max_length=5, choices=HOLIDAY_TYPE)
+    holiday_type = models.CharField(max_length=5, choices=HOLIDAY_TYPE)
     holiday_location = models.CharField(max_length=15, choices=HOLIDAY_LOCATION) 
 
     class Meta:
