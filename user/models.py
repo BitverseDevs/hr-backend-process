@@ -6,15 +6,6 @@ from django.utils.translation import gettext_lazy as _
 import datetime
 
 
-"""
-unique
-validators
-max length
-null
-blank
-choices
-default
-"""
 
 PAYROLL_FREQUENCY = (
     (1, "Monthly"),
@@ -24,13 +15,13 @@ PAYROLL_FREQUENCY = (
 )
 
 TAX_FREQUENCY = (
-    (1, "Semi-Monthly"),
+    (1, "Annual"),
     (2, "Monthly"),
-    (3, "Annual"),
+    (3, "Semi-Monthly"),
 )
 
 HOLIDAY_TYPE = [
-    ("SH", "Special Non-working Holiday"),
+    ("SH", "Special Non-Working Holiday"),
     ("LH", "Legal Working Holiday"),
 ]
 
@@ -220,7 +211,6 @@ class Employee(models.Model):
     insurance_life = models.FloatField(null=True, blank=True)
     other_deductible = models.FloatField(null=True, blank=True)
     ecola = models.FloatField(null=True, blank=True)
-
 
     def days_before(self, date):
         today = datetime.date.today()
