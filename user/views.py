@@ -307,6 +307,15 @@ class DTRCutoffSummaryView(APIView):
         dtr_cutoff_summary_serializer = DTRCutoffSerializer(dtr_cutoff_summary, many=True)
         return Response(dtr_cutoff_summary_serializer.data, status=status.HTTP_200_OK)
     
+    def delete(self, request, pk=None, *args, **kwargs):
+        if pk is None:
+            return Response({"ID is required to use this method"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        dtr_cutoff = get_object_or_404(DTRCutoff, pk=pk)
+        dtr_cutoff.date_deleted = datetime.now()
+        dtr_cutoff.save()
+        return Response({"Message": f"DTR Cutoff Summary {pk} successfully deleted"}, status=status.HTTP_204_NO_CONTENT)
+    
 
 class PayrollView(APIView):
     def get(self, request, *args, **kwargs):
