@@ -406,11 +406,13 @@ def merge_dtr_entries(employees, cutoff_code, operation):
         return Response({"Message": "Successfully merge DTR for all employees with the same payroll group code"}, status=status.HTTP_200_OK)    
 
 def create_dtr_cutoff_summary(employees, cutoff_code, cutoff_start_date, cutoff_end_date, operation):
+    exists = []
     try:
         for employee in employees:
             # dtr_summaries = DTRSummary.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, business_date__gte=cutoff_start_date, business_date__lte=cutoff_end_date)
             dtr_summaries = DTRSummary.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, business_date__gte=cutoff_start_date, business_date__lte=cutoff_end_date, is_computed=False)
             dtr_summaries_checker = DTRSummary.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, business_date__gte=cutoff_start_date, business_date__lte=cutoff_end_date, is_computed=True)
+            dtr_cutoff_checker = DTRCutoff.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code)
 
             cutoff_total_hours = 0
             cutoff_lates = 0
@@ -425,6 +427,8 @@ def create_dtr_cutoff_summary(employees, cutoff_code, cutoff_start_date, cutoff_
             cutoff_reg_holiday_total = 0
             cutoff_absent_total = 0
             hours = 0
+            if dtr_cutoff_checker.exists():
+                exists.append(dtr_cutoff_checker.first())
 
             if dtr_summaries.exists() and not dtr_summaries_checker:
                 for dtr_summary in dtr_summaries:
@@ -488,6 +492,12 @@ def create_dtr_cutoff_summary(employees, cutoff_code, cutoff_start_date, cutoff_
         return Response({"Error Message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     
     if operation == "list":
+        if exists:
+            serializer = DTRCutoffSerializer(exists, many=True)
+            return Response({"Message": "Successfully created DTR Cutoff Summary for selected employees but there are repetition of entries", "DTR Cutoff Summary": serializer.data}, status=status.HTTP_200_OK)
         return Response({"Message": "Successfully created DTR Cutoff Summary for selected employees"}, status=status.HTTP_200_OK)
     elif operation == "null":
+        if exists:
+            serializer = DTRCutoffSerializer(exists, many=True)
+            return Response({"Message": "Successfully created DTR Cutoff Summary for all employees with the same payroll group code but there are repetition of entries", "DTR Cutoff Summary": serializer.data}, status=status.HTTP_200_OK)
         return Response({"Message": "Successfully created DTR Cutoff Summary for all employees with the same payroll group code"}, status=status.HTTP_200_OK)
