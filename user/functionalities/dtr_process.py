@@ -79,13 +79,14 @@ def dtr_logs_upload(tsv_file):
                     return Response({"message": "DTR OUT", "error": dtr_out_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         if exists:
             serializer = DTRSerializer(exists, many=True)
-            return Response({"Message": "Successfully uploaded to DTR database. There are existing logs that was uploaded", "Existing logs": serializer.data})
+            return Response({"Message": "Successfully uploaded to DTR database. There are existing logs that was uploaded", "Existing logs": serializer.data}, status=status.HTTP_201_CREATED)
         return Response({"message": "Successfully uploaded to DTR database"}, status=status.HTTP_201_CREATED)
 
     except Exception as e:
         return Response({"Overall error": str(e)}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
 def merge_dtr_entries(employees, cutoff_code, operation):
+    exists = []
     try:
         for employee in employees:
             cutoff = Cutoff.objects.get(pk=cutoff_code)
@@ -97,8 +98,14 @@ def merge_dtr_entries(employees, cutoff_code, operation):
                 dtr_date_to = datetime(start_date.year, start_date.month, start_date.day, 23, 59, 59)                
                 dtr_entries = DTR.objects.filter(emp_no=employee.emp_no, datetime_bio__gte=dtr_date_from, datetime_bio__lte=dtr_date_to, is_processed=False)
                 dtr_entries_processed = DTR.objects.filter(emp_no=employee.emp_no, datetime_bio__gte=dtr_date_from, datetime_bio__lte=dtr_date_to, is_processed=True)
+                dtr_summmary = DTRSummary.objects.filter(emp_no=employee.emp_no, business_date=start_date)
 
-                if dtr_entries.exists():
+                if dtr_summmary.exists():
+                    exists.append(dtr_summmary.first())
+                    start_date += delta
+                    continue
+
+                if dtr_entries.exists() and not dtr_entries_processed and not dtr_summmary.exists():
                     # Initialization of variables
                     business_date = dtr_entries.first().schedule_daily_code.business_date
                     shift_name = dtr_entries.first().schedule_daily_code.schedule_shift_code.name
@@ -253,7 +260,7 @@ def merge_dtr_entries(employees, cutoff_code, operation):
 
 
 
-                elif not dtr_entries.exists() and not dtr_entries_processed:
+                elif not dtr_entries.exists() and not dtr_entries_processed and not dtr_summmary.exists():
 
                     schedule_daily = ScheduleDaily.objects.filter(emp_no=employee.emp_no, business_date__gte=dtr_date_from, business_date__lte=dtr_date_to)
 
@@ -346,7 +353,7 @@ def merge_dtr_entries(employees, cutoff_code, operation):
 
 
 
-                    elif not schedule_daily.exists():
+                    elif not schedule_daily.exists() and not dtr_summmary.exists():
                         is_restday = True
 
                         dtr_summary = {
@@ -381,7 +388,6 @@ def merge_dtr_entries(employees, cutoff_code, operation):
                         else:
                             return Response({"Location": "Restday", "Error": serializer.errors}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)                                            
 
-
                 start_date += delta                                        
 
 
@@ -389,8 +395,14 @@ def merge_dtr_entries(employees, cutoff_code, operation):
         return Response({"Exception Message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     if operation == "list":
+        if exists:
+            serializer = DTRSummarySerializer(exists, many=True)
+            return Response({"Message": "Successfully merge DTR for selected employees but there are employees that have already been merged", "Existing DTR Summary": serializer.data}, status=status.HTTP_200_OK)
         return Response({"Message": "Successfully merge DTR for selected employees"}, status=status.HTTP_200_OK)
     elif operation == "null":
+        if exists:
+            serializer = DTRSummarySerializer(exists, many=True)
+            return Response({"Message": "Successfully merge DTR for selected employees but there are employees that have already been merged", "Existing DTR Summary": serializer.data}, status=status.HTTP_200_OK)
         return Response({"Message": "Successfully merge DTR for all employees with the same payroll group code"}, status=status.HTTP_200_OK)    
 
 def create_dtr_cutoff_summary(employees, cutoff_code, cutoff_start_date, cutoff_end_date, operation):
