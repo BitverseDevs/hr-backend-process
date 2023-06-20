@@ -1,4 +1,4 @@
-import csv, io, pandas as pd
+import csv, io, pandas as pd,json
 from django.shortcuts import get_object_or_404
 
 from rest_framework.response import Response
@@ -27,6 +27,7 @@ def dtr_logs_upload(tsv_file):
         for id in ids:
             select_row = grouped_df[grouped_df['bio_id'] == id]
             employee = Employee.objects.get(bio_id=id)
+            exists = []
 
             for i in range(len(select_row)):
                 duty_in = select_row.iloc[i]['datetime_bio_min']
@@ -35,6 +36,12 @@ def dtr_logs_upload(tsv_file):
                 date = select_row.iloc[i]['date']
                 emp_branch = Branch.objects.get(branch_name=branch)                        
                 schedule = ScheduleDaily.objects.get(emp_no=employee.emp_no, business_date=date)
+
+                dtr_entry_checker = DTR.objects.filter(datetime_bio__gte=duty_in, datetime_bio__lte=duty_out, emp_no=employee.emp_no)
+
+                if dtr_entry_checker.exists():
+                    exists.append(dtr_entry_checker.first())
+                    continue
 
                 dtr_in = {
                     'emp_no': employee.emp_no,
@@ -70,87 +77,17 @@ def dtr_logs_upload(tsv_file):
                     dtr_out_serializer.save()
                 else:
                     return Response({"message": "DTR OUT", "error": dtr_out_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-
+        if exists:
+            serializer = DTRSerializer(exists, many=True)
+            return Response({"Message": "Successfully uploaded to DTR database. There are existing logs that was uploaded", "Existing logs": serializer.data})
         return Response({"message": "Successfully uploaded to DTR database"}, status=status.HTTP_201_CREATED)
 
     except Exception as e:
         return Response({"Overall error": str(e)}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
-def upload_csv_file_employee(file):
-    existing = []
-    non_existing = []
-    csv_file = file.read().decode('utf-8')
-    reader = csv.reader(csv_file.splitlines(),delimiter=',')
-
-    for row in reader:
-        emp_no = row[0]
-
-        if Employee.objects.filter(emp_no=emp_no).exists():
-            existing.append(row)
-            continue
-
-        else:
-            gender = {
-                "Male": "M",
-                "Female": "F"
-            }
-
-            civil_status = {
-                "Single": "S",
-                "Married": "M",
-                "Annulled": "A",
-                "Widowed": "W",
-                "Separated": "SA"
-            }
-
-            employee = {
-                "emp_no": row[0],
-                "first_name": row[1],
-                "middle_name": None if row[2] == "" else row[2],
-                "last_name": row[3],
-                "suffix": None if row[4] == "" else row[4],
-                "birthday": row[5],
-                "birth_place": row[6],
-                "civil_status": civil_status[row[7]] if row[7] in civil_status.keys() else row[7],
-                "gender": gender[row[8]] if row[8] in gender.keys() else row[8],
-                "address": row[9],
-                "provincial_address": None if row[10] == "" else row[10],
-                "mobile_phone": row[11],
-                "email_address": f"{row[1].lower()}.{row[3].replace(' ', '_').lower()}@sample.com",
-                "date_hired": row[12],
-                "date_resigned": None,
-                "date_added": datetime.now(),
-                "date_deleted": None,                            
-            }
-
-            serializer = EmployeeSerializer(data=employee)
-
-            if serializer.is_valid():
-                serializer.save()
-                non_existing.append(row)
-
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    if existing:
-        return Response({
-            "Message": "Uploaded employee data contains employee number that already exists in the sysyem. Unique employee data is successfully uploaded in the database", 
-            "Existing employee/s": existing, 
-            "Unique employee/s": non_existing
-        }, status=status.HTTP_200_OK)
-
-    elif not existing:
-        return Response({
-            "Message": "All employee data is unique and is successfully uploaded into the database",
-            "Unique employee/s": non_existing
-        }, status=status.HTTP_202_ACCEPTED)
-
-
-
 def merge_dtr_entries(employees, cutoff_code, operation):
     try:
         for employee in employees:
-            print(employee)
             cutoff = Cutoff.objects.get(pk=cutoff_code)
             start_date = cutoff.co_date_from
             end_date = cutoff.co_date_to
@@ -298,18 +235,14 @@ def merge_dtr_entries(employees, cutoff_code, operation):
 
                     if serializer.is_valid():
                         # Changing the DTR Entry is_processed to True
-                        print(dtr_entries.first().datetime_bio)
-                        print(dtr_entries.last().datetime_bio)
 
                         dtr_entry_in = DTR.objects.get(pk=dtr_entries.first().pk)
                         dtr_entry_in.is_processed = True
-                        dtr_entry_in.save()
-                        print(dtr_entry_in)
+                        dtr_entry_in.save()                        
 
                         dtr_entry_out = DTR.objects.get(pk=dtr_entries.last().pk)
                         dtr_entry_out.is_processed = True
                         dtr_entry_out.save()
-                        print(dtr_entry_out)
                         
                         serializer.save()
 
@@ -463,7 +396,6 @@ def merge_dtr_entries(employees, cutoff_code, operation):
 def create_dtr_cutoff_summary(employees, cutoff_code, cutoff_start_date, cutoff_end_date, operation):
     try:
         for employee in employees:
-            print(employee)
             # dtr_summaries = DTRSummary.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, business_date__gte=cutoff_start_date, business_date__lte=cutoff_end_date)
             dtr_summaries = DTRSummary.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, business_date__gte=cutoff_start_date, business_date__lte=cutoff_end_date, is_computed=False)
             dtr_summaries_checker = DTRSummary.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, business_date__gte=cutoff_start_date, business_date__lte=cutoff_end_date, is_computed=True)
