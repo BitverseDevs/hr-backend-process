@@ -24,13 +24,20 @@ from user.functionalities.payroll_process import create_payroll
 
 class UserView(APIView):
     def post(self, request, *args, **kwargs):
-        
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, pk=None, *args, **kwargs):
+        if pk is None:
+            return Response({"ID is required to use this method"}, status=status.HTTP_400_BAD_REQUEST)
+        user = get_object_or_404(User, pk=pk)
+        user.date_deleted = datetime.now()
+        user.save()
+        return Response({"Message": f"User {pk} account has been successfully deleted"}, status=status.HTTP_204_NO_CONTENT)
+
 
 # Login Dashboard
 
@@ -115,6 +122,8 @@ class EmployeesView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
     def delete(self, request, emp_no, *args, **kwargs):
+        if emp_no is None:
+            return Response({"Employee number is required to use this method"}, status=status.HTTP_400_BAD_REQUEST)
         employee = get_object_or_404(Employee, emp_no=emp_no)
         employee.date_deleted = date.today()
         employee.save()
