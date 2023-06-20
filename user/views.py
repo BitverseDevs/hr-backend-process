@@ -19,28 +19,7 @@ from user.functionalities.payroll_process import create_payroll
 
 
 
-
-# Create new user based on existing employee data
-
-class UserView(APIView):
-    def post(self, request, *args, **kwargs):
-        serializer = UserSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    def delete(self, request, pk=None, *args, **kwargs):
-        if pk is None:
-            return Response({"ID is required to use this method"}, status=status.HTTP_400_BAD_REQUEST)
-        user = get_object_or_404(User, pk=pk)
-        user.date_deleted = datetime.now()
-        user.save()
-        return Response({"Message": f"User {pk} account has been successfully deleted"}, status=status.HTTP_204_NO_CONTENT)
-
-
-# Login Dashboard
-
+# User Dashboard
 class LoginView(APIView):
     @staticmethod
     def post(request):
@@ -88,8 +67,23 @@ class LoginView(APIView):
 
         return Response(data, status=status.HTTP_200_OK)
     
+class UserView(APIView):
+    def post(self, request, *args, **kwargs):
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, pk=None, *args, **kwargs):
+        if pk is None:
+            return Response({"ID is required to use this method"}, status=status.HTTP_400_BAD_REQUEST)
+        user = get_object_or_404(User, pk=pk)
+        user.date_deleted = datetime.now()
+        user.save()
+        return Response({"Message": f"User {pk} account has been successfully deleted"}, status=status.HTTP_204_NO_CONTENT)
+    
 # Employee Dashboard
-
 class EmployeesView(APIView):
     parser_classes = [MultiPartParser, FormParser]
 
@@ -166,17 +160,12 @@ class AnniversaryView(APIView):
 
         return Response(data, status=status.HTTP_200_OK)        
         
-
-# Employee Upload CSV
-
 class EmployeeUploadView(APIView):
     def post(self, request, *args, **kwargs):
         file = request.FILES.get('file')
         filename = str(file)
-
         if not file:
             return Response({"Message": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
-        
         else:
             if filename.endswith('.csv'):
                 response = upload_csv_file_employee(file)
@@ -184,9 +173,7 @@ class EmployeeUploadView(APIView):
             else:                
                 return Response({"Message": "The file you uploaded cannot be processed due to incorrect file extension"}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)            
             
-
 # DTR Dashboard
-
 class DTRView(APIView):
     def get(self, request, emp_no=None, *args, **kwargs):
         if emp_no is not None:
@@ -204,16 +191,34 @@ class UploadDTREntryView(APIView):
         tsv_filename = str(tsv_file)
 
         if not tsv_file:
-            return Response({"message": "No file uploaded"}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
-        
+            return Response({"message": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)    
         else:
             if tsv_filename.endswith(".tsv"):
                 response = dtr_logs_upload(tsv_file)
                 return response
-
             else:
                 return Response({"Message": "The file you uploaded cannot be processed due to incorrect file extension"}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)                
 
+class DTRSummaryView(APIView):
+    def get(self, request, emp_no=None, cutoff_code=None, *args, **kwargs):
+        if emp_no is None:
+            dtr_summary = DTRSummary.objects.all()
+            dtr_summary_serializer = DTRSummarySerializer(dtr_summary, many=True)
+            return Response(dtr_summary_serializer.data, status=status.HTTP_200_OK)            
+        
+        employee = get_object_or_404(Employee, emp_no=emp_no, date_deleted__exact=None)
+        cutoff_code = request.data['cutoff_code']
+        if cutoff_code is not None:    
+            cutoff = get_object_or_404(Cutoff, pk=cutoff_code)            
+            date_from = cutoff.co_date_from
+            date_to = cutoff.co_date_to
+            dtr_summary = DTRSummary.objects.filter(emp_no=employee.emp_no, business_date__gte=date_from, business_date__lte=date_to).order_by('-business_date')
+            dtr_summary_serializer = DTRSummarySerializer(dtr_summary, many=True)
+            return Response(dtr_summary_serializer.data, status=status.HTTP_200_OK)
+        
+        dtr_summary = DTRSummary.objects.filter(emp_no=employee.emp_no).order_by('-business_date')
+        dtr_summary_serializer = DTRSummarySerializer(dtr_summary, many=True)
+        return Response(dtr_summary_serializer.data, status=status.HTTP_200_OK)
 
 class CutoffPeriodListView(APIView):
     def get(self, request, pk=None, *args, **kwargs):                
@@ -246,54 +251,7 @@ class MergeDTRSummaryView(APIView):
             employees = Employee.objects.filter(payroll_group_code=payroll_group_code, date_deleted=None)        
             response = merge_dtr_entries(employees, cutoff_code, operation="null")
 
-            return response
-        
-
-class CreateDTRCutoffSummaryView(APIView):
-    def post(self, request, *args, **kwargs):
-        user_emp_nos = request.data['emp_no']
-        cutoff_code = request.data['cutoff_code']
-        cutoff = Cutoff.objects.get(pk=cutoff_code)
-        payroll_group_code = cutoff.payroll_group_code
-        cutoff_start_date = cutoff.co_date_from
-        cutoff_end_date = cutoff.co_date_to
-
-        if user_emp_nos:
-            employees = Employee.objects.filter(emp_no__in=user_emp_nos, payroll_group_code=payroll_group_code)
-            operation = "list"
-            response = create_dtr_cutoff_summary(employees, cutoff_code, cutoff_start_date, cutoff_end_date, operation)
-
-            return response
-
-        else:
-            employees = Employee.objects.filter(payroll_group_code=payroll_group_code, date_deleted=None)
-            print(employees)
-            operation = "null"
-            response = create_dtr_cutoff_summary(employees, cutoff_code, cutoff_start_date, cutoff_end_date, operation)
-
-            return response            
-        
-
-class DTRSummaryView(APIView):
-    def get(self, request, emp_no=None, cutoff_code=None, *args, **kwargs):
-        if emp_no is None:
-            dtr_summary = DTRSummary.objects.all()
-            dtr_summary_serializer = DTRSummarySerializer(dtr_summary, many=True)
-            return Response(dtr_summary_serializer.data, status=status.HTTP_200_OK)            
-        
-        employee = get_object_or_404(Employee, emp_no=emp_no, date_deleted__exact=None)
-        cutoff_code = request.data['cutoff_code']
-        if cutoff_code is not None:    
-            cutoff = get_object_or_404(Cutoff, pk=cutoff_code)            
-            date_from = cutoff.co_date_from
-            date_to = cutoff.co_date_to
-            dtr_summary = DTRSummary.objects.filter(emp_no=employee.emp_no, business_date__gte=date_from, business_date__lte=date_to).order_by('-business_date')
-            dtr_summary_serializer = DTRSummarySerializer(dtr_summary, many=True)
-            return Response(dtr_summary_serializer.data, status=status.HTTP_200_OK)
-        
-        dtr_summary = DTRSummary.objects.filter(emp_no=employee.emp_no).order_by('-business_date')
-        dtr_summary_serializer = DTRSummarySerializer(dtr_summary, many=True)
-        return Response(dtr_summary_serializer.data, status=status.HTTP_200_OK)
+            return response        
     
 class DTRCutoffSummaryView(APIView):
     def get(self, request, emp_no=None, *args, **kwargs):
@@ -325,7 +283,31 @@ class DTRCutoffSummaryView(APIView):
         dtr_cutoff.save()
         return Response({"Message": f"DTR Cutoff Summary {pk} successfully deleted"}, status=status.HTTP_204_NO_CONTENT)
     
+class CreateDTRCutoffSummaryView(APIView):
+    def post(self, request, *args, **kwargs):
+        user_emp_nos = request.data['emp_no']
+        cutoff_code = request.data['cutoff_code']
+        cutoff = Cutoff.objects.get(pk=cutoff_code)
+        payroll_group_code = cutoff.payroll_group_code
+        cutoff_start_date = cutoff.co_date_from
+        cutoff_end_date = cutoff.co_date_to
 
+        if user_emp_nos:
+            employees = Employee.objects.filter(emp_no__in=user_emp_nos, payroll_group_code=payroll_group_code)
+            operation = "list"
+            response = create_dtr_cutoff_summary(employees, cutoff_code, cutoff_start_date, cutoff_end_date, operation)
+
+            return response
+
+        else:
+            employees = Employee.objects.filter(payroll_group_code=payroll_group_code, date_deleted=None)
+            print(employees)
+            operation = "null"
+            response = create_dtr_cutoff_summary(employees, cutoff_code, cutoff_start_date, cutoff_end_date, operation)
+
+            return response            
+    
+# Payroll Dashboard
 class PayrollView(APIView):
     def get(self, request, *args, **kwargs):
         payrolls = Payroll.objects.all()
