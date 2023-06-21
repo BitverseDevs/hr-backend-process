@@ -229,7 +229,7 @@ def merge_dtr_entries(employees, cutoff_code, operation):
                         "lates": late,
                         "undertime": undertime,
                         "total_hours": total_hours,
-                        "reg_ot_total": reg_ot_total,
+                        "reg_ot_total": int(reg_ot_total),
                         "nd_ot_total": nd_ot_total,
                         "is_obt": is_obt,
                         "is_ua": is_ua,
