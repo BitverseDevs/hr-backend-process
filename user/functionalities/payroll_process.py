@@ -156,6 +156,7 @@ def create_payroll(employees, cutoff, operation):
                 "pr_cutoff_code": cutoff.pk,
                 "emp_no" : employee.emp_no,
                 "emp_cname": cname,
+                "cutoff_summary_code": dtr_cutoff.pk,
                 "run_date": datetime.now(),
                 "accnt_no": employee.accnt_no,
                 "salary_basic": employee.emp_salary_basic if employee.emp_salary_basic else 0.00,
