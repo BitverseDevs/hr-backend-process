@@ -514,6 +514,7 @@ class Payroll(models.Model):
     pr_cutoff_code = models.ForeignKey(Cutoff, on_delete=models.CASCADE)
     emp_no = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE)
     emp_cname = models.CharField(max_length=50)
+    cutoff_summary_code = models.ForeignKey(DTRCutoff, on_delete=models.CASCADE)
     run_date = models.DateField(auto_now_add=True)
     accnt_no = models.CharField(max_length=25)
     salary_basic = models.FloatField()
