@@ -316,19 +316,30 @@ class PayrollView(APIView):
 
 class CreatePayrollView(APIView):
     def post(self, request, *args, **kwargs):
+        is_loan = request.data['is_loan']
+        is_ca = request.data['is_ca']
+        is_pagibig_house = request.data['is_pagibig_house']
+        is_pagibig_cal = request.data['is_pagibig_cal']
+        is_pagibig_cash = request.data['is_pagibig_cash']
+        is_sss_cal = request.data['is_sss_cal']
+        is_sss_cash = request.data['is_sss_cash']
+        is_deduction = request.data['is_deduction']
+        is_30 = request.data['is_30']
+        is_70 = request.data['is_70']
+
         user_emp_nos = request.data['emp_no']
         cutoff_code = request.data['cutoff_code']
         cutoff = Cutoff.objects.get(pk=cutoff_code)
 
         if user_emp_nos:
             employees = Employee.objects.filter(emp_no__in=user_emp_nos, payroll_group_code=cutoff.payroll_group_code, date_deleted=None)
-            response = create_payroll(employees, cutoff, operation="list")
+            response = create_payroll(employees, cutoff, is_loan, is_ca, is_pagibig_house, is_pagibig_cal, is_pagibig_cash, is_sss_cal, is_sss_cash, is_deduction, is_30, is_70, operation="list")
 
             return response
         
         else:
             employees = Employee.objects.filter(payroll_group_code=cutoff.payroll_group_code, date_deleted=None)
-            response = create_payroll(employees, cutoff, operation="null")
+            response = create_payroll(employees, cutoff, is_loan, is_ca, is_pagibig_house, is_pagibig_cal, is_pagibig_cash, is_sss_cal, is_sss_cash, is_deduction, is_30, is_70, operation="null")
 
             return response
 

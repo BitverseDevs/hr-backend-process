@@ -12,7 +12,7 @@ import math
 
 
 
-def create_payroll(employees, cutoff, operation):
+def create_payroll(employees, cutoff, is_loan, is_ca, is_pagibig_house, is_pagibig_cal, is_pagibig_cash, is_sss_cal, is_sss_cash, is_deduction, is_30, is_70, operation):
     try:
         for employee in employees:
             dtr_cutoff = DTRCutoff.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff.pk, is_processed=False).first()
