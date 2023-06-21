@@ -109,7 +109,22 @@ def create_payroll(employees, cutoff, is_loan, is_ca, is_pagibig_house, is_pagib
             # # print(f"lates_utime_deduction: {lates_utime_amound}")
             # lates_utime_amount = lates_amount + utime_amount
 
+            # Settings
+            # if sss.exists():
+            #     sss_contribution = sss.first().sss_contribution_month / 2 if sss.first().sss_contribution_month else 0.00                
+            #     if (sss.first().sss_with_cashloan_amount != 0 or sss.first().sss_with_cashloan_amount != None) and is_sss_cash == True:
+            #         sss_cashloan = sss.first().sss_with_cashloan_amount / 2 if sss.first().sss_with_cashloan_amount else 0.00
+            #     if (sss.first().sss_with_calloan_amount != 0 or sss.first().sss_with_calloan_amount != None) and is_sss_cal == True:
+            #         sss_calloan = sss.first().sss_with_calloan_amount / 2 if sss.first().sss_with_calloan_amount else 0.00
 
+            # if pagibig.exists():
+            #     pagibig_contribution = pagibig.first().pagibig_contribution_month / 2 if pagibig.first().pagibig_contribution_month else 0.00
+            #     if (pagibig.first().pagibig_with_cloan_amount != 0 or pagibig.first().pagibig_with_cloan_amount != None) and is_pagibig_cash == True:
+            #         pagibig_cloan = pagibig.first().pagibig_with_cloan_amount / 2 if pagibig.first().pagibig_with_cloan_amount else 0.00
+            #     if (pagibig.first().pagibig_with_hloan_amount != 0 or pagibig.first().pagibig_with_hloan_amount != None) and is_pagibig_house == True:
+            #         pagibig_hloan = pagibig.first().pagibig_with_hloan_amount / 2 if pagibig.first().pagibig_with_hloan_amount else 0.00
+            #     if (pagibig.first().pagibig_with_calloan_amount != 0 or pagibig.first().pagibig_with_calloan_amount != None) and is_pagibig_cal == True:
+            #         pagibig_calloan = pagibig.first().pagibig_with_calloan_amount / 2 if pagibig.first().pagibig_with_calloan_amount else 0.00
 
             if sss.exists():
                 sss_contribution = sss.first().sss_contribution_month / 2 if sss.first().sss_contribution_month else 0.00                
@@ -141,6 +156,11 @@ def create_payroll(employees, cutoff, is_loan, is_ca, is_pagibig_house, is_pagib
             tax_amount += tax_basic_bracket.fix_tax_amount
 
             net_after_tax = net_before_tax - tax_amount
+
+            #  Settings
+            # if cash_advance.exists() and is_ca == True:
+            #     if cash_advance.first().cash_advance_remaining != 0:
+            #         cash_advance_amount = cash_advance.first().payment_monthly / 2 if cash_advance.first().payment_monthly else 0.00                    
 
             if cash_advance.exists():
                 if cash_advance.first().cash_advance_remaining != 0:
