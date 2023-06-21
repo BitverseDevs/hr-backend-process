@@ -141,6 +141,8 @@ class PAGIBIG(models.Model):
     pagibig_rem_cloan_amount = models.FloatField(null=True, blank=True)
     pagibig_with_hloan_amount = models.FloatField(null=True, blank=True)
     pagibig_rem_hloan_amount = models.FloatField(null=True, blank=True)
+    pagibig_with_calloan_amount = models.FloatField(null=True, blank=True)
+    pagibig_rem_calloan_amount = models.FloatField(null=True, blank=True)
 
     class Meta:
         db_table = "TBL_PAGIBIG_CODE"
@@ -544,6 +546,7 @@ class Payroll(models.Model):
     pagibigc_amount_d = models.FloatField()
     pagibig_cloan_d = models.FloatField(default=0)
     pagibig_hloan_d = models.FloatField(default=0)
+    pagibig_calloan_d = models.FloatField(default=0)
 
     philhealthc_amount_d = models.FloatField()
     

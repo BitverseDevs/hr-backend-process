@@ -124,6 +124,8 @@ def create_payroll(employees, cutoff, is_loan, is_ca, is_pagibig_house, is_pagib
                     pagibig_cloan = pagibig.first().pagibig_with_cloan_amount / 2 if pagibig.first().pagibig_with_cloan_amount else 0.00
                 if pagibig.first().pagibig_with_hloan_amount != 0 or pagibig.first().pagibig_with_hloan_amount != None:
                     pagibig_hloan = pagibig.first().pagibig_with_hloan_amount / 2 if pagibig.first().pagibig_with_hloan_amount else 0.00
+                if pagibig.first().pagibig_with_calloan_amount != 0 or pagibig.first().pagibig_with_calloan_amount != None:
+                    pagibig_calloan = pagibig.first().pagibig_with_calloan_amount / 2 if pagibig.first().pagibig_with_calloan_amount else 0.00
 
             if philhealth.exists():
                 philhealth_contribution = philhealth.first().ph_contribution_month / 2 if philhealth.first().ph_contribution_month else 0.00
@@ -183,6 +185,7 @@ def create_payroll(employees, cutoff, is_loan, is_ca, is_pagibig_house, is_pagib
                 "sss_calloan_d": sss_calloan,
                 "pagibig_cloan_d": pagibig_cloan,
                 "pagibig_hloan_d": pagibig_hloan,
+                "pagibig_calloan_d": pagibig_hloan,
                 "cash_advance_amount_d": cash_advance_amount,
                 "insurance_d": insurance_amount,
                 "other_d": other_deduction,
@@ -221,6 +224,11 @@ def create_payroll(employees, cutoff, is_loan, is_ca, is_pagibig_house, is_pagib
                         pagibig_instance.pagibig_rem_hloan_amount -= pagibig_hloan
                     elif pagibig_instance.pagibig_rem_hloan_amount == 0:
                         pagibig_instance.pagibig_with_hloan_amount = 0
+
+                    if pagibig_instance.pagibig_rem_calloan_amount != 0 and pagibig_instance.pagibig_rem_calloan_amount != None:
+                        pagibig_instance.pagibig_rem_calloan_amount -= pagibig_calloan
+                    elif pagibig_instance.pagibig_rem_calloan_amount == 0:
+                        pagibig_instance.pagibig_with_calloan_amount = 0
 
                     pagibig_instance.save()
 
