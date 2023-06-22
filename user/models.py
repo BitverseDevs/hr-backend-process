@@ -645,3 +645,50 @@ class TaxAllowanceBracket(models.Model):
 
     class Meta:
         db_table = "TBL_TAX_ALLOWA_BRACKET"
+
+class Pay13TH(models.Model):
+    emp_no = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE)
+    coverage_from = models.DateTimeField()
+    coverage_to = models.DateTimeField()
+    total_pay = models.FloatField()
+    is_printed = models.BooleanField()
+
+    class Meta:
+        db_table = "TBL_13TH_MPAY"
+
+class Announcement(models.Model):
+    emp_no = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE)
+    date_added = models.DateTimeField(auto_now_add=True)
+    date_posted = models.DateTimeField()
+    is_posted = models.BooleanField()
+    expiry_date = models.DateTimeField()
+    order_by_no = models.PositiveSmallIntegerField(validators=[MaxValueValidator(3)])
+    message = models.TextField(max_length=300)
+
+    class Meta:
+        db_table = "TBL_ANNOUNCEMENT_LIST"
+
+class AssetsAccount(models.Model):
+    asset_list_code = models.ForeignKey("AssetsList", on_delete=models.CASCADE)
+    assigned_by = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE, related_name="assignedby")
+    assigned_to = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE, related_name="assignedto")
+    serial_no_manufacturer = models.CharField(max_length=30)
+    serial_no_internal = models.CharField(max_length=30)
+    remarks = models.TextField(max_length=100)
+
+    class Meta:
+        db_table = "TBL_ASSETS_ACCOUNT_LIST"
+
+class AssetsList(models.Model):
+    asset_name = models.CharField(max_length=25)
+    added_by = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE)
+    date_added = models.DateTimeField(auto_now_add=True)
+    model = models.CharField(max_length=4)
+    year = models.DateField()
+    batch_no = models.CharField(max_length=20, null=True, blank=True)
+    description = models.TextField(max_length=100)
+    remarks = models.TextField(max_length=100, null=True, blank=True)
+    quantity = models.PositiveSmallIntegerField()
+
+    class Meta:
+        db_table = "TBL_ASSETS_LIST"
