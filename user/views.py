@@ -122,6 +122,168 @@ class EmployeesView(APIView):
         employee.save()
         
         return Response({"message": "Account successfully deleted"}, status=status.HTTP_204_NO_CONTENT)
+    
+class EmployeeUploadView(APIView):
+    def post(self, request, *args, **kwargs):
+        file = request.FILES.get('file')
+        filename = str(file)
+        if not file:
+            return Response({"Message": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            if filename.endswith('.csv'):
+                response = upload_csv_file_employee(file)
+                return response
+            else:                
+                return Response({"Message": "The file you uploaded cannot be processed due to incorrect file extension"}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)    
+
+class BranchView(APIView):
+    def get(self, request, pk=None, *args, **kwargs):
+        if pk is not None:
+            branch = get_object_or_404(Branch, pk=pk, date_deleted__isnull=True)
+            branch_serializer = BranchSerializer(branch)
+            return Response(branch_serializer.data, status=status.HTTP_200_OK)
+        branch = Branch.objects.filter(date_deleted__isnull=True)
+        branch_serializer = BranchSerializer(branch, many=True)
+        return Response(branch_serializer.data, status=status.HTTP_200_OK)\
+        
+    def post(self, request, *args, **kwargs):
+        branch_serializer = BranchSerializer(data=request.data)
+        if branch_serializer.is_valid():
+            branch_serializer.save()
+            return Response(branch_serializer.data, status=status.HTTP_201_CREATED)
+        return Response(branch_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def put(self, request, pk=None, *args, **kwargs):
+        branch = get_object_or_404(Branch,pk=pk, date_deleted__isnull=True)
+        branch_serializer = BranchSerializer(branch, data=request.data)
+        if branch_serializer.is_valid():
+            branch_serializer.save()
+            return Response(branch_serializer.data, status=status.HTTP_200_OK)
+        return Response(branch_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, pk=None, *args, **kwargs):
+        if pk is None:
+            return Response({"Message": "It requires ID to delete a branch instance"}, status=status.HTTP_400_BAD_REQUEST)
+        branch = get_object_or_404(Branch, pk=pk, date_deleted__isnull=True)
+        branch.date_deleted = datetime.now()
+        branch.save()
+        return Response({"Message": f"Branch {pk} successfully deleted"}, status=status.HTTP_204_NO_CONTENT)
+    
+class DepartmentView(APIView):
+    def get (self, request, pk=None, *args, **kwargs):
+        if pk is not None:
+            department = get_object_or_404(Department, pk=pk, date_deleted__isnull=True)
+            department_serializer = DepartmentSerializer(department)
+            return Response(department_serializer.data, status=status.HTTP_200_OK)
+        department = Department.objects.filter(date_deleted__isnull=True)
+        department_serializer = DepartmentSerializer(department, many=True)
+        return Response(department_serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request, *args, **kwargs):
+        department_serializer = DepartmentSerializer(data=request.data)
+        if department_serializer.is_valid(raise_exception=True):
+            department_serializer.save()
+            return Response(department_serializer.data, status=status.HTTP_201_CREATED)
+
+    def put(self, request, pk=None, *args, **kwargs):
+        department = get_object_or_404(Department, pk=pk, date_deleted__isnull=True)
+        department_serializer = DepartmentSerializer(department, data=request.data)
+        if department_serializer.is_valid(raise_exception=True):
+            department_serializer.save()
+            return Response(department_serializer.data, status=status.HTTP_200_OK)
+
+    def delete(self, request, pk=None, *args, **kwargs):
+        department = get_object_or_404(Department, pk=pk, date_deleted__isnull=True)
+        department.date_deleted = datetime.now()
+        department.save()
+        return Response({"Message": f"Department {pk} successfully deleted"}, status=status.HTTP_204_NO_CONTENT)
+
+class DivisionView(APIView):
+    def get(self, request, pk=None, *args, **kwargs):
+        if pk is not None:
+            division = get_object_or_404(Division, pk=pk, date_deleted__isnull=True)
+            division_serializer = DivisionSerializer(division)
+            return Response(division_serializer.data, status=status.HTTP_200_OK)
+        division = Division.objects.filter(date_deleted__isnull=True)
+        division_serializer = DivisionSerializer(division, many=True)
+        return Response(division_serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request, *args, **kwargs):
+        division_serializer = DivisionSerializer(data=request.data)
+        if division_serializer.is_valid(raise_exception=True):
+            division_serializer.save()
+            return Response(division_serializer.data, status=status.HTTP_201_CREATED)
+
+    def put(self, request, pk=None, *args, **kwargs):
+        division = get_object_or_404(Division, pk=pk, date_deleted__isnull=True)
+        division_serializer = DivisionSerializer(division, data=request.data)
+        if division_serializer.is_valid(raise_exception=True):
+            division_serializer.save()
+            return Response(division_serializer.data, status=status.HTTP_200_OK)
+
+    def delete(self, request, pk=None, *args, **kwargs):
+        division = get_object_or_404(Division, pk=pk, date_deleted__isnull=True)
+        division.date_deleted = datetime.now()
+        division.save()
+        return Response({"Message": f"Division {pk} successfully deleted"}, status=status.HTTP_204_NO_CONTENT)
+    
+class PayrollGroupView(APIView):
+    def get(self, request, pk=None, *args, **kwargs):
+        if pk is not None:
+            payrollgroup = get_object_or_404(PayrollGroup, pk=pk, date_deleted__isnull=True)
+            payrollgroup_serializer = PayrollGroupSerializer(payrollgroup)
+            return Response(payrollgroup_serializer.data, status=status.HTTP_200_OK)
+        payrollgroup = PayrollGroup.objects.filter(date_deleted__isnull=True)
+        payrollgroup_serializer = PayrollGroupSerializer(payrollgroup, many=True)
+        return Response(payrollgroup_serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request, *args, **kwargs):
+        payrollgroup_serializer = PayrollGroupSerializer(data=request.data)
+        if payrollgroup_serializer.is_valid(raise_exception=True):
+            payrollgroup_serializer.save()
+            return Response(payrollgroup_serializer.data, status=status.HTTP_201_CREATED)
+
+    def put(self, request, pk=None, *args, **kwargs):
+        payrollgroup = get_object_or_404(PayrollGroup, pk=pk)
+        payrollgroup_serializer = PayrollGroupSerializer(payrollgroup, data=request.data)
+        if payrollgroup_serializer.is_valid(raise_exception=True):
+            payrollgroup_serializer.save()
+            return Response(payrollgroup_serializer.data, status=status.HTTP_200_OK)
+
+    def delete(self, request, pk=None, *args, **kwargs):
+        payrollgroup = get_object_or_404(PayrollGroup, pk=pk, date_deleted__isnull=True)
+        payrollgroup.date_deleted = datetime.now()
+        payrollgroup.save()
+        return Response({"Message": f"Payroll Group ID {pk} has been successfully deleted"}, status=status.HTTP_204_NO_CONTENT)
+    
+class PositionView(APIView):
+    def get(self, request, pk=None, *args, **kwargs):
+        if pk is not None:
+            position = get_object_or_404(Position, pk=pk, date_deleted__isnull=True)
+            position_serializer = PositionSerializer(position)
+            return Response(position_serializer.data, status=status.HTTP_200_OK)
+        position = Position.objects.filter(date_deleted__isnull=True)
+        position_serializer = PositionSerializer(position, many=True)
+        return Response(position_serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request, *args, **kwargs):
+        position_serializer = PositionSerializer(data=request.data)
+        if position_serializer.is_valid(raise_exception=True):
+            position_serializer.save()
+            return Response(position_serializer.data, status=status.HTTP_201_CREATED)
+
+    def put(self, request, pk=None, *args, **kwargs):
+        position = get_object_or_404(Position, pk=pk)
+        position_serializer = PositionSerializer(position, data=request.data)
+        if position_serializer.is_valid(raise_exception=True):
+            position_serializer.save()
+            return Response(position_serializer.data, status=status.HTTP_200_OK)
+
+    def delete(self, request, pk=None, *args, **kwargs):
+        position = get_object_or_404(Position, pk=pk, date_deleted__isnull=True)
+        position.date_deleted = datetime.now()
+        position.save()
+        return Response({"Message": f"Position ID {pk} has been successfully deleted"}, status=status.HTTP_204_NO_CONTENT)
 
 class BirthdayView(APIView):
     def get(self, request, *args, **kwargs):
@@ -159,18 +321,7 @@ class AnniversaryView(APIView):
 
         return Response(data, status=status.HTTP_200_OK)        
         
-class EmployeeUploadView(APIView):
-    def post(self, request, *args, **kwargs):
-        file = request.FILES.get('file')
-        filename = str(file)
-        if not file:
-            return Response({"Message": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            if filename.endswith('.csv'):
-                response = upload_csv_file_employee(file)
-                return response
-            else:                
-                return Response({"Message": "The file you uploaded cannot be processed due to incorrect file extension"}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)            
+        
             
 # DTR Dashboard
 class DTRView(APIView):
@@ -302,10 +453,10 @@ class PayrollView(APIView):
     def get(self, request, emp_no=None, *args, **kwargs):
         if emp_no is not None:
             payrolls = Payroll.objects.filter(emp_no=emp_no)
-            payrolls_serializer = PayrollSerializer(payrolls, many=True)
+            payrolls_serializer = PayrollViewSerializer(payrolls, many=True)
             return Response(payrolls_serializer.data, status=status.HTTP_200_OK)
         payrolls = Payroll.objects.all()
-        serializer = PayrollSerializer(payrolls, many=True)
+        serializer = PayrollViewSerializer(payrolls, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class CreatePayrollView(APIView):

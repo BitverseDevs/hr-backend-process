@@ -15,6 +15,17 @@ urlpatterns = [
     path('employees/<int:emp_no>/', EmployeesView.as_view()),
     path('import_employee/', EmployeeUploadView.as_view()),
 
+    path('branch/', BranchView.as_view()),
+    path('branch/<int:pk>/', BranchView.as_view()),
+    path('department/', DepartmentView.as_view()),
+    path('department/<int:pk>/', DepartmentView.as_view()),
+    path('division/', DivisionView.as_view()),
+    path('division/<int:pk>/', DivisionView.as_view()),
+    path('payrollgroup/', PayrollGroupView.as_view()),
+    path('payrollgroup/<int:pk>/', PayrollGroupView.as_view()),
+    path('position/', PositionView.as_view()),
+    path('position/<int:pk>/', PositionView.as_view()),
+
     path('birthdays/', BirthdayView.as_view()),
     path('anniversary/', AnniversaryView.as_view()),
 

@@ -202,6 +202,19 @@ class DTRCutoffSerializer(serializers.ModelSerializer):
         model = DTRCutoff
         fields = "__all__"
 
+class PayrollViewSerializer(serializers.ModelSerializer):
+    cutoff = serializers.SerializerMethodField()
+    class Meta:
+        model = Payroll
+        fields = "__all__"
+
+    def get_cutoff(self, obj):
+        try:
+            cutoff = Cutoff.objects.get(pk=obj.pr_cutoff_code.pk)
+            return CutoffSerializer(cutoff).data
+        except Cutoff.DoesNotExist:
+            return None
+
 class PayrollSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payroll
