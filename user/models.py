@@ -422,7 +422,7 @@ class Leaves(models.Model):
 class LeavesCredit(models.Model):
     emp_no = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE)
     leave_type_code = models.ForeignKey("LeavesType", on_delete=models.CASCADE)
-    allowed_days = models.DateTimeField(null=True, blank=True)
+    allowed_days = models.PositiveSmallIntegerField(null=True, blank=True)
     credit_used = models.PositiveSmallIntegerField(validators=[MaxValueValidator(99)], null=True, blank=True)
     credit_remaining = models.PositiveSmallIntegerField(validators=[MaxValueValidator(99)], null=True, blank=True)
     expiry = models.DateTimeField()
