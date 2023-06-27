@@ -278,3 +278,8 @@ class Pay13THSerializer(serializers.ModelSerializer):
     class Meta:
         model = Pay13TH
         fields = "__all__"
+
+class AnnouncementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Announcement
+        fields = "__all__"

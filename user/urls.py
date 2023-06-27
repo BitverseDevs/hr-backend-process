@@ -85,6 +85,9 @@ urlpatterns = [
     path('tax_collected/', TaxColletedView.as_view()),
     path('pay13/', Pay13THView.as_view()),
 
+    path('announcement/', AnnouncementView.as_view()),
+    path('announcement/<int:pk>/', AnnouncementView.as_view()),
+
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

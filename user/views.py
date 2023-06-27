@@ -930,3 +930,26 @@ class Pay13THView(APIView):
         pay13 = Pay13TH.objects.all()
         pay13_serializer = Pay13THSerializer(pay13, many=True)
         return Response(pay13_serializer.data, status=status.HTTP_200_OK)
+    
+class AnnouncementView(APIView):
+    def get(self, request, pk=None, *args, **kwargs):
+        if pk is not None:
+            announcement = get_object_or_404(Announcement, pk=pk)
+            announcement_serializer = AnnouncementSerializer(announcement)
+            return Response(announcement_serializer.data, status=status.HTTP_200_OK)
+        announcement = Announcement.objects.all()
+        announcement_serializer = AnnouncementSerializer(announcement,many=True)
+        return Response(announcement_serializer.data, status=status.HTTP_200_OK)
+    
+    def post(self, request, *args, **kwargs):
+        announcement_serializer = AnnouncementSerializer(data=request.data)
+        if announcement_serializer.is_valid(raise_exception=True):
+            announcement_serializer.save()
+            return Response(announcement_serializer.data, status=status.HTTP_201_CREATED)
+        
+    def put(self, request, pk=None, *args, **kwargs):
+        announcement = get_object_or_404(Announcement, pk=pk)
+        announcement_serializer = AnnouncementSerializer(announcement, data=request.data)
+        if announcement_serializer.is_valid(raise_exception=True):
+            announcement_serializer.save()
+            return Response(announcement_serializer.data, status=status.HTTP_200_OK)
