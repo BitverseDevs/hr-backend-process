@@ -433,13 +433,11 @@ class LeaveTypeView(APIView):
             leave_type_serializer.save()
             return Response(leave_type_serializer.data, status=status.HTTP_200_OK)
 
-
-
-class LeaveCreditView(APIView): # Pending Computation
+class LeaveCreditView(APIView):
     def get(self, request, *args, **kwargs):
         emp_no = request.data['emp_no']
         if emp_no is not None:
-            leave_credit = LeavesCredit.objects.filter(emp_no=emp_no)
+            leave_credit = get_object_or_404(LeavesCredit, emp_no=emp_no)
             leave_credit_serializer = GetLeavesCreditSerializer(leave_credit)
             return Response(leave_credit_serializer.data, status=status.HTTP_200_OK)
         leave_credit = LeavesCredit.objects.all()
@@ -458,8 +456,6 @@ class LeaveCreditView(APIView): # Pending Computation
         if leave_credit_serializer.is_valid(raise_exception=True):
             leave_credit_serializer.save()
             return Response(leave_credit_serializer.data, status=status.HTTP_200_OK)
-        
-
 
 class LeaveView(APIView): # Pending Computation
     def get(self, request, *args, **kwargs):

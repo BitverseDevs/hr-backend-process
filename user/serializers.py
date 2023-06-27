@@ -97,24 +97,25 @@ class LeavesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Leaves
         fields = "__all__"
-
-class GetLeavesCreditSerializer(serializers.ModelSerializer):
-    leave_type = serializers.SerializerMethodField()
-    class Meta:
-        model = LeavesCredit
-        fields = "__all__"
-
-    def get_leave_type(self, obj):
-        try:
-            leave_type = LeavesType.objects.get(pk=obj.leave_type_code.pk)
-            return LeavesTypeSerializer(leave_type).data['name']
-        except LeavesType.DoesNotExist:
-            return None
         
 class LeavesCreditSerializer(serializers.ModelSerializer):
     class Meta:
         model = LeavesCredit
         fields = "__all__"
+
+class GetLeavesCreditSerializer(serializers.ModelSerializer):
+    leave_name = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = LeavesCredit
+        fields = "__all__"
+
+    def get_leave_name(self, obj):
+        try:
+            leave_name = LeavesType.objects.get(pk=obj.leave_type_code.pk)
+            return LeavesTypeSerializer(leave_name).data['name']
+        except LeavesType.DoesNotExist:
+            return None
 
 class LeavesTypeSerializer(serializers.ModelSerializer):
     class Meta:
