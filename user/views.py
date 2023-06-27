@@ -847,3 +847,32 @@ class CashAdvanceView(APIView):
             return Response(ca_serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(ca_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+class AllowanceTypeView(APIView):
+    def get(self, request, pk=None, *args, **kwargs):
+        if pk is not None:
+            allowance_type = get_object_or_404(AllowanceType, pk=pk, date_deleted__isnull=True)
+            allowance_type_serializer = AllowanceTypeSerializer(allowance_type)
+            return Response(allowance_type_serializer.data, status=status.HTTP_200_OK)
+        allowance_type = AllowanceType.objects.filter(date_deleted__isnull=True)
+        allowance_type_serializer = AllowanceTypeSerializer(allowance_type, many=True)
+        return Response(allowance_type_serializer.data, status=status.HTTP_200_OK)
+    
+    def post(self, request, *args, **kwargs):
+        allowance_type_serializer = AllowanceTypeSerializer(data=request.data)
+        if allowance_type_serializer.is_valid(raise_exception=True):
+            allowance_type_serializer.save()
+            return Response(allowance_type_serializer.data, status=status.HTTP_201_CREATED)
+        
+    def put(self, request, pk=None, *args, **kwargs):
+        allowance_type = get_object_or_404(AllowanceType, pk=pk, date_deleted__isnull=True)
+        allowance_type_serializer = AllowanceTypeSerializer(allowance_type, data=request.data)
+        if allowance_type_serializer.is_valid(raise_exception=True):
+            allowance_type_serializer.save()
+            return Response(allowance_type_serializer.data, status=status.HTTP_200_OK)
+
+    def delete(self, request, pk=None, *args, **kwargs):
+        allowance_type = get_object_or_404(AllowanceType, pk=pk, date_deleted__isnull=True)
+        allowance_type.date_deleted = datetime.now()
+        allowance_type.save()
+        return Response({"Message": f"Allowance Type ID {pk} successfully deleted"}, status=status.HTTP_204_NO_CONTENT)

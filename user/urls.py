@@ -78,6 +78,8 @@ urlpatterns = [
     path('payroll/<int:emp_no>/', PayrollView.as_view()),
     path('ca/', CashAdvanceView.as_view()),
     path('ca/<int:pk>/', CashAdvanceView.as_view()),
+    path('allowance_type/', AllowanceTypeView.as_view()),
+    path('allowance_type/<int:pk>/', AllowanceTypeView.as_view()),
 
 ]
 
