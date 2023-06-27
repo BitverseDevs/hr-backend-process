@@ -80,6 +80,8 @@ urlpatterns = [
     path('ca/<int:pk>/', CashAdvanceView.as_view()),
     path('allowance_type/', AllowanceTypeView.as_view()),
     path('allowance_type/<int:pk>/', AllowanceTypeView.as_view()),
+    path('allowance_entry/', AllowanceEntryView.as_view()),
+    path('allowance_entry/<int:pk>/', AllowanceEntryView.as_view()),
 
 ]
 

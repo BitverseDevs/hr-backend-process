@@ -876,3 +876,35 @@ class AllowanceTypeView(APIView):
         allowance_type.date_deleted = datetime.now()
         allowance_type.save()
         return Response({"Message": f"Allowance Type ID {pk} successfully deleted"}, status=status.HTTP_204_NO_CONTENT)
+    
+class AllowanceEntryView(APIView):
+    def get(self, request, *args, **kwargs):
+        emp_no = request.data['emp_no']
+        if emp_no is not None:
+            allowance_entry = AllowanceEntry.objects.filter(emp_no=emp_no, date_deleted__isnull=True)
+            allowance_entry_serializer = AllowanceEntrySerializer(allowance_entry, many=True)
+            return Response(allowance_entry_serializer.data, status=status.HTTP_200_OK)
+        allowance_entry = AllowanceEntry.objects.filter(date_deleted__isnull=True)
+        allowance_entry_serializer = AllowanceEntrySerializer(allowance_entry, many=True)
+        return Response(allowance_entry_serializer.data, status=status.HTTP_200_OK)
+    
+    def post(self, request, *args, **kwargs):
+        allowance_entry_serializer = AllowanceEntrySerializer(data=request.data)
+        if allowance_entry_serializer.is_valid(raise_exception=True):
+            allowance_entry_serializer.save()
+            return Response(allowance_entry_serializer.data, status=status.HTTP_201_CREATED)
+    
+    def put(self, request, pk=None, *args, **kwargs):
+        allowance_entry = get_object_or_404(AllowanceEntry, pk=pk, date_deleted__isnull=True)
+        allowance_entry_serializer = AllowanceEntrySerializer(allowance_entry, data=request.data)
+        if allowance_entry_serializer.is_valid(raise_exception=True):
+            allowance_entry_serializer.save()
+            return Response(allowance_entry_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(allowance_entry_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+    def delete(self, request, pk=None, *args, **kwargs):
+        allowance_entry = get_object_or_404(AllowanceEntry, pk=pk, date_deleted__isnull=True)
+        allowance_entry.date_deleted = datetime.now()
+        allowance_entry.save()
+        return Response({"Message": f"Allowance Entry ID {pk} successfully deleted"})
