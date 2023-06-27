@@ -137,8 +137,13 @@ class ScheduleShiftSerializer(serializers.ModelSerializer):
         model = ScheduleShift
         fields = "__all__"
 
-class ScheduleDailySerializer(serializers.ModelSerializer):
+class GetScheduleDailySerializer(serializers.ModelSerializer):
     schedule_shift_code = ScheduleShiftSerializer()
+    class Meta:
+        model = ScheduleDaily
+        fields = "__all__"
+
+class ScheduleDailySerializer(serializers.ModelSerializer):
     class Meta:
         model = ScheduleDaily
         fields = "__all__"

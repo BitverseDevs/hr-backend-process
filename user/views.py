@@ -534,6 +534,31 @@ class ScheduleShiftView(APIView):
         shift.save()
         return Response({"Message": f"Schedule Shift ID {pk} successfully deleted"}, status=status.HTTP_204_NO_CONTENT)
 
+class ScheduleDailyView(APIView):
+    def get(self, request, *args, **kwargs):
+        emp_no = request.data['emp_no']
+        if emp_no is not None:
+            daily = ScheduleDaily.objects.filter(emp_no=emp_no)
+            daily_serializer = GetScheduleDailySerializer(daily, many=True)
+            return Response(daily_serializer.data, status=status.HTTP_200_OK)
+        daily = ScheduleDaily.objects.all()
+        daily_serializer = GetScheduleDailySerializer(daily, many=True)
+        return Response(daily_serializer.data, status=status.HTTP_200_OK)
+    
+    def post(self, request, *args, **kwargs):
+        daily_serializer = ScheduleDailySerializer(data=request.data)
+        if daily_serializer.is_valid(raise_exception=True):
+            daily_serializer.save()
+            return Response(daily_serializer.data, status=status.HTTP_201_CREATED)
+        
+    def put(self, request, pk=None, *args, **kwargs):
+        daily = get_object_or_404(ScheduleDaily, pk=pk)
+        daily_serializer = ScheduleDailySerializer(daily, data=request.data)
+        if daily_serializer.is_valid(raise_exception=True):
+            daily_serializer.save()
+            return Response(daily_serializer.data, status=status.HTTP_200_OK)
+
+
 
 
 # Government Mandated Contribution
