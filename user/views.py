@@ -505,6 +505,35 @@ class UnaccountedAttendanceView(APIView):
             ua_serializer.save()
             return Response(ua_serializer.data, status=status.HTTP_200_OK)
         
+class ScheduleShiftView(APIView):
+    def get(self, request, pk=None, *args, **kwargs):
+        if pk is not None:
+            shift = get_object_or_404(ScheduleShift, pk=pk, date_deleted__isnull=True)
+            shift_serializer = ScheduleShiftSerializer(shift)
+            return Response(shift_serializer.data, status=status.HTTP_200_OK)
+        shift = ScheduleShift.objects.filter(date_deleted__isnull=True)
+        shift_serializer = ScheduleShiftSerializer(shift, many=True)
+        return Response(shift_serializer.data, status=status.HTTP_200_OK)
+    
+    def post(self, request, *args, **kwargs):
+        shift_serializer = ScheduleShiftSerializer(data=request.data)
+        if shift_serializer.is_valid(raise_exception=True):
+            shift_serializer.save()
+            return Response(shift_serializer.data, status=status.HTTP_201_CREATED)
+        
+    def put(self, request, pk=None, *args, **kwargs):
+        shift = get_object_or_404(ScheduleShift, pk=pk)
+        shift_serializer = ScheduleShiftSerializer(shift, data=request.data)
+        if shift_serializer.is_valid(raise_exception=True):
+            shift_serializer.save()
+            return Response(shift_serializer.data, status=status.HTTP_200_OK)
+        
+    def delete(self, request, pk=None, *args, **kwargs):
+        shift = get_object_or_404(ScheduleShift, pk=pk)
+        shift.date_deleted = datetime.now()
+        shift.save()
+        return Response({"Message": f"Schedule Shift ID {pk} successfully deleted"}, status=status.HTTP_204_NO_CONTENT)
+
 
 
 # Government Mandated Contribution

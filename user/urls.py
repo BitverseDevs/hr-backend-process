@@ -45,6 +45,8 @@ urlpatterns = [
     path('leave/<int:pk>/', LeaveView.as_view()),
     path('ua/', UnaccountedAttendanceView.as_view()),
     path('ua/<int:pk>/', UnaccountedAttendanceView.as_view()),
+    path('schedule_shift/', ScheduleShiftView.as_view()),
+    path('schedule_shift/<int:pk>/', ScheduleShiftView.as_view()),
 
     path('tax/', TaxView.as_view()),
     path('tax/<int:emp_no>/', TaxView.as_view()),
