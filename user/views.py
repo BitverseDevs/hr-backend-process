@@ -68,10 +68,12 @@ class LoginView(APIView):
     
 class UserView(APIView):
     def post(self, request, *args, **kwargs):
-        serializer = UserSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)        
+        user_serializer = UserSerializer(data=request.data)
+        if user_serializer.is_valid(raise_exception=True):
+            user_serializer.save()
+            return Response(user_serializer.data, status=status.HTTP_201_CREATED) 
+        else:
+            return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def delete(self, request, pk=None, *args, **kwargs):
         user = get_object_or_404(User, pk=pk, date_deleted__isnull=True)
@@ -99,6 +101,8 @@ class EmployeesView(APIView):
         if employee_serializer.is_valid(raise_exception=True):
             employee_serializer.save()
             return Response(employee_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(employee_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
     def put(self, request, emp_no=None, *args, **kwargs):
         employee = get_object_or_404(Employee, emp_no=emp_no)
@@ -106,6 +110,8 @@ class EmployeesView(APIView):
         if employee_serializer.is_valid(raise_exception=True):
             employee_serializer.save()
             return Response(employee_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(employee_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
     def delete(self, request, emp_no=None, *args, **kwargs):
         employee = get_object_or_404(Employee, emp_no=emp_no, date_deleted__isnull=True)
@@ -141,6 +147,8 @@ class BranchView(APIView):
         if branch_serializer.is_valid(raise_exception=True):
             branch_serializer.save()
             return Response(branch_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(branch_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def put(self, request, pk=None, *args, **kwargs):
         branch = get_object_or_404(Branch,pk=pk, date_deleted__isnull=True)
@@ -148,6 +156,8 @@ class BranchView(APIView):
         if branch_serializer.is_valid(raise_exception=True):
             branch_serializer.save()
             return Response(branch_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(branch_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def delete(self, request, pk=None, *args, **kwargs):
         branch = get_object_or_404(Branch, pk=pk, date_deleted__isnull=True)
@@ -170,6 +180,8 @@ class DepartmentView(APIView):
         if department_serializer.is_valid(raise_exception=True):
             department_serializer.save()
             return Response(department_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(department_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, pk=None, *args, **kwargs):
         department = get_object_or_404(Department, pk=pk, date_deleted__isnull=True)
@@ -177,6 +189,8 @@ class DepartmentView(APIView):
         if department_serializer.is_valid(raise_exception=True):
             department_serializer.save()
             return Response(department_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(department_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk=None, *args, **kwargs):
         department = get_object_or_404(Department, pk=pk, date_deleted__isnull=True)
@@ -199,6 +213,8 @@ class DivisionView(APIView):
         if division_serializer.is_valid(raise_exception=True):
             division_serializer.save()
             return Response(division_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(division_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, pk=None, *args, **kwargs):
         division = get_object_or_404(Division, pk=pk, date_deleted__isnull=True)
@@ -206,6 +222,8 @@ class DivisionView(APIView):
         if division_serializer.is_valid(raise_exception=True):
             division_serializer.save()
             return Response(division_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(division_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk=None, *args, **kwargs):
         division = get_object_or_404(Division, pk=pk, date_deleted__isnull=True)
@@ -228,6 +246,8 @@ class PayrollGroupView(APIView):
         if payrollgroup_serializer.is_valid(raise_exception=True):
             payrollgroup_serializer.save()
             return Response(payrollgroup_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(payrollgroup_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, pk=None, *args, **kwargs):
         payrollgroup = get_object_or_404(PayrollGroup, pk=pk)
@@ -235,6 +255,8 @@ class PayrollGroupView(APIView):
         if payrollgroup_serializer.is_valid(raise_exception=True):
             payrollgroup_serializer.save()
             return Response(payrollgroup_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(payrollgroup_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk=None, *args, **kwargs):
         payrollgroup = get_object_or_404(PayrollGroup, pk=pk, date_deleted__isnull=True)
@@ -257,6 +279,8 @@ class PositionView(APIView):
         if position_serializer.is_valid(raise_exception=True):
             position_serializer.save()
             return Response(position_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(position_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, pk=None, *args, **kwargs):
         position = get_object_or_404(Position, pk=pk)
@@ -264,6 +288,8 @@ class PositionView(APIView):
         if position_serializer.is_valid(raise_exception=True):
             position_serializer.save()
             return Response(position_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(position_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk=None, *args, **kwargs):
         position = get_object_or_404(Position, pk=pk, date_deleted__isnull=True)
@@ -286,6 +312,8 @@ class RankView(APIView):
         if rank_serializer.is_valid(raise_exception=True):
             rank_serializer.save()
             return Response(rank_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(rank_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, pk=None, *args, **kwargs):
         rank = get_object_or_404(Rank, pk=pk)
@@ -293,6 +321,8 @@ class RankView(APIView):
         if rank_serializer.is_valid(raise_exception=True):
             rank_serializer.save()
             return Response(rank_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(rank_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk=None, *args, **kwargs):
         rank = get_object_or_404(Rank, pk=pk, date_deleted__isnull=True)
@@ -354,6 +384,8 @@ class HolidayView(APIView):
         if holiday_serializer.is_valid(raise_exception=True):
             holiday_serializer.save()
             return Response(holiday_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(holiday_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, pk=None, *args, **kwargs):
         holiday = get_object_or_404(Holiday, pk=pk)
@@ -361,6 +393,8 @@ class HolidayView(APIView):
         if holiday_serializer.is_valid(raise_exception=True):
             holiday_serializer.save()
             return Response(holiday_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(holiday_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class OBTView(APIView):
     def get(self, request, *args, **kwargs):
@@ -378,6 +412,8 @@ class OBTView(APIView):
         if obt_serializer.is_valid(raise_exception=True):
             obt_serializer.save()
             return Response(obt_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(obt_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
     def put(self, request, pk=None, *args, **kwargs):
         obt = get_object_or_404(OBT, pk=pk)
@@ -385,6 +421,8 @@ class OBTView(APIView):
         if obt_serializer.is_valid(raise_exception=True):
             obt_serializer.save()
             return Response(obt_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(obt_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
 class OvertimeView(APIView):
     def get(self, request, *args, **kwargs):
@@ -402,6 +440,8 @@ class OvertimeView(APIView):
         if ot_serializer.is_valid(raise_exception=True):
             ot_serializer.save()
             return Response(ot_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(ot_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, pk=None, *args, **kwargs):
         ot = get_object_or_404(Overtime, pk=pk)
@@ -409,6 +449,8 @@ class OvertimeView(APIView):
         if ot_serializer.is_valid(raise_exception=True):
             ot_serializer.save()
             return Response(ot_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(ot_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
 class LeaveTypeView(APIView):
     def get(self, request, pk=None, *args, **kwargs):
@@ -425,6 +467,8 @@ class LeaveTypeView(APIView):
         if leave_type_serializer.is_valid(raise_exception=True):
             leave_type_serializer.save()
             return Response(leave_type_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(leave_type_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
     def put(self, request, pk=None, *args, **kwargs):
         leave_type = get_object_or_404(LeavesType, pk=pk)
@@ -432,6 +476,8 @@ class LeaveTypeView(APIView):
         if leave_type_serializer.is_valid(raise_exception=True):
             leave_type_serializer.save()
             return Response(leave_type_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(leave_type_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class LeaveCreditView(APIView):
     def get(self, request, *args, **kwargs):
@@ -449,6 +495,8 @@ class LeaveCreditView(APIView):
         if leave_credit_serializer.is_valid(raise_exception=True):
             leave_credit_serializer.save()
             return Response(leave_credit_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(leave_credit_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
     def put(self, request, pk=None, *args, **kwargs):
         leave_credit = get_object_or_404(LeavesCredit, pk=pk)
@@ -456,6 +504,8 @@ class LeaveCreditView(APIView):
         if leave_credit_serializer.is_valid(raise_exception=True):
             leave_credit_serializer.save()
             return Response(leave_credit_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(leave_credit_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class LeaveView(APIView): # Pending Computation
     def get(self, request, *args, **kwargs):
@@ -473,6 +523,8 @@ class LeaveView(APIView): # Pending Computation
         if leave_serializer.is_valid(raise_exception=True):
             leave_serializer.save()
             return Response(leave_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(leave_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
     def put (self, request, pk=None, *args, **kwargs):
         leave = get_object_or_404(Leaves, pk=pk)
@@ -480,6 +532,8 @@ class LeaveView(APIView): # Pending Computation
         if leave_serializer.is_valid(raise_exception=True):
             leave_serializer.save()
             return Response(leave_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(leave_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
 class UnaccountedAttendanceView(APIView):
     def get(self, request, *args, **kwargs):
@@ -497,6 +551,8 @@ class UnaccountedAttendanceView(APIView):
         if ua_serializer.is_valid(raise_exception=True):
             ua_serializer.save()
             return Response(ua_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(ua_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
     def put(self, request, pk=None, *args, **kwargs):
         ua = get_object_or_404(UnaccountedAttendance, pk=pk)
@@ -504,6 +560,8 @@ class UnaccountedAttendanceView(APIView):
         if ua_serializer.is_valid(raise_exception=True):
             ua_serializer.save()
             return Response(ua_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(ua_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
 class ScheduleShiftView(APIView):
     def get(self, request, pk=None, *args, **kwargs):
@@ -520,6 +578,8 @@ class ScheduleShiftView(APIView):
         if shift_serializer.is_valid(raise_exception=True):
             shift_serializer.save()
             return Response(shift_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(shift_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
     def put(self, request, pk=None, *args, **kwargs):
         shift = get_object_or_404(ScheduleShift, pk=pk)
@@ -527,6 +587,8 @@ class ScheduleShiftView(APIView):
         if shift_serializer.is_valid(raise_exception=True):
             shift_serializer.save()
             return Response(shift_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(shift_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
     def delete(self, request, pk=None, *args, **kwargs):
         shift = get_object_or_404(ScheduleShift, pk=pk)
@@ -550,6 +612,8 @@ class ScheduleDailyView(APIView):
         if daily_serializer.is_valid(raise_exception=True):
             daily_serializer.save()
             return Response(daily_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(daily_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
     def put(self, request, pk=None, *args, **kwargs):
         daily = get_object_or_404(ScheduleDaily, pk=pk)
@@ -557,6 +621,8 @@ class ScheduleDailyView(APIView):
         if daily_serializer.is_valid(raise_exception=True):
             daily_serializer.save()
             return Response(daily_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(daily_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -577,6 +643,8 @@ class TaxView(APIView):
         if tax_serializer.is_valid(raise_exception=True):
             tax_serializer.save()
             return Response(tax_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(tax_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
     def put(self, request, pk=None, *args, **kwargs):
         tax = get_object_or_404(Tax, pk=pk)
@@ -584,6 +652,8 @@ class TaxView(APIView):
         if tax_serializer.is_valid(raise_exception=True):
             tax_serializer.save()
             return Response(tax_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(tax_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class PagibigView(APIView):
     def get(self, request, emp_no=None, *args, **kwargs):
@@ -600,6 +670,8 @@ class PagibigView(APIView):
         if pagibig_serializer.is_valid(raise_exception=True):
             pagibig_serializer.save()
             return Response(pagibig_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(pagibig_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
     def put(self, request, emp_no=None, *args, **kwargs):
         pagibig = get_object_or_404(PAGIBIG, emp_no=emp_no)
@@ -607,6 +679,8 @@ class PagibigView(APIView):
         if pagibig_serializer.is_valid(raise_exception=True):
             pagibig_serializer.save()
             return Response(pagibig_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(pagibig_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class SssView(APIView):
     def get(self, request, emp_no=None, *args, **kwargs):
@@ -623,6 +697,8 @@ class SssView(APIView):
         if sss_serializer.is_valid(raise_exception=True):
             sss_serializer.save()
             return Response(sss_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(sss_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
     def put(self, request, emp_no=None, *args, **kwargs):
         sss = get_object_or_404(SSS, emp_no=emp_no)
@@ -630,6 +706,8 @@ class SssView(APIView):
         if sss_serializer.is_valid(raise_exception=True):
             sss_serializer.save()
             return Response(sss_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(sss_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class PhilhealthView(APIView):
     def get(self, request, emp_no=None, *args, **kwargs):
@@ -646,6 +724,8 @@ class PhilhealthView(APIView):
         if philhealth_serializer.is_valid(raise_exception=True):
             philhealth_serializer.save()
             return Response(philhealth_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(philhealth_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
     def put(self, request, emp_no=None, *args, **kwargs):
         philhealth = get_object_or_404(Philhealth, emp_no=emp_no)
@@ -653,6 +733,8 @@ class PhilhealthView(APIView):
         if philhealth_serializer.is_valid(raise_exception=True):
             philhealth_serializer.save()
             return Response(philhealth_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(philhealth_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -713,6 +795,8 @@ class CutoffPeriodListView(APIView):
         if cutoff_serializer.is_valid(raise_exception=True):
             cutoff_serializer.save()
             return Response(cutoff_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(cutoff_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
     def put(self, request, pk=None, *args, **kwargs):
         cutoff = get_object_or_404(Cutoff, pk=pk)
@@ -720,6 +804,8 @@ class CutoffPeriodListView(APIView):
         if cutoff_serializer.is_valid(raise_exception=True):
             cutoff_serializer.save()
             return Response(cutoff_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(cutoff_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class MergeDTRSummaryView(APIView):
     def post(self, request, *args, **kwargs):
@@ -838,6 +924,8 @@ class CashAdvanceView(APIView):
         if ca_serializer.is_valid(raise_exception=True):
             ca_serializer.save()
             return Response(ca_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(ca_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
     def put(self, request, pk=None, *args, **kwargs):
         ca = get_object_or_404(CashAdvance, pk=pk)
@@ -863,6 +951,8 @@ class AllowanceTypeView(APIView):
         if allowance_type_serializer.is_valid(raise_exception=True):
             allowance_type_serializer.save()
             return Response(allowance_type_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(allowance_type_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
     def put(self, request, pk=None, *args, **kwargs):
         allowance_type = get_object_or_404(AllowanceType, pk=pk, date_deleted__isnull=True)
@@ -870,6 +960,8 @@ class AllowanceTypeView(APIView):
         if allowance_type_serializer.is_valid(raise_exception=True):
             allowance_type_serializer.save()
             return Response(allowance_type_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(allowance_type_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk=None, *args, **kwargs):
         allowance_type = get_object_or_404(AllowanceType, pk=pk, date_deleted__isnull=True)
@@ -893,6 +985,8 @@ class AllowanceEntryView(APIView):
         if allowance_entry_serializer.is_valid(raise_exception=True):
             allowance_entry_serializer.save()
             return Response(allowance_entry_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(allowance_entry_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def put(self, request, pk=None, *args, **kwargs):
         allowance_entry = get_object_or_404(AllowanceEntry, pk=pk, date_deleted__isnull=True)
@@ -946,6 +1040,8 @@ class AnnouncementView(APIView):
         if announcement_serializer.is_valid(raise_exception=True):
             announcement_serializer.save()
             return Response(announcement_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(announcement_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
     def put(self, request, pk=None, *args, **kwargs):
         announcement = get_object_or_404(Announcement, pk=pk)
@@ -953,6 +1049,8 @@ class AnnouncementView(APIView):
         if announcement_serializer.is_valid(raise_exception=True):
             announcement_serializer.save()
             return Response(announcement_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(announcement_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
 
 
@@ -972,6 +1070,8 @@ class AssetsListView(APIView):
         if asset_list_serializer.is_valid(raise_exception=True):
             asset_list_serializer.save()
             return Response(asset_list_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(asset_list_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
     def put(self, request, pk=None, *args, **kwargs):
         asset_list = get_object_or_404(AssetsLists, pk=pk)
@@ -979,6 +1079,8 @@ class AssetsListView(APIView):
         if asset_list_serializer.is_valid(raise_exception=True):
             asset_list_serializer.save()
             return Response(asset_list_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(asset_list_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
 class AssetsAccountView(APIView):
     def get(self, request, *args, **kwargs):
@@ -1005,3 +1107,5 @@ class AssetsAccountView(APIView):
         if account_serializer.is_valid(raise_exception=True):
             account_serializer.save()
             return Response(account_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(account_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
