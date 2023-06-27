@@ -76,6 +76,9 @@ urlpatterns = [
     path('create_payrolls/', CreatePayrollView.as_view()),
     path('payroll/', PayrollView.as_view()),
     path('payroll/<int:emp_no>/', PayrollView.as_view()),
+    path('ca/', CashAdvanceView.as_view()),
+    path('ca/<int:pk>/', CashAdvanceView.as_view()),
+
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

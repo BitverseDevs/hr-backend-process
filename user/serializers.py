@@ -239,6 +239,11 @@ class PayrollSerializer(serializers.ModelSerializer):
         model = Payroll
         fields = "__all__"
 
+class CashAdvanceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CashAdvance
+        fields = "__all__"
+
 class AllowanceEntrySerializer(serializers.ModelSerializer):
     class Meta:
         model = AllowanceEntry
