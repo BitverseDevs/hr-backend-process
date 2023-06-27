@@ -908,3 +908,14 @@ class AllowanceEntryView(APIView):
         allowance_entry.date_deleted = datetime.now()
         allowance_entry.save()
         return Response({"Message": f"Allowance Entry ID {pk} successfully deleted"})
+
+class TaxColletedView(APIView):
+    def get(self, request, *args, **kwargs):
+        emp_no = request.data['emp_no']
+        if emp_no is not None:
+            tax_collected = TaxCollected.objects.filter(emp_no=emp_no)
+            tax_collected_serializer = TaxCollectedSerializer(tax_collected, many=True)
+            return Response(tax_collected_serializer.data, status=status.HTTP_200_OK)
+        tax_collected = TaxCollected.objects.all()
+        tax_collected_serializer = TaxCollectedSerializer(tax_collected, many=True)
+        return Response(tax_collected_serializer.data, status=status.HTTP_200_OK)
