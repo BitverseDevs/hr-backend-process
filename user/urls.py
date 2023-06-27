@@ -90,6 +90,8 @@ urlpatterns = [
 
     path('asset_list/', AssetsListView.as_view()),
     path('asset_list/<int:pk>/', AssetsListView.as_view()),
+    path('asset_account/', AssetsAccountView.as_view()),
+    path('asset_account/<int:pk>/', AssetsAccountView.as_view()),
 
 ]
 

@@ -979,3 +979,29 @@ class AssetsListView(APIView):
         if asset_list_serializer.is_valid(raise_exception=True):
             asset_list_serializer.save()
             return Response(asset_list_serializer.data, status=status.HTTP_200_OK)
+        
+class AssetsAccountView(APIView):
+    def get(self, request, *args, **kwargs):
+        emp_no = request.data['emp_no']
+        if emp_no is not None:
+            account = AssetsAccount.objects.filter(assigned_to=emp_no)
+            account_serializer = AssetsAccountSerializer(account, many=True)
+            return Response(account_serializer.data, status=status.HTTP_200_OK)
+        account = AssetsAccount.objects.all()
+        account_serializer = AssetsAccountSerializer(account, many=True)
+        return Response(account_serializer.data, status=status.HTTP_200_OK)
+    
+    def post(self, request, *args, **kwargs):
+        account_serializer = AssetsAccountSerializer(data=request.data)
+        if account_serializer.is_valid(raise_exception=True):
+            account_serializer.save()
+            return Response(account_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(account_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+    def put(self, request, pk=None, *args, **kwargs):
+        account = get_object_or_404(AssetsAccount, pk=pk)
+        account_serializer = AssetsAccountSerializer(account, data=request.data)
+        if account_serializer.is_valid(raise_exception=True):
+            account_serializer.save()
+            return Response(account_serializer.data, status=status.HTTP_200_OK)

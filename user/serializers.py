@@ -296,3 +296,8 @@ class AssestsListSerializer(serializers.ModelSerializer):
     class Meta:
         model = AssetsLists
         fields = "__all__"
+
+class AssetsAccountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AssetsAccount
+        fields = "__all__"
