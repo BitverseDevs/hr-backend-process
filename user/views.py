@@ -953,3 +953,29 @@ class AnnouncementView(APIView):
         if announcement_serializer.is_valid(raise_exception=True):
             announcement_serializer.save()
             return Response(announcement_serializer.data, status=status.HTTP_200_OK)
+        
+
+
+# Asset
+class AssetsListView(APIView):
+    def get(self, request, pk=None, *args, **kwargs):
+        if pk is not None:
+            asset_list = get_object_or_404(AssetsLists, pk=pk)
+            asset_list_serializer = AssestsListSerializer(asset_list)
+            return Response(asset_list_serializer.data, status=status.HTTP_200_OK)
+        asset_list = AssetsLists.objects.all()
+        asset_list_serializer = AssestsListSerializer(asset_list, many=True)
+        return Response(asset_list_serializer.data, status=status.HTTP_200_OK)
+    
+    def post(self, request, *args, **kwargs):
+        asset_list_serializer = AssestsListSerializer(data=request.data)
+        if asset_list_serializer.is_valid(raise_exception=True):
+            asset_list_serializer.save()
+            return Response(asset_list_serializer.data, status=status.HTTP_200_OK)
+        
+    def put(self, request, pk=None, *args, **kwargs):
+        asset_list = get_object_or_404(AssetsLists, pk=pk)
+        asset_list_serializer = AssestsListSerializer(asset_list, data=request.data)
+        if asset_list_serializer.is_valid(raise_exception=True):
+            asset_list_serializer.save()
+            return Response(asset_list_serializer.data, status=status.HTTP_200_OK)

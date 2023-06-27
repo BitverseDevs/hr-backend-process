@@ -88,6 +88,9 @@ urlpatterns = [
     path('announcement/', AnnouncementView.as_view()),
     path('announcement/<int:pk>/', AnnouncementView.as_view()),
 
+    path('asset_list/', AssetsListView.as_view()),
+    path('asset_list/<int:pk>/', AssetsListView.as_view()),
+
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

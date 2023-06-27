@@ -669,7 +669,7 @@ class Announcement(models.Model):
         db_table = "TBL_ANNOUNCEMENT_LIST"
 
 class AssetsAccount(models.Model):
-    asset_list_code = models.ForeignKey("AssetsList", on_delete=models.CASCADE)
+    asset_list_code = models.ForeignKey("AssetsLists", on_delete=models.CASCADE)
     assigned_by = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE, related_name="assignedby")
     assigned_to = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE, related_name="assignedto")
     serial_no_manufacturer = models.CharField(max_length=30)
@@ -679,7 +679,7 @@ class AssetsAccount(models.Model):
     class Meta:
         db_table = "TBL_ASSETS_ACCOUNT_LIST"
 
-class AssetsList(models.Model):
+class AssetsLists(models.Model):
     asset_name = models.CharField(max_length=25)
     added_by = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE)
     date_added = models.DateTimeField(auto_now_add=True)
