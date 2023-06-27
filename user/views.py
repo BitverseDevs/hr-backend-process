@@ -483,7 +483,6 @@ class LeaveView(APIView): # Pending Computation
         
 
 
-
 # Government Mandated Contribution
 class TaxView(APIView):
     def get(self, request, emp_no=None, pk=None, *args, **kwargs):
@@ -630,6 +629,19 @@ class CutoffPeriodListView(APIView):
             cutoff = Cutoff.objects.all()
             serializer = CutoffSerializer(cutoff, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
+        
+    def post(self, request, *args, **kwargs):
+        cutoff_serializer = CutoffSerializer(data=request.data)
+        if cutoff_serializer.is_valid(raise_exception=True):
+            cutoff_serializer.save()
+            return Response(cutoff_serializer.data, status=status.HTTP_201_CREATED)
+        
+    def put(self, request, pk=None, *args, **kwargs):
+        cutoff = get_object_or_404(Cutoff, pk=pk)
+        cutoff_serializer = CutoffSerializer(cutoff, data=request.data)
+        if cutoff_serializer.is_valid(raise_exception=True):
+            cutoff_serializer.save()
+            return Response(cutoff_serializer.data, status=status.HTTP_200_OK)
 
 class MergeDTRSummaryView(APIView):
     def post(self, request, *args, **kwargs):
