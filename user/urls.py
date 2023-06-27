@@ -43,6 +43,8 @@ urlpatterns = [
     path('leave_credit/<int:pk>/', LeaveCreditView.as_view()),
     path('leave/', LeaveView.as_view()),
     path('leave/<int:pk>/', LeaveView.as_view()),
+    path('ua/', UnaccountedAttendanceView.as_view()),
+    path('ua/<int:pk>/', UnaccountedAttendanceView.as_view()),
 
     path('tax/', TaxView.as_view()),
     path('tax/<int:emp_no>/', TaxView.as_view()),

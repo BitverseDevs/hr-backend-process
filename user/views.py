@@ -481,6 +481,30 @@ class LeaveView(APIView): # Pending Computation
             leave_serializer.save()
             return Response(leave_serializer.data, status=status.HTTP_200_OK)
         
+class UnaccountedAttendanceView(APIView):
+    def get(self, request, *args, **kwargs):
+        emp_no = request.data['emp_no'] if request.data['emp_no'] else None
+        if emp_no is not None:
+            ua = UnaccountedAttendance.objects.filter(emp_no=emp_no)
+            ua_serializer = UnaccountedAttendanceSerializer(ua, many=True)
+            return Response(ua_serializer.data, status=status.HTTP_200_OK)
+        ua = UnaccountedAttendance.objects.all()
+        ua_serializer = UnaccountedAttendanceSerializer(ua, many=True)
+        return Response(ua_serializer.data, status=status.HTTP_200_OK)
+    
+    def post(self, request, *args, **kwargs):
+        ua_serializer = UnaccountedAttendanceSerializer(data=request.data)
+        if ua_serializer.is_valid(raise_exception=True):
+            ua_serializer.save()
+            return Response(ua_serializer.data, status=status.HTTP_201_CREATED)
+        
+    def put(self, request, pk=None, *args, **kwargs):
+        ua = get_object_or_404(UnaccountedAttendance, pk=pk)
+        ua_serializer = UnaccountedAttendanceSerializer(ua, data=request.data)
+        if ua_serializer.is_valid(raise_exception=True):
+            ua_serializer.save()
+            return Response(ua_serializer.data, status=status.HTTP_200_OK)
+        
 
 
 # Government Mandated Contribution
