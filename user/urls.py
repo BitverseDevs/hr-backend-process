@@ -83,6 +83,7 @@ urlpatterns = [
     path('allowance_entry/', AllowanceEntryView.as_view()),
     path('allowance_entry/<int:pk>/', AllowanceEntryView.as_view()),
     path('tax_collected/', TaxColletedView.as_view()),
+    path('pay13/', Pay13THView.as_view()),
 
 ]
 

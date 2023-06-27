@@ -919,3 +919,14 @@ class TaxColletedView(APIView):
         tax_collected = TaxCollected.objects.all()
         tax_collected_serializer = TaxCollectedSerializer(tax_collected, many=True)
         return Response(tax_collected_serializer.data, status=status.HTTP_200_OK)
+    
+class Pay13THView(APIView):
+    def get(self, request, *args, **kwargs):
+        emp_no = request.data['emp_no']
+        if emp_no is not None:
+            pay13 = Pay13TH.objects.filter(emp_no=emp_no)
+            pay13_serializer = Pay13THSerializer(pay13, many=True)
+            return Response(pay13_serializer.data, status=status.HTTP_200_OK)
+        pay13 = Pay13TH.objects.all()
+        pay13_serializer = Pay13THSerializer(pay13, many=True)
+        return Response(pay13_serializer.data, status=status.HTTP_200_OK)

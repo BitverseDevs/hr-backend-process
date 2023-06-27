@@ -273,3 +273,8 @@ class TaxAllowanceBracketSerializer(serializers.ModelSerializer):
     class Meta:
         model = TaxAllowanceBracket
         fields = "__all__"
+
+class Pay13THSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Pay13TH
+        fields = "__all__"
