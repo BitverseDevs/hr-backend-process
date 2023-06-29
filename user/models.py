@@ -651,7 +651,7 @@ class Pay13TH(models.Model):
     coverage_from = models.DateTimeField()
     coverage_to = models.DateTimeField()
     total_pay = models.FloatField()
-    is_printed = models.BooleanField()
+    is_printed = models.BooleanField(default=False)
 
     class Meta:
         db_table = "TBL_13TH_MPAY"

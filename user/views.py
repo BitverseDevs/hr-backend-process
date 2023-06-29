@@ -1025,6 +1025,39 @@ class Pay13THView(APIView):
         pay13_serializer = Pay13THSerializer(pay13, many=True)
         return Response(pay13_serializer.data, status=status.HTTP_200_OK)
     
+class Create13THPayView(APIView):
+    def post(self, request, *args, **kwargs):
+        emp_nos = request.data['emp_no']
+        for emp_no in emp_nos:
+            payrolls = Payroll.objects.filter(emp_no=emp_no)
+            employee = get_object_or_404(Employee,emp_no=emp_no)
+            total_gross_pay = 0
+            date_from = payrolls.first().pr_cutoff_code.co_date_from
+            date_to = payrolls.last().pr_cutoff_code.co_date_to
+            count = payrolls.count()
+            for payroll in payrolls:
+                total_gross_pay += payroll.gross_pay
+                print(payroll.gross_pay)
+
+            total_13_pay = total_gross_pay/count
+
+            pay13th = {
+                "coverage_from": date_from,
+                "coverage_to": date_to,
+                "total_pay": total_13_pay,
+                "emp_no": employee.emp_no
+            }
+
+            pay13th_serializer = Pay13THSerializer(data=pay13th)
+            if pay13th_serializer.is_valid(raise_exception=True):
+                pay13th_serializer.save()
+                return Response(pay13th_serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                return Response(pay13th_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({"Message": "Sample 13th month pay"}, status=status.HTTP_200_OK)
+
+    
 class AnnouncementView(APIView):
     def get(self, request, pk=None, *args, **kwargs):
         if pk is not None:
