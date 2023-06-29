@@ -313,6 +313,7 @@ class DTRSummary(models.Model):
     lates = models.PositiveSmallIntegerField()
     undertime = models.PositiveSmallIntegerField()
     total_hours = models.PositiveSmallIntegerField()
+    nd_total_hours = models.PositiveSmallIntegerField(null=True, blank=True)
 
     adjusted_timein = models.DateTimeField(null=True, blank=True)
     adjusted_timeout = models.DateTimeField(null=True, blank=True)
@@ -329,17 +330,21 @@ class DTRCutoff(models.Model):
     business_date_to = models.DateField()
 
     paid_leaves_total = models.PositiveSmallIntegerField(null=True, blank=True)
+    leaves_type_used = models.TextField(max_length=100, null=True, blank=True)
     reg_ot_total = models.PositiveSmallIntegerField(null=True, blank=True)
     nd_ot_total = models.PositiveSmallIntegerField(null=True, blank=True)
     sp_holiday_total = models.PositiveSmallIntegerField(null=True, blank=True)
     sp_holiday_total_hours = models.PositiveSmallIntegerField(null=True, blank=True)
     reg_holiday_total = models.PositiveSmallIntegerField(null=True, blank=True)
+    rd_ot_total_hours = models.PositiveSmallIntegerField(null=True, blank=True)
+    rd_sp_holiday_ot_total_hours = models.PositiveSmallIntegerField(null=True, blank=True)
+    rd_reg_holiday_ot_total_hours = models.PositiveSmallIntegerField(null=True, blank=True)
+    
     absent_total = models.PositiveSmallIntegerField(null=True, blank=True)
-    leaves_type_used = models.TextField(max_length=100, null=True, blank=True)
-
     overbreak_total = models.PositiveSmallIntegerField(null=True, blank=True)
     lates_total = models.PositiveSmallIntegerField(null=True, blank=True)
     undertime_total = models.PositiveSmallIntegerField(null=True, blank=True)
+
     total_hours = models.PositiveSmallIntegerField()
 
     is_processed = models.BooleanField(default=False)
@@ -535,6 +540,9 @@ class Payroll(models.Model):
     nd_amount_a = models.FloatField()
     reg_holiday_amount_a = models.FloatField()
     sp_holiday_amount_a = models.FloatField()
+    rd_ot_amount_a = models.FloatField(default=0)
+    rd_sp_holiday_amount_a = models.FloatField(default=0)
+    rd_reg_holiday_amount_a = models.FloatField(default=0)
     
     lates_amount_d = models.FloatField()
     utime_amount_d = models.FloatField()
@@ -691,4 +699,26 @@ class AssetsLists(models.Model):
     quantity = models.PositiveSmallIntegerField()
 
     class Meta:
-        db_table = "TBL_ASSETS_LIST"
+        db_table = "TBL_ASSETS_LIST"\
+        
+class BonusList(models.Model):
+    name = models.CharField(max_length=25)
+    description = models.TextField(max_length=100)
+    amount = models.FloatField()
+
+    date_added = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "TBL_BONUS_LIST"
+
+class BonusEntry(models.Model):
+    bonus_code = models.ForeignKey(BonusList, on_delete=models.CASCADE)
+    emp_no = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE)
+    cutoff_code = models.ForeignKey(Cutoff, on_delete=models.CASCADE)
+    is_applied = models.BooleanField(default=False)
+    added_by = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE, related_name="added_by_emp_no")
+
+    date_added = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "TBL_BONUS_ENTRY"

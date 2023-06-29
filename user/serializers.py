@@ -301,3 +301,13 @@ class AssetsAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = AssetsAccount
         fields = "__all__"
+
+class BonusListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BonusList
+        fields = "__all__"
+
+class BonusEntrySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BonusEntry
+        fields = "__all__"
