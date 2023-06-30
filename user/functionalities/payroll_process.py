@@ -210,7 +210,7 @@ def create_payroll(employees, cutoff, is_loan, is_ca, is_pagibig_house, is_pagib
                 "insurance_d": insurance_amount,
                 "other_d": other_deduction,
                 "net_pay": net_pay,
-                "absent_amount": dtr_cutoff.absent_total
+                "absent_amount": dtr_cutoff.absent_total * daily_total
             }
 
             # print(payroll)
