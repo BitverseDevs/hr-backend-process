@@ -9,7 +9,21 @@ from user.serializers import *
 
 from datetime import datetime, date, timedelta
 
+def new_dtr_logs_upload(tsv_file):
+    try:
+        stream = io.StringIO(tsv_file.read().decode('utf-8'))
+        columns = ['bio_id', 'datetime_bio', 'duty_in', 'duty_out', 'lunch_out', 'lunch_in', 'branch']
+        dframe = pd.read_table(stream, header=None, names=columns)
+        dframe['datetime_bio'] = pd.to_datetime(dframe['datetime_bio'])
+        dframe['date'] = dframe['datetime_bio'].dt.date
+        dframe['time'] = dframe['datetime_bio'].dt.time
+        dframe['bio_id'] = dframe['bio_id'].astype(int)
+        dframe = dframe.sort_values(['bio_id', 'datetime_bio'])
 
+        ids = dframe['bio_id'].unique()
+
+    except Exception as e:
+        return Response({"Error Message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 def dtr_logs_upload(tsv_file):
     try:
