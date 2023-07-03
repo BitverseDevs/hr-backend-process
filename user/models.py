@@ -493,6 +493,7 @@ class ScheduleDaily(models.Model):
     emp_no = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE)
     business_date = models.DateField()
     schedule_shift_code = models.ForeignKey(ScheduleShift, on_delete=models.CASCADE)
+    is_restday = models.BooleanField(default=False)
     is_processed = models.BooleanField(null=True, blank=True)
     sched_default = models.ForeignKey(ScheduleShift, on_delete=models.CASCADE, null=True, blank=True, related_name="sched_daily_default")
 
