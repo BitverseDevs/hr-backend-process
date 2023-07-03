@@ -94,6 +94,8 @@ urlpatterns = [
     path('asset_account/', AssetsAccountView.as_view()),
     path('asset_account/<int:pk>/', AssetsAccountView.as_view()),
 
+    path('test_upload/', TestView.as_view()),
+
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

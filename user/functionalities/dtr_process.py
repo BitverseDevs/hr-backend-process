@@ -14,13 +14,143 @@ def new_dtr_logs_upload(tsv_file):
         stream = io.StringIO(tsv_file.read().decode('utf-8'))
         columns = ['bio_id', 'datetime_bio', 'duty_in', 'duty_out', 'lunch_out', 'lunch_in', 'branch']
         dframe = pd.read_table(stream, header=None, names=columns)
-        dframe['datetime_bio'] = pd.to_datetime(dframe['datetime_bio'])
-        dframe['date'] = dframe['datetime_bio'].dt.date
-        dframe['time'] = dframe['datetime_bio'].dt.time
-        dframe['bio_id'] = dframe['bio_id'].astype(int)
         dframe = dframe.sort_values(['bio_id', 'datetime_bio'])
+        dframe['datetime_bio'] = pd.to_datetime(dframe['datetime_bio'])
+        dframe['bio_id'] = dframe['bio_id'].astype(int)
 
-        ids = dframe['bio_id'].unique()
+        # shifts = ScheduleShift.objects.all()
+        
+        morning_shift_entry = dframe[(dframe['datetime_bio'].dt.hour >= 7) & (dframe['datetime_bio'].dt.hour < 16) & (dframe['duty_out'] == 0)]
+        morning_shift_entry['date'] = morning_shift_entry['datetime_bio'].dt.date
+        morning_shift_exit = dframe[(dframe['datetime_bio'].dt.hour > 8) & (dframe['datetime_bio'].dt.hour < 18) & (dframe['duty_out'] == 1)]
+        morning_shift_exit['date'] = morning_shift_exit['datetime_bio'].dt.date
+        morning_shift = pd.concat([morning_shift_entry, morning_shift_exit])        
+        grouped_morning_df = morning_shift.groupby(['bio_id', 'date']).agg(datetime_bio_min=('datetime_bio', 'min'), datetime_bio_max=('datetime_bio', 'max')).reset_index()
+        grouped_morning_df['branch'] = dframe['branch']
+        ids_morning = grouped_morning_df['bio_id'].unique()
+        exists = []
+
+        for id in ids_morning:
+            select_row = grouped_morning_df[grouped_morning_df["bio_id"] == id]
+            employee = get_object_or_404(Employee, bio_id=id)
+
+            for i in range(len(select_row)):
+                duty_in = select_row.iloc[i]['datetime_bio_min']
+                duty_out = select_row.iloc[i]['datetime_bio_max']
+                branch = select_row.iloc[i]['branch']
+                date = select_row.iloc[i]['date']
+                emp_branch = get_object_or_404(Branch, branch_name=branch)
+                schedule = get_object_or_404(ScheduleDaily, emp_no=employee.emp_no, business_date=date)
+
+                dtr_entry_checker = DTR.objects.filter(datetime_bio__gte=duty_in, datetime_bio__lte=duty_out, emp_no=employee.emp_no)
+                
+                if dtr_entry_checker.exists():
+                    exists.append(dtr_entry_checker.first())
+                    continue
+
+                dtr_morning_in = {
+                    'emp_no': employee.emp_no,
+                    'bio_id': employee.bio_id,
+                    'datetime_bio': duty_in,
+                    'flag1_in_out': 0,
+                    'entry_type': "DIN",
+                    'date_uploaded': datetime.now(),
+                    'branch_code': emp_branch.pk,
+                    'schedule_daily_code': schedule.pk
+                }
+                
+                dtr_morning_out = {
+                    'emp_no': employee.emp_no,
+                    'bio_id': employee.bio_id,
+                    'datetime_bio': duty_out,
+                    'flag1_in_out': 1,
+                    'entry_type': "DOUT",
+                    'date_uploaded': datetime.now(),
+                    'branch_code': emp_branch.pk,
+                    'schedule_daily_code': schedule.pk
+                }
+
+                dtr_in_serializer = DTRSerializer(data=dtr_morning_in)
+                dtr_out_serializer = DTRSerializer(data=dtr_morning_out)
+
+                if dtr_in_serializer.is_valid(raise_exception=True):
+                    dtr_in_serializer.save()
+                else:
+                    return Response(dtr_in_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                
+                if dtr_out_serializer.is_valid(raise_exception=True):
+                    dtr_out_serializer.save()
+                else:
+                    return Response(dtr_out_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                
+        night_shift_entry = dframe[(dframe['datetime_bio'].dt.hour >= 20) & (dframe['duty_out'] == 0)]
+        night_shift_entry['date'] = night_shift_entry['datetime_bio'].dt.date
+        night_shift_exit = dframe[(dframe['datetime_bio'].dt.hour <= 7) & (dframe['duty_out'] == 1)]
+        night_shift_exit['date'] = night_shift_exit['datetime_bio'].dt.date - pd.DateOffset(days=1)
+        night_shift = pd.concat([night_shift_entry, night_shift_exit])
+        night_shift['date'] = pd.to_datetime(night_shift['date']).dt.date
+        grouped_night_df = night_shift.groupby(['bio_id', 'date']).agg(datetime_bio_min=('datetime_bio', 'min'), datetime_bio_max=('datetime_bio', 'max')).reset_index()
+        grouped_night_df['branch'] = dframe['branch']
+        ids_night = grouped_morning_df['bio_id'].unique()
+        print(grouped_night_df)
+        
+        for id in ids_night:
+            select_row = grouped_night_df[grouped_night_df['bio_id'] == id]
+            employee = get_object_or_404(Employee, bio_id=id)
+
+            for i in range(len(select_row)):
+                duty_in = select_row.iloc[i]['datetime_bio_min']
+                duty_out = select_row.iloc[i]['datetime_bio_max']
+                branch = select_row.iloc[i]['branch']
+                date = select_row.iloc[i]['date']
+                emp_branch = get_object_or_404(Branch, branch_name=branch)
+                schedule = get_object_or_404(ScheduleDaily, emp_no=employee.emp_no, business_date=date)
+
+                dtr_entry_checker = DTR.objects.filter(datetime_bio__gte=duty_in, datetime_bio__lte=duty_out, emp_no=employee.emp_no)
+
+                if dtr_entry_checker.exists():
+                    exists.append(dtr_entry_checker.first())
+                    continue
+
+                dtr_night_in = {
+                    'emp_no': employee.emp_no,
+                    'bio_id': employee.bio_id,
+                    'datetime_bio': duty_in,
+                    'flag1_in_out': 0,
+                    'entry_type': "DIN",
+                    'date_uploaded': datetime.now(),
+                    'branch_code': emp_branch.pk,
+                    'schedule_daily_code': schedule.pk
+                }
+                
+                dtr_night_out = {
+                    'emp_no': employee.emp_no,
+                    'bio_id': employee.bio_id,
+                    'datetime_bio': duty_out,
+                    'flag1_in_out': 1,
+                    'entry_type': "DOUT",
+                    'date_uploaded': datetime.now(),
+                    'branch_code': emp_branch.pk,
+                    'schedule_daily_code': schedule.pk
+                }
+
+                dtr_in_serializer = DTRSerializer(data=dtr_night_in)
+                dtr_out_serializer = DTRSerializer(data=dtr_night_out)
+
+                if dtr_in_serializer.is_valid(raise_exception=True):
+                    dtr_in_serializer.save()
+                else:
+                    return Response(dtr_in_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                
+                if dtr_out_serializer.is_valid(raise_exception=True):
+                    dtr_out_serializer.save()
+                else:
+                    return Response(dtr_out_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        if exists:
+            exist_serializer = DTRSerializer(exists, many=True)
+            return Response({"Message": "Successfully uploaded to DTR database. There are existing logs that was uploaded", "Existing Logs": exist_serializer.data}, status=status.HTTP_200_OK)
+        return Response({"Message": "Successfully uploaded to DTR database"}, status=status.HTTP_200_OK)           
 
     except Exception as e:
         return Response({"Error Message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
