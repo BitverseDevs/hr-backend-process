@@ -229,6 +229,68 @@ def dtr_logs_upload(tsv_file):
     except Exception as e:
         return Response({"Overall error": str(e)}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
+def new_merge_dtr_entries(employees, cutoff_code, operation):
+    exists = []
+    try:
+        for employee in employees:
+            cutoff = get_object_or_404(Cutoff, pk=cutoff_code)
+            start_date = cutoff.co_date_from
+            end_date = cutoff.co_date_to
+            delta = timedelta(days=1)
+
+            while start_date <= end_date:
+                dtr_date_from = datetime(start_date.year, start_date.month, start_date.day)
+                dtr_date_to = datetime(start_date.year, start_date.month, start_date.day, 23, 59, 59)
+
+                dtr_entries = DTR.objects.filter(emp_no=employee.emp_no, datetime_bio__gte=dtr_date_from, datetime_bio__lte=dtr_date_to, is_processed=False)
+                dtr_entries_checker = DTR.objects.filter(emp_no=employee.emp_no, datetime_bio__gte=dtr_date_from, datetime_bio__lte=dtr_date_to, is_processed=True)
+                dtr_summary = DTRSummary.objects.filter(emp_no=employee.emp_no, business_date=start_date)
+
+                if dtr_summary.exists():
+                    exists.append(dtr_summary.first())
+                    start_date += delta
+                    continue
+
+                if dtr_entries.exists() and not dtr_entries_checker:
+                    business_date = dtr_entries.first().schedule_daily_code.business_date
+                    shift_name = dtr_entries.first().schedule_daily_code.schedule_shift_code.name
+                    duty_in = dtr_entries.first().datetime_bio
+                    duty_out = dtr_entries.last().datetime_bio
+                    sched_timein = dtr_entries.first().schedule_daily_code.schedule_shift_code.time_in
+                    sched_timeout = dtr_entries.first().schedule_daily_code.schedule_shift_code.time_out
+                    curr_sched_timein = datetime(duty_in.year, duty_in.month, duty_in.day, sched_timein.hour, sched_timein.minute, sched_timein.second)
+                    curr_sched_timeout= datetime(duty_out.year, duty_out.month, duty_out.day, sched_timeout.hour, sched_timeout.minute, sched_timeout.second)
+                    
+                    # lunch_out = 0
+                    # lunch_in = 0
+                    # overbreak = 0
+                    # adjusted_timein = None
+                    # adjusted_timeout = None
+                    
+                    lates = 0
+                    undertime = 0
+                    
+                    total_hours = 0
+                    nd_total_hours = 0
+                    reg_ot_total = 0
+                    nd_ot_total = 0
+
+                    is_obt = False
+                    is_sp_holiday = False
+                    is_reg_holiday = False
+                    is_absent = False                                        
+                    is_ua = False
+
+                    if curr_sched_timein < duty_in or duty_out < curr_sched_timeout:
+                        obts = OBT.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, obt_approval_status="APD", obt_date_from__gte=dtr_date_from, obt_date_to__lte=dtr_date_to)
+                        if obts.exists():
+                            pass
+
+                        uas = UnaccountedAttendance.objects.filter()
+                start_date += delta
+    except Exception as e:
+        return Response({"Error Message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 def merge_dtr_entries(employees, cutoff_code, operation):
     exists = []
     try:
@@ -255,6 +317,8 @@ def merge_dtr_entries(employees, cutoff_code, operation):
                     shift_name = dtr_entries.first().schedule_daily_code.schedule_shift_code.name
                     duty_in = dtr_entries.first().datetime_bio
                     duty_out = dtr_entries.last().datetime_bio
+                    print(duty_in)
+                    print(duty_out)
                     sched_timein = dtr_entries.first().schedule_daily_code.schedule_shift_code.time_in
                     sched_timeout = dtr_entries.first().schedule_daily_code.schedule_shift_code.time_out
                     curr_sched_timein = datetime(duty_in.year, duty_in.month, duty_in.day, sched_timein.hour, sched_timein.minute, sched_timein.second)                        
