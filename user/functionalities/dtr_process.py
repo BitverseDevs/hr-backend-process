@@ -18,7 +18,18 @@ def new_dtr_logs_upload(tsv_file):
         dframe['datetime_bio'] = pd.to_datetime(dframe['datetime_bio'])
         dframe['bio_id'] = dframe['bio_id'].astype(int)
 
-        # shifts = ScheduleShift.objects.all()
+        shifts = ScheduleShift.objects.all()
+
+        shift_data = list(shifts.values())
+        shift_df = pd.DataFrame(shift_data)
+
+        shift_df['time_in'] = pd.to_datetime(shift_df["time_in"], format='%H:%M:%S').dt.time
+        shift_df['time_out'] = pd.to_datetime(shift_df["time_out"], format='%H:%M:%S').dt.time
+
+        sample_df = dframe[(dframe['datetime_bio'].dt.hour >= (shift_df.iloc[0]['time_in'].hour - pd.to_datetime("1:0:0", format="%H:%M:%S").hour)) & (dframe['datetime_bio'].dt.hour < shift_df.iloc[0]['time_out'].hour) & (dframe['duty_out'] == 0)]
+        print(sample_df)
+
+        return Response("Something")
         
         morning_shift_entry = dframe[(dframe['datetime_bio'].dt.hour >= 7) & (dframe['datetime_bio'].dt.hour < 16) & (dframe['duty_out'] == 0)]
         morning_shift_entry['date'] = morning_shift_entry['datetime_bio'].dt.date
