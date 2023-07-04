@@ -483,7 +483,7 @@ class ScheduleShift(models.Model):
     time_out = models.TimeField()
     grace_period = models.PositiveSmallIntegerField(default=0)
     with_overtime = models.BooleanField()
-    is_night_shift = models.BooleanField()
+    is_night_shift = models.BooleanField(default=False)
     date_deleted = models.DateTimeField(null=True, blank=True)
 
     class Meta:
