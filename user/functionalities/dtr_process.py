@@ -46,6 +46,7 @@ def new_dtr_logs_upload(tsv_file):
                 
                 if dtr_entry_checker.exists():
                     exists.append(dtr_entry_checker.first())
+                    exists.append(dtr_entry_checker.last())
                     continue
 
                 dtr_morning_in = {
@@ -110,6 +111,7 @@ def new_dtr_logs_upload(tsv_file):
 
                 if dtr_entry_checker.exists():
                     exists.append(dtr_entry_checker.first())
+                    exists.append(dtr_entry_checker.last())
                     continue
 
                 dtr_night_in = {
@@ -284,9 +286,55 @@ def new_merge_dtr_entries(employees, cutoff_code, operation):
                     if curr_sched_timein < duty_in or duty_out < curr_sched_timeout:
                         obts = OBT.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, obt_approval_status="APD", obt_date_from__gte=dtr_date_from, obt_date_to__lte=dtr_date_to)
                         if obts.exists():
-                            pass
+                            is_obt = True
+                            if obts.count() == 1:
+                                if obts.first().obt_date_from <= duty_in:
+                                    duty_in = obts.first().obt_date_from
 
-                        uas = UnaccountedAttendance.objects.filter()
+                                if obts.first().obt_date_to >= duty_out:
+                                    duty_out = obts.first().obt_date_to
+
+                            elif obts.count() == 2:
+                                if obts.first().obt_date_from <= duty_in:
+                                    duty_in = obts.first().obt_date_from
+                                elif obts.last().obt_date_from <= duty_in:
+                                    duty_in = obts.last().obt_date_from
+
+                                if obts.first().obt_date_to >= duty_out:
+                                    duty_out = obts.first(). obt_date_to
+                                elif obts.last().obt_date_to >= duty_out:
+                                    duty_out = obts.last(). obt_date_to
+
+                        uas = UnaccountedAttendance.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, ua_approval_status="APD", ua_date_from__gte=dtr_date_from, ua_date_to__lte=dtr_date_to)
+                        if uas.exists():
+                            is_ua = True
+                            
+                            if uas.count() == 1:
+                                if uas.first().ua_date_from <= duty_in:
+                                    duty_in = uas.first().ua_date_from
+                                if uas.first().ua_date_to >= duty_out:
+                                    duty_out = uas.first().ua_date_to
+
+                            elif uas.count() == 2:
+                                if uas.first().ua_date_from <= duty_in:
+                                    duty_in = uas.first().ua_date_from
+                                elif uas.last().ua_date_from <= duty_in:
+                                    duty_in = uas.last().ua_date_from
+
+                                if uas.first().ua_date_to >= duty_out:
+                                    duty_out = uas.first().ua_date_to
+                                elif uas.last().ua_date_to >= duty_out:
+                                    duty_out = uas.last().ua_date_to
+
+                    ot = Overtime.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, ot_approval_status="APD", ot_date_from__gte=dtr_date_from, ot_date_to__lte=dtr_date_to)
+                    if ot.exists():
+                        pass
+
+                    # computation of late undertime and total total_hours or nd hours
+
+                    # holiday
+                    # restday
+
                 start_date += delta
     except Exception as e:
         return Response({"Error Message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -355,11 +403,11 @@ def merge_dtr_entries(employees, cutoff_code, operation):
                                 elif obts.last().obt_date_from <= duty_in:
                                     duty_in = obts.last().obt_date_from 
 
-                            if obts.first().obt_date_to >= duty_out:
-                                duty_out = obts.first().obt_date_to
+                                if obts.first().obt_date_to >= duty_out:
+                                    duty_out = obts.first().obt_date_to
 
-                            elif obts.last().obt_date_to >= duty_out:
-                                duty_out = obts.last().obt_date_to
+                                elif obts.last().obt_date_to >= duty_out:
+                                    duty_out = obts.last().obt_date_to
 
                         #  Unaccounted Attendance
                         uas = UnaccountedAttendance.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, ua_approval_status="APD", ua_date_from__gte=dtr_date_from, ua_date_to__lte=dtr_date_to)
