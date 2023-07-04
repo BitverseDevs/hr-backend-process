@@ -10,7 +10,7 @@ from user.models import *
 from user.serializers import *
 
 import secret, jwt
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, time
 
 from user.functionalities.employee_process import upload_csv_file_employee
 from user.functionalities.dtr_process import dtr_logs_upload, merge_dtr_entries, create_dtr_cutoff_summary, new_dtr_logs_upload
@@ -574,6 +574,14 @@ class ScheduleShiftView(APIView):
         return Response(shift_serializer.data, status=status.HTTP_200_OK)
     
     def post(self, request, *args, **kwargs):
+        time_in = request.data['time_in']
+        time_out = request.data['time_out']
+        shift_timein = datetime.strptime(time_in, '%H:%M:%S').time()
+        shift_timeout = datetime.strptime(time_out, '%H:%M:%S').time()
+        night_differential_in = time(22,0,0,0)
+        night_differential_out = time(6,0,0,0)
+        if shift_timein >= night_differential_in or shift_timein < night_differential_out or shift_timeout > night_differential_in or shift_timeout <=night_differential_out:
+            request.data['is_night_shift'] = True
         shift_serializer = ScheduleShiftSerializer(data=request.data)
         if shift_serializer.is_valid(raise_exception=True):
             shift_serializer.save()
