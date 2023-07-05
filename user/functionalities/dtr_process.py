@@ -232,109 +232,40 @@ def new_merge_dtr_entries(employees, cutoff_code, operation):
     exists = []
     try:
         for employee in employees:
-            cutoff = get_object_or_404(Cutoff, pk=cutoff_code)
+            cutoff = Cutoff.objects.get(pk=cutoff_code)
             start_date = cutoff.co_date_from
             end_date = cutoff.co_date_to
             delta = timedelta(days=1)
-
             while start_date <= end_date:
+
                 dtr_date_from = datetime(start_date.year, start_date.month, start_date.day)
                 dtr_date_to = datetime(start_date.year, start_date.month, start_date.day, 23, 59, 59)
+                print(dtr_date_from)
+                print(dtr_date_to)
+                schedule = ScheduleDaily.objects.filter(emp_no=employee.emp_no, business_date=start_date)
+                if schedule.exists():
+                    sched_timein = schedule.first().schedule_shift_code.time_in
+                    sched_timeout = schedule.first().schedule_shift_code.time_out
+                    print(sched_timein)
+                    print(sched_timeout)
+                    if sched_timein > sched_timeout:
+                        dtr_date_to += timedelta(days=1)
+                    print(dtr_date_to)
+                    dtr_duty_in = DTR.objects.filter(emp_no=employee.emp_no, entry_type="DIN", datetime_bio__gte=dtr_date_from, datetime_bio__lte=dtr_date_to)
+                    dtr_duty_out = DTR.objects.filter(emp_no=employee.emp_no, entry_type="DOUT", datetime_bio__gte=dtr_date_from, datetime_bio__lte=dtr_date_to)
+                    if dtr_duty_in.exists():
+                        print(f"dtr_duty_in: {dtr_duty_in.first().datetime_bio}")
+                    if dtr_duty_out.exists():
+                        print(f"dtr_duty_out: {dtr_duty_out.first().datetime_bio}")
 
-                dtr_entries = DTR.objects.filter(emp_no=employee.emp_no, datetime_bio__gte=dtr_date_from, datetime_bio__lte=dtr_date_to, is_processed=False)
-                dtr_entries_checker = DTR.objects.filter(emp_no=employee.emp_no, datetime_bio__gte=dtr_date_from, datetime_bio__lte=dtr_date_to, is_processed=True)
-                dtr_summary = DTRSummary.objects.filter(emp_no=employee.emp_no, business_date=start_date)
+                else:
+                    return Response({"Schedule Error": f"No Schedule found on employee {employee.emp_no} at business date {start_date.date()}."})
 
-                if dtr_summary.exists():
-                    exists.append(dtr_summary.first())
-                    start_date += delta
-                    continue
-
-                if dtr_entries.exists() and not dtr_entries_checker:
-                    business_date = dtr_entries.first().schedule_daily_code.business_date
-                    shift_name = dtr_entries.first().schedule_daily_code.schedule_shift_code.name
-                    duty_in = dtr_entries.first().datetime_bio
-                    duty_out = dtr_entries.last().datetime_bio
-                    sched_timein = dtr_entries.first().schedule_daily_code.schedule_shift_code.time_in
-                    sched_timeout = dtr_entries.first().schedule_daily_code.schedule_shift_code.time_out
-                    curr_sched_timein = datetime(duty_in.year, duty_in.month, duty_in.day, sched_timein.hour, sched_timein.minute, sched_timein.second)
-                    curr_sched_timeout= datetime(duty_out.year, duty_out.month, duty_out.day, sched_timeout.hour, sched_timeout.minute, sched_timeout.second)
-                    
-                    # lunch_out = 0
-                    # lunch_in = 0
-                    # overbreak = 0
-                    # adjusted_timein = None
-                    # adjusted_timeout = None
-                    
-                    lates = 0
-                    undertime = 0
-                    
-                    total_hours = 0
-                    nd_total_hours = 0
-                    reg_ot_total = 0
-                    nd_ot_total = 0
-
-                    is_obt = False
-                    is_sp_holiday = False
-                    is_reg_holiday = False
-                    is_absent = False                                        
-                    is_ua = False
-
-                    if curr_sched_timein < duty_in or duty_out < curr_sched_timeout:
-                        obts = OBT.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, obt_approval_status="APD", obt_date_from__gte=dtr_date_from, obt_date_to__lte=dtr_date_to)
-                        if obts.exists():
-                            is_obt = True
-                            if obts.count() == 1:
-                                if obts.first().obt_date_from <= duty_in:
-                                    duty_in = obts.first().obt_date_from
-
-                                if obts.first().obt_date_to >= duty_out:
-                                    duty_out = obts.first().obt_date_to
-
-                            elif obts.count() == 2:
-                                if obts.first().obt_date_from <= duty_in:
-                                    duty_in = obts.first().obt_date_from
-                                elif obts.last().obt_date_from <= duty_in:
-                                    duty_in = obts.last().obt_date_from
-
-                                if obts.first().obt_date_to >= duty_out:
-                                    duty_out = obts.first(). obt_date_to
-                                elif obts.last().obt_date_to >= duty_out:
-                                    duty_out = obts.last(). obt_date_to
-
-                        uas = UnaccountedAttendance.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, ua_approval_status="APD", ua_date_from__gte=dtr_date_from, ua_date_to__lte=dtr_date_to)
-                        if uas.exists():
-                            is_ua = True
-                            
-                            if uas.count() == 1:
-                                if uas.first().ua_date_from <= duty_in:
-                                    duty_in = uas.first().ua_date_from
-                                if uas.first().ua_date_to >= duty_out:
-                                    duty_out = uas.first().ua_date_to
-
-                            elif uas.count() == 2:
-                                if uas.first().ua_date_from <= duty_in:
-                                    duty_in = uas.first().ua_date_from
-                                elif uas.last().ua_date_from <= duty_in:
-                                    duty_in = uas.last().ua_date_from
-
-                                if uas.first().ua_date_to >= duty_out:
-                                    duty_out = uas.first().ua_date_to
-                                elif uas.last().ua_date_to >= duty_out:
-                                    duty_out = uas.last().ua_date_to
-
-                    ot = Overtime.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, ot_approval_status="APD", ot_date_from__gte=dtr_date_from, ot_date_to__lte=dtr_date_to)
-                    if ot.exists():
-                        pass
-
-                    # computation of late undertime and total total_hours or nd hours
-
-                    # holiday
-                    # restday
-
+                break
                 start_date += delta
+        return Response({"Message": "Sample"}, status=status.HTTP_200_OK)
     except Exception as e:
-        return Response({"Error Message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"Exception Message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 def merge_dtr_entries(employees, cutoff_code, operation):
     exists = []
@@ -362,8 +293,6 @@ def merge_dtr_entries(employees, cutoff_code, operation):
                     shift_name = dtr_entries.first().schedule_daily_code.schedule_shift_code.name
                     duty_in = dtr_entries.first().datetime_bio
                     duty_out = dtr_entries.last().datetime_bio
-                    print(duty_in)
-                    print(duty_out)
                     sched_timein = dtr_entries.first().schedule_daily_code.schedule_shift_code.time_in
                     sched_timeout = dtr_entries.first().schedule_daily_code.schedule_shift_code.time_out
                     curr_sched_timein = datetime(duty_in.year, duty_in.month, duty_in.day, sched_timein.hour, sched_timein.minute, sched_timein.second)                        
