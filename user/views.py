@@ -13,7 +13,7 @@ import secret, jwt
 from datetime import datetime, timedelta, date, time
 
 from user.functionalities.employee_process import upload_csv_file_employee
-from user.functionalities.dtr_process import dtr_logs_upload, merge_dtr_entries, create_dtr_cutoff_summary, new_dtr_logs_upload
+from user.functionalities.dtr_process import dtr_logs_upload, merge_dtr_entries, create_dtr_cutoff_summary, new_dtr_logs_upload, new_merge_dtr_entries
 from user.functionalities.payroll_process import create_payroll
 
 
@@ -1151,7 +1151,7 @@ class AssetsAccountView(APIView):
         else:
             return Response(account_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
-class TestView(APIView):
+class TestTSVUploadView(APIView):
     def post(self, request, *args, **kwargs):
         tsv_file = request.FILES.get('file')
         tsv_filename = str(tsv_file)
@@ -1164,3 +1164,22 @@ class TestView(APIView):
                 return response
             else:
                 return Response({"Message": "The file you uploaded cannot be processed due to incorrect file extension"}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)                
+            
+class TestMergeDTRSummaryView(APIView):
+    def post(self, request, *args, **kwargs):
+        user_emp_nos = request.data["emp_no"]
+        cutoff_code = request.data["cutoff_code"]
+        cutoff = get_object_or_404(Cutoff, pk=cutoff_code)
+        payroll_group_code = cutoff.payroll_group_code
+
+        if user_emp_nos:
+            employees = Employee.objects.filter(emp_no__in=user_emp_nos, payroll_group_code=payroll_group_code, date_deleted=None)            
+            response = new_merge_dtr_entries(employees, cutoff_code, operation="list")
+
+            return response
+
+        else:
+            employees = Employee.objects.filter(payroll_group_code=payroll_group_code, date_deleted=None)        
+            response = new_merge_dtr_entries(employees, cutoff_code, operation="null")
+
+            return response 
