@@ -827,7 +827,8 @@ class MergeDTRSummaryView(APIView):
             response = merge_dtr_entries(employees, cutoff_code, operation="list")
 
             return response
-
+        # elif user_emp_nos == None:
+        #     return Response({"Error Message": "Select at least one (1) Employee from the list"}, status=status.HTTP_400_BAD_REQUEST)
         else:
             employees = Employee.objects.filter(payroll_group_code=payroll_group_code, date_deleted=None)        
             response = merge_dtr_entries(employees, cutoff_code, operation="null")
@@ -867,12 +868,14 @@ class CreateDTRCutoffSummaryView(APIView):
             operation = "list"
             response = create_dtr_cutoff_summary(employees, cutoff_code, cutoff_start_date, cutoff_end_date, operation)
             return response
+        # elif user_emp_nos == None:
+        #     return Response({"Error Message": "Select at least one (1) Employee from the list"}, status=status.HTTP_400_BAD_REQUEST)
         else:
             employees = Employee.objects.filter(payroll_group_code=payroll_group_code, date_deleted=None)
-            print(employees)
             operation = "null"
             response = create_dtr_cutoff_summary(employees, cutoff_code, cutoff_start_date, cutoff_end_date, operation)
-            return response            
+            return Response
+          
     
 
 
@@ -903,13 +906,14 @@ class CreatePayrollView(APIView):
         user_emp_nos = request.data['emp_no']
         cutoff_code = request.data['cutoff_code']
         cutoff = Cutoff.objects.get(pk=cutoff_code)
-
         if user_emp_nos:
             employees = Employee.objects.filter(emp_no__in=user_emp_nos, payroll_group_code=cutoff.payroll_group_code, date_deleted=None)
             response = create_payroll(employees, cutoff, is_disabled_loan, is_ca, is_pagibig_house, is_pagibig_cal, is_pagibig_cash, is_sss_cal, is_sss_cash, is_disabled_deduction, is_30, is_70, operation="list")
 
             return response
         
+        # elif user_emp_nos == None:
+        #     return Response({"Error Message": "Select at least one (1) Employee from the list"}, status=status.HTTP_400_BAD_REQUEST)
         else:
             employees = Employee.objects.filter(payroll_group_code=cutoff.payroll_group_code, date_deleted=None)
             response = create_payroll(employees, cutoff, is_disabled_loan, is_ca, is_pagibig_house, is_pagibig_cal, is_pagibig_cash, is_sss_cal, is_sss_cash, is_disabled_deduction, is_30, is_70, operation="null")
