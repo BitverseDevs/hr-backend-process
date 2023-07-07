@@ -229,10 +229,9 @@ def dtr_logs_upload(tsv_file):
         return Response({"Overall error": str(e)}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
 def new_merge_dtr_entries(employees, cutoff_code, operation):
-    print("Initialization of Merge DTR Entries")
+    print("----------Initialization of Merge DTR Entries----------")
     exists = []
     ND_NIGHT_TIME = time(22, 0, 0)
-    ND_BMIDNIGHT_TIME = time(11, 59, 59)
     ND_MIDNIGHT_TIME = time(0, 0, 0)
     ND_MORNING_TIME = time(6, 0, 0)
     ADJUSTMENT_TIME = timedelta(minutes=60)
@@ -251,7 +250,7 @@ def new_merge_dtr_entries(employees, cutoff_code, operation):
                 schedule = ScheduleDaily.objects.filter(emp_no=employee.emp_no, business_date=start_date)
 
                 if schedule.exists():
-                    lates, undertime, total_hours, nd_total_hours, ot_total, nd_ot_total, reg_work_hours, nd_work_hours = 0, 0, 0, 0 ,0, 0, 0, 0
+                    lates, undertime, total_hours, nd_total_hours, ot_total, nd_ot_total, reg_work_hours, nd_work_hours, bd_ot_hours, ad_ot_hours = 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0
                     obt, ua, restday, sp_holiday, reg_holiday, paid_leave, absent = False, False, False, False, False, False, False
                     duty_in, duty_out, curr_duty_in, curr_duty_out = None, None, None, None
                     
@@ -265,7 +264,6 @@ def new_merge_dtr_entries(employees, cutoff_code, operation):
                         dtr_date_to += timedelta(days=1)
 
                     curr_nd_night_time = datetime(dtr_date_from.year, dtr_date_from.month, dtr_date_from.day, ND_NIGHT_TIME.hour, ND_NIGHT_TIME.minute, ND_NIGHT_TIME.second)
-                    curr_nd_bmidnight_time = datetime(dtr_date_from.year, dtr_date_from.month, dtr_date_from.day, ND_BMIDNIGHT_TIME.hour, ND_BMIDNIGHT_TIME.minute, ND_BMIDNIGHT_TIME.second)
                     curr_nd_midnight_time = datetime(dtr_date_to.year, dtr_date_to.month, dtr_date_to.day, ND_MIDNIGHT_TIME.hour, ND_MIDNIGHT_TIME.minute, ND_MIDNIGHT_TIME.second)
                     curr_nd_morning_time = datetime(dtr_date_to.year, dtr_date_to.month, dtr_date_to.day, ND_MORNING_TIME.hour, ND_MORNING_TIME.minute, ND_MORNING_TIME.second)
 
@@ -326,25 +324,117 @@ def new_merge_dtr_entries(employees, cutoff_code, operation):
                         curr_duty_out = curr_sched_timeout if curr_sched_timeout < duty_out else duty_out
 
                         timein_difference = curr_duty_in - curr_sched_timein
-                        if timein_difference > timedelta(minutes=0):
-                            lates = math.floor(int(timein_difference.seconds/60))
-
+                        print(f"Time In Difference: {timein_difference}")
+                        if timein_difference > timedelta(minutes=0):                        
+                            remainder = 1 if (timein_difference.seconds%60)/60 >= 0.5 else 0
+                            lates = timein_difference.seconds//60 + remainder
+                        
                         timeout_difference = curr_sched_timeout - curr_duty_out
+                        print(f"Time Out Difference: {timeout_difference}")
                         if timeout_difference > timedelta(minutes=0):
-                            undertime = math.floor(int(timeout_difference.seconds/60))
+                            remainder = 1 if (timeout_difference.seconds%60)/60 >= 0.5 else 0
+                            undertime = timeout_difference.seconds//60 + remainder
 
-                        if sched_timeout > ND_NIGHT_TIME:
-                            reg_work_hours = curr_nd_night_time - curr_duty_in
+                        if (sched_timein < ND_NIGHT_TIME and sched_timeout > ND_NIGHT_TIME) or (sched_timein < ND_NIGHT_TIME and sched_timeout < ND_MORNING_TIME): # CAT1 and CAT2
+                            work_hours = curr_nd_night_time - curr_duty_in
                             nd_work_hours = curr_duty_out - curr_nd_night_time
-                            print(reg_work_hours)
-                            print(nd_work_hours)
-                        elif sched_timein == ND_NIGHT_TIME and ND_MORNING_TIME == sched_timeout:
-                            nd_work_hours = (curr_nd_bmidnight_time - curr_duty_in) + (curr_duty_out - curr_nd_midnight_time)
-                            print(nd_work_hours)                            
 
-                        else:
-                            work_hours = duty_out - duty_in - ADJUSTMENT_TIME                            
-                            total_hours = 480 if work_hours >= timedelta(hours=8) else int(work_hours.seconds/60)
+                            reg_remainder = 1 if (work_hours.seconds%60)/60 >= 0.5 else 0
+                            total_hours = work_hours.seconds//60 + reg_remainder
+                            nd_remainder = 1 if (nd_work_hours.seconds%60)/60 >= 0.5 else 0
+                            nd_total_hours = nd_work_hours.seconds//60 + nd_remainder
+
+                        elif sched_timein == ND_NIGHT_TIME and sched_timeout == ND_MORNING_TIME: # CAT3
+                            nd_work_hours = (curr_nd_midnight_time - curr_duty_in) + (curr_duty_out - curr_nd_midnight_time)
+                            if nd_work_hours >= timedelta(hours=8):
+                                nd_total_hours = 480
+                            else:
+                                remainder = 1 if (nd_work_hours.seconds%60)/60 >= 0.5 else 0
+                                nd_total_hours = nd_work_hours.seconds//60 + remainder
+
+                        elif (sched_timein > ND_NIGHT_TIME and sched_timeout > ND_MORNING_TIME) or (sched_timein < ND_MORNING_TIME and sched_timeout > ND_MORNING_TIME): # CAT4 and CAT5
+                            work_hours = curr_duty_out - curr_nd_morning_time
+                            nd_work_hours = curr_nd_morning_time - curr_duty_in
+
+                            reg_remainder = 1 if (work_hours.seconds%60)/60 >= 0.5 else 0
+                            total_hours = work_hours.seconds//60 + reg_remainder
+                            nd_remainder = 1 if (nd_work_hours.seconds%60)/60 >= 0.5 else 0
+                            nd_total_hours = nd_work_hours.seconds//60 + nd_remainder
+
+                        else: # Morning Shift
+                            work_hours = duty_out - duty_in - ADJUSTMENT_TIME                                                    
+                            if work_hours >= timedelta(hours=8):
+                                total_hours = 480     
+                            else:
+                                remainder = 1 if (work_hours.seconds%60)/60 >= 0.5 else 0
+                                total_hours = work_hours.seconds//60 + remainder
+
+                        bdots = Overtime.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, ot_type="BD", ot_date_from__gte=dtr_date_from, ot_date_to__lte=curr_sched_timeout, ot_approval_status="APD")                        
+                        adots = Overtime.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, ot_type="AD", ot_date_from__gte=curr_sched_timein, ot_date_to__lte=dtr_date_to, ot_approval_status="APD")
+                        print(bdots)
+                        print(adots)
+
+                        if bdots.exists():
+                            if bdots.first().ot_date_from >= curr_nd_night_time and bdots.first().ot_date_to <= curr_nd_morning_time:
+                                nd_ot_work_hours = bdots.first().ot_date_to - bdots.first().ot_date_from
+                                nd_ot_remainder = 1 if (nd_ot_work_hours.seconds%60)/60 >= 0.5 else 0
+                                nd_ot_total = nd_ot_work_hours.seconds//60 + nd_ot_remainder
+
+                            elif bdots.first().ot_date_from < curr_nd_night_time and bdots.first().ot_date_to > curr_nd_night_time and bdots.first() <= curr_nd_morning_time:
+                                ot_work_hours = curr_nd_night_time - bdots.first().ot_date_from
+                                nd_ot_work_hours = bdots.first().ot_date_to - curr_nd_night_time
+
+                                ot_remainder = 1 if (ot_work_hours.seconds%60)/60 >= 0.5 else 0
+                                ot_total = ot_work_hours.seconds//60 + ot_remainder
+                                nd_ot_remainder = 1 if (nd_ot_work_hours.seconds%60)/60 >= 0.5 else 0
+                                nd_ot_total = nd_ot_work_hours.seconds//60 + nd_ot_remainder
+
+                            elif bdots.first().ot_date_from >= curr_nd_night_time and bdots.first().ot_date_from < curr_nd_morning_time and bdots.first().ot_date_to > curr_nd_morning_time: 
+                                ot_work_hours = bdots.first().ot_date_to - curr_nd_morning_time
+                                nd_ot_work_hours = bdots.first().ot_date_from - ND_NIGHT_TIME
+
+                                ot_remainder = 1 if (ot_work_hours.seconds%60)/60 >= 0.5 else 0
+                                ot_total = ot_work_hours.seconds//60 + ot_remainder
+                                nd_ot_remainder = 1 if (nd_ot_work_hours.seconds%60)/60 >= 0.5 else 0
+                                nd_ot_total = nd_ot_work_hours.seconds//60 + nd_ot_remainder
+                            
+                            else:
+                                ot_work_hours = bdots.first().ot_date_to - bdots.first().ot_date_from
+                                ot_remainder = 1 if (ot_work_hours.seconds%60)/60 >= 0.5 else 0
+                                ot_total = ot_work_hours.seconds//60 + ot_remainder
+
+                        if adots.exists():
+                            if adots.first().ot_date_from >= curr_nd_night_time and adots.first().ot_date_to <= curr_nd_morning_time:
+                                nd_ot_work_hours = adots.first().ot_date_to - adots.first().ot_date_from
+                                nd_ot_remainder = 1 if (nd_ot_work_hours.seconds%60)/60 >= 0.5 else 0
+                                nd_ot_total = nd_ot_work_hours.seconds//60 + nd_ot_remainder
+
+                            elif adots.first().ot_date_from < curr_nd_night_time and adots.first().ot_date_to > curr_nd_night_time and adots.first() <= curr_nd_morning_time:
+                                ot_work_hours = curr_nd_night_time - adots.first().ot_date_from
+                                nd_ot_work_hours = adots.first().ot_date_to - curr_nd_night_time
+
+                                ot_remainder = 1 if (ot_work_hours.seconds%60)/60 >= 0.5 else 0
+                                ot_total = ot_work_hours.seconds//60 + ot_remainder
+                                nd_ot_remainder = 1 if (nd_ot_work_hours.seconds%60)/60 >= 0.5 else 0
+                                nd_ot_total = nd_ot_work_hours.seconds//60 + nd_ot_remainder
+
+                            elif adots.first().ot_date_from >= curr_nd_night_time and adots.first().ot_date_from < curr_nd_morning_time and adots.first().ot_date_to > curr_nd_morning_time: 
+                                ot_work_hours = adots.first().ot_date_to - curr_nd_morning_time
+                                nd_ot_work_hours = adots.first().ot_date_from - ND_NIGHT_TIME
+
+                                ot_remainder = 1 if (ot_work_hours.seconds%60)/60 >= 0.5 else 0
+                                ot_total = ot_work_hours.seconds//60 + ot_remainder
+                                nd_ot_remainder = 1 if (nd_ot_work_hours.seconds%60)/60 >= 0.5 else 0
+                                nd_ot_total = nd_ot_work_hours.seconds//60 + nd_ot_remainder
+
+                            else:
+                                ot_work_hours = adots.first().ot_date_to - adots.first().ot_date_from
+                                ot_remainder = 1 if (ot_work_hours.seconds%60)/60 >= 0.5 else 0
+                                ot_total = ot_work_hours.seconds//60 + ot_remainder
+
+
+                        print(f"Reg Work Hours: {work_hours}")              
+                        print(f"ND Work Hours: {nd_work_hours}") 
                                
                     
                     
@@ -359,7 +449,7 @@ def new_merge_dtr_entries(employees, cutoff_code, operation):
                     print(f"Sched Timein: {sched_timein}")
                     print(f"Sched Timeout: {sched_timeout}")
                     print(f"Duty In: {duty_in}")
-                    print(f"Duty Out: {duty_out}")
+                    print(f"Duty Out: {duty_out}")                   
                     print(f"Current Duty In: {curr_duty_in}")                
                     print(f"Current Duty Out: {curr_duty_out}")                
 
