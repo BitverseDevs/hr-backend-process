@@ -289,7 +289,7 @@ class DTRSummary(models.Model):
     emp_no = models.ForeignKey(Employee, to_field="emp_no", on_delete=models.CASCADE)
     cutoff_code = models.ForeignKey("Cutoff", on_delete=models.CASCADE)
     business_date = models.DateField()
-    shift_name = models.CharField(max_length=25, default="RD")
+    shift_name = models.CharField(max_length=35, default="RD")
     duty_in = models.DateTimeField(null=True, blank=True)
     duty_out = models.DateTimeField(null=True, blank=True)
     
@@ -478,7 +478,7 @@ class Cutoff(models.Model):
         db_table = "TBL_CUTOFF_PERIOD_LIST"
 
 class ScheduleShift(models.Model):
-    name = models.CharField(max_length=25)
+    name = models.CharField(max_length=35)
     time_in = models.TimeField()
     time_out = models.TimeField()
     grace_period = models.PositiveSmallIntegerField(default=0)
