@@ -13,15 +13,18 @@ import math
 
 
 def create_payroll(employees, cutoff, is_disabled_loan, is_ca, is_pagibig_house, is_pagibig_cal, is_pagibig_cash, is_sss_cal, is_sss_cash, is_disabled_deduction, is_30, is_70, operation):
+    exists = []
     try:
         for employee in employees:
             dtr_cutoff = DTRCutoff.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff.pk, is_processed=False)
-            if not dtr_cutoff.exists():
-                return Response({"Error Message": "The following request does not have a prerequisite cutoff summary yet."}, status=status.HTTP_400_BAD_REQUEST )
             dtr_cutoff_checker = DTRCutoff.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff.pk, is_processed=True).first()
 
             if dtr_cutoff_checker:
-                return Response({"Message": f"Employee {employee.first_name} {employee.last_name} payroll account has already been processed"})
+                exists.append(dtr_cutoff_checker)
+                continue
+                # return Response({"Error Message": f"Employee {employee.first_name} {employee.last_name} payroll account has already been processed"}, status=status.HTTP_400_BAD_REQUEST)
+            if not dtr_cutoff.exists():
+                return Response({"Error Message": "The following request does not have a prerequisite cutoff summary yet."}, status=status.HTTP_400_BAD_REQUEST )
             
             dtr_cutoff = dtr_cutoff.first()
             
@@ -34,7 +37,13 @@ def create_payroll(employees, cutoff, is_disabled_loan, is_ca, is_pagibig_house,
             cash_advance = CashAdvance.objects.filter(emp_no=employee.emp_no, is_fully_paid=False)
 
 
-
+            sss_contribution = 0.00
+            sss_cashloan = 0.00
+            sss_calloan = 0.00  
+            pagibig_contribution = 0.00
+            pagibig_cloan = 0.00
+            pagibig_hloan = 0.00
+            philhealth_contribution = 0.00
             salary_allowance = 0.00
             salary_other = 0.00
             daily_salary_other = 0.00
@@ -276,7 +285,13 @@ def create_payroll(employees, cutoff, is_disabled_loan, is_ca, is_pagibig_house,
         return Response({"Error Message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     if operation == "list":
+        if exists:
+            dtr_cutoff_serializer = DTRCutoffSerializer(exists, many=True)
+            return Response({"Message": "Successfully created a Payroll for selected employees but there are employees with existing processed payroll", "Existing Payroll": dtr_cutoff_serializer.data}, status=status.HTTP_200_OK)
         return Response({"Message": "Successfully created a payroll for the selected employees"}, status=status.HTTP_201_CREATED)
 
     elif operation == "null":
+        if exists:
+            dtr_cutoff_serializer = DTRCutoffSerializer(exists, many=True)
+            return Response({"Message": "Successfully created a Payroll for selected employees but there are employees with existing processed payroll", "Existing Payroll": dtr_cutoff_serializer.data}, status=status.HTTP_200_OK)
         return Response({"Message": "Successfully created a payroll for all employees within the same payroll group"}, status=status.HTTP_201_CREATED)
