@@ -245,23 +245,40 @@ def new_merge_dtr_entries(employees, cutoff_code, operation):
 
                 dtr_date_from = datetime(start_date.year, start_date.month, start_date.day)
                 dtr_date_to = datetime(start_date.year, start_date.month, start_date.day, 23, 59, 59)
-                print(f"dtr_date_from: {dtr_date_from}")
-                print(f"dtr_date_to: {dtr_date_to}")
+
                 schedule = ScheduleDaily.objects.filter(emp_no=employee.emp_no, business_date=start_date)
 
                 if schedule.exists():
-                    lates, undertime, total_hours, nd_total_hours, ot_total, nd_ot_total, reg_work_hours, nd_work_hours, bd_ot_hours, ad_ot_hours = 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0
+                    lates, undertime, overbreak, total_hours, nd_total_hours, ot_total, nd_ot_total, work_hours, nd_work_hours = 0, 0, 0, 0 ,0, 0, 0, 0, 0
                     obt, ua, restday, sp_holiday, reg_holiday, paid_leave, absent = False, False, False, False, False, False, False
-                    duty_in, duty_out, curr_duty_in, curr_duty_out = None, None, None, None
+                    duty_in, duty_out, curr_duty_in, curr_duty_out, lunch_out, lunch_in, adjusterd_timein, adjusted_timeout, leave_type = None, None, None, None, None, None, None, None, None
                     
                     business_date = schedule.first().business_date
                     shift_name = schedule.first().schedule_shift_code.name
                     sched_timein = schedule.first().schedule_shift_code.time_in
                     sched_timeout = schedule.first().schedule_shift_code.time_out
                     restday = schedule.first().is_restday
+
+                    dtr_summary = DTRSummary.objects.filter(emp_no=employee.emp_no, business_date=business_date)
+                    print(dtr_summary)
+                    if dtr_summary.exists():
+                        exists.append(dtr_summary.first())
+                        start_date += delta
+                        continue
+
+
+                    holidays = Holiday.objects.filter(holiday_date__gte=dtr_date_from, holiday_date__lte=dtr_date_to)
+                    if holidays.exists():
+                        if holidays.first().holiday_type == "SH":
+                            sp_holiday = True
+                        elif holidays.first().holiday_type == "LH":
+                            reg_holiday = True
                     
                     if sched_timein > sched_timeout:
                         dtr_date_to += timedelta(days=1)
+                    
+                    # print(f"DTR Date From: {dtr_date_from}")
+                    # print(f"DTR Date To: {dtr_date_to}")
 
                     curr_nd_night_time = datetime(dtr_date_from.year, dtr_date_from.month, dtr_date_from.day, ND_NIGHT_TIME.hour, ND_NIGHT_TIME.minute, ND_NIGHT_TIME.second)
                     curr_nd_midnight_time = datetime(dtr_date_to.year, dtr_date_to.month, dtr_date_to.day, ND_MIDNIGHT_TIME.hour, ND_MIDNIGHT_TIME.minute, ND_MIDNIGHT_TIME.second)
@@ -271,7 +288,8 @@ def new_merge_dtr_entries(employees, cutoff_code, operation):
                     curr_sched_timeout = datetime(dtr_date_to.year, dtr_date_to.month, dtr_date_to.day, sched_timeout.hour, sched_timeout.minute, sched_timeout.second)                    
                     
                     dtr_duty_in = DTR.objects.filter(emp_no=employee.emp_no, entry_type="DIN", datetime_bio__gte=dtr_date_from, datetime_bio__lte=curr_sched_timeout)
-                    dtr_duty_out = DTR.objects.filter(emp_no=employee.emp_no, entry_type="DOUT", datetime_bio__gte=curr_sched_timein, datetime_bio__lte=dtr_date_to)
+                    # dtr_duty_out = DTR.objects.filter(emp_no=employee.emp_no, entry_type="DOUT", datetime_bio__gte=curr_sched_timein, datetime_bio__lte=dtr_date_to)
+                    dtr_duty_out = DTR.objects.filter(emp_no=employee.emp_no, entry_type="DOUT", datetime_bio__gte=curr_sched_timein, datetime_bio__lte=curr_sched_timein + timedelta(days=1)) # Edit this query if ever another scenario came up with and a dtr entry is not query
                     
                     if dtr_duty_in.exists() and dtr_duty_out.exists():
 
@@ -324,13 +342,13 @@ def new_merge_dtr_entries(employees, cutoff_code, operation):
                         curr_duty_out = curr_sched_timeout if curr_sched_timeout < duty_out else duty_out
 
                         timein_difference = curr_duty_in - curr_sched_timein
-                        print(f"Time In Difference: {timein_difference}")
+                        # print(f"Time In Difference: {timein_difference}")
                         if timein_difference > timedelta(minutes=0):                        
                             remainder = 1 if (timein_difference.seconds%60)/60 >= 0.5 else 0
                             lates = timein_difference.seconds//60 + remainder
                         
                         timeout_difference = curr_sched_timeout - curr_duty_out
-                        print(f"Time Out Difference: {timeout_difference}")
+                        # print(f"Time Out Difference: {timeout_difference}")
                         if timeout_difference > timedelta(minutes=0):
                             remainder = 1 if (timeout_difference.seconds%60)/60 >= 0.5 else 0
                             undertime = timeout_difference.seconds//60 + remainder
@@ -369,27 +387,28 @@ def new_merge_dtr_entries(employees, cutoff_code, operation):
                                 remainder = 1 if (work_hours.seconds%60)/60 >= 0.5 else 0
                                 total_hours = work_hours.seconds//60 + remainder
 
-                        bdots = Overtime.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, ot_type="BD", ot_date_from__gte=dtr_date_from, ot_date_to__lte=curr_sched_timeout, ot_approval_status="APD")                        
-                        adots = Overtime.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, ot_type="AD", ot_date_from__gte=curr_sched_timein, ot_date_to__lte=dtr_date_to, ot_approval_status="APD")
-                        print(bdots)
-                        print(adots)
+                        bdots = Overtime.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, ot_type="BD", ot_date_to=curr_sched_timein, ot_approval_status="APD")                        
+                        adots = Overtime.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, ot_type="AD", ot_date_from=curr_sched_timeout, ot_approval_status="APD")
+                        # print(f"Before Duty OT: {bdots}")
+                        # print(f"After Duty OT: {adots}")
 
                         if bdots.exists():
-                            if bdots.first().ot_date_from >= curr_nd_night_time and bdots.first().ot_date_to <= curr_nd_morning_time:
+                            curr_nd_ot_night_time = datetime(bdots.first().ot_date_from.year, bdots.first().ot_date_from.month, bdots.first().ot_date_from.day, ND_NIGHT_TIME.hour, ND_NIGHT_TIME.minute, ND_NIGHT_TIME.second)
+                            if bdots.first().ot_date_from >= curr_nd_ot_night_time and bdots.first().ot_date_to <= curr_nd_morning_time:
                                 nd_ot_work_hours = bdots.first().ot_date_to - bdots.first().ot_date_from
                                 nd_ot_remainder = 1 if (nd_ot_work_hours.seconds%60)/60 >= 0.5 else 0
                                 nd_ot_total = nd_ot_work_hours.seconds//60 + nd_ot_remainder
 
-                            elif bdots.first().ot_date_from < curr_nd_night_time and bdots.first().ot_date_to > curr_nd_night_time and bdots.first() <= curr_nd_morning_time:
-                                ot_work_hours = curr_nd_night_time - bdots.first().ot_date_from
-                                nd_ot_work_hours = bdots.first().ot_date_to - curr_nd_night_time
+                            elif bdots.first().ot_date_from < curr_nd_ot_night_time and bdots.first().ot_date_to > curr_nd_ot_night_time and bdots.first() <= curr_nd_morning_time:
+                                ot_work_hours = curr_nd_ot_night_time - bdots.first().ot_date_from
+                                nd_ot_work_hours = bdots.first().ot_date_to - curr_nd_ot_night_time
 
                                 ot_remainder = 1 if (ot_work_hours.seconds%60)/60 >= 0.5 else 0
                                 ot_total = ot_work_hours.seconds//60 + ot_remainder
                                 nd_ot_remainder = 1 if (nd_ot_work_hours.seconds%60)/60 >= 0.5 else 0
                                 nd_ot_total = nd_ot_work_hours.seconds//60 + nd_ot_remainder
 
-                            elif bdots.first().ot_date_from >= curr_nd_night_time and bdots.first().ot_date_from < curr_nd_morning_time and bdots.first().ot_date_to > curr_nd_morning_time: 
+                            elif bdots.first().ot_date_from >= curr_nd_ot_night_time and bdots.first().ot_date_from < curr_nd_morning_time and bdots.first().ot_date_to > curr_nd_morning_time: 
                                 ot_work_hours = bdots.first().ot_date_to - curr_nd_morning_time
                                 nd_ot_work_hours = bdots.first().ot_date_from - ND_NIGHT_TIME
 
@@ -404,12 +423,16 @@ def new_merge_dtr_entries(employees, cutoff_code, operation):
                                 ot_total = ot_work_hours.seconds//60 + ot_remainder
 
                         if adots.exists():
-                            if adots.first().ot_date_from >= curr_nd_night_time and adots.first().ot_date_to <= curr_nd_morning_time:
+                            # print(f"OT Date From: {adots.first().ot_date_from}")
+                            # print(f"OT Date To:{adots.first().ot_date_to}")
+                            curr_nd_ot_morning_time = datetime(adots.first().ot_date_to.year, adots.first().ot_date_to.month, adots.first().ot_date_to.day, ND_MORNING_TIME.hour, ND_MORNING_TIME.minute, ND_MORNING_TIME.second)
+                            # print(f"Current ND OT Morning Time: {curr_nd_ot_morning_time}")
+                            if adots.first().ot_date_from >= curr_nd_night_time and adots.first().ot_date_to <= curr_nd_ot_morning_time:
                                 nd_ot_work_hours = adots.first().ot_date_to - adots.first().ot_date_from
                                 nd_ot_remainder = 1 if (nd_ot_work_hours.seconds%60)/60 >= 0.5 else 0
                                 nd_ot_total = nd_ot_work_hours.seconds//60 + nd_ot_remainder
 
-                            elif adots.first().ot_date_from < curr_nd_night_time and adots.first().ot_date_to > curr_nd_night_time and adots.first() <= curr_nd_morning_time:
+                            elif adots.first().ot_date_from < curr_nd_night_time and adots.first().ot_date_to > curr_nd_night_time and adots.first() <= curr_nd_ot_morning_time:
                                 ot_work_hours = curr_nd_night_time - adots.first().ot_date_from
                                 nd_ot_work_hours = adots.first().ot_date_to - curr_nd_night_time
 
@@ -418,8 +441,8 @@ def new_merge_dtr_entries(employees, cutoff_code, operation):
                                 nd_ot_remainder = 1 if (nd_ot_work_hours.seconds%60)/60 >= 0.5 else 0
                                 nd_ot_total = nd_ot_work_hours.seconds//60 + nd_ot_remainder
 
-                            elif adots.first().ot_date_from >= curr_nd_night_time and adots.first().ot_date_from < curr_nd_morning_time and adots.first().ot_date_to > curr_nd_morning_time: 
-                                ot_work_hours = adots.first().ot_date_to - curr_nd_morning_time
+                            elif adots.first().ot_date_from >= curr_nd_night_time and adots.first().ot_date_from < curr_nd_ot_morning_time and adots.first().ot_date_to > curr_nd_ot_morning_time: 
+                                ot_work_hours = adots.first().ot_date_to - curr_nd_ot_morning_time
                                 nd_ot_work_hours = adots.first().ot_date_from - ND_NIGHT_TIME
 
                                 ot_remainder = 1 if (ot_work_hours.seconds%60)/60 >= 0.5 else 0
@@ -433,53 +456,112 @@ def new_merge_dtr_entries(employees, cutoff_code, operation):
                                 ot_total = ot_work_hours.seconds//60 + ot_remainder
 
 
-                        print(f"Reg Work Hours: {work_hours}")              
-                        print(f"ND Work Hours: {nd_work_hours}") 
+                        # print(f"Reg Work Hours: {work_hours}")              
+                        # print(f"ND Work Hours: {nd_work_hours}") 
                                
+                    elif not dtr_duty_in.exists() and not dtr_duty_out.exists():
+                        leaves = Leaves.objects.filter(emp_no=employee.emp_no, cutoff_code=cutoff_code, leave_date_from__gte=dtr_date_from, leave_date_to__lte=dtr_date_to, leave_approval_status="APD")
+                        if leaves.exists():
+                            leave_type = leaves.first().leave_type.name
+                            paid_leave = leaves.first().leave_type.is_paid
+                        
+                    elif restday == False and not dtr_duty_in.exists() and not dtr_duty_out.exists():
+                        absent = True
                     
-                    
+                    # print(f"Current Schedule Timein: {curr_sched_timein}")
+                    # print(f"Current Schedule Timeout: {curr_sched_timeout}")
+                    # print("")
+                    # print(f"Employee Number: {employee.emp_no}")
+                    # print(f"Cutoff Code: {cutoff_code}")
+                    # print(f"Shift Name: {shift_name}")
+                    # print(f"Business Date: {business_date}")
+                    # print(f"Sched Timein: {sched_timein}")
+                    # print(f"Sched Timeout: {sched_timeout}")
+                    # print(f"Duty In: {duty_in}")
+                    # print(f"Duty Out: {duty_out}")                   
+                    # print(f"Current Duty In: {curr_duty_in}")                
+                    # print(f"Current Duty Out: {curr_duty_out}")                
 
-                    print(f"curr_sched_timeout: {curr_sched_timeout}")
-                    print(f"curr_sched_timein: {curr_sched_timein}")
-                    print("")
-                    print(f"Employee Number: {employee.emp_no}")
-                    print(f"Cutoff Code: {cutoff_code}")
-                    print(f"Shift Name: {shift_name}")
-                    print(f"Business Date: {business_date}")
-                    print(f"Sched Timein: {sched_timein}")
-                    print(f"Sched Timeout: {sched_timeout}")
-                    print(f"Duty In: {duty_in}")
-                    print(f"Duty Out: {duty_out}")                   
-                    print(f"Current Duty In: {curr_duty_in}")                
-                    print(f"Current Duty Out: {curr_duty_out}")                
+                    # print(f"OBT: {obt}")
+                    # print(f"Unaccounted Attendance: {ua}")
 
-                    print(f"OBT: {obt}")
-                    print(f"Unaccounted Attendance: {ua}")
+                    # print(f"Lates: {lates}")
+                    # print(f"Undertime: {undertime}")
+                    # print(f"Total Hours: {total_hours}")
+                    # print(f"ND Total Hours: {nd_total_hours}")
+                    # print(f"OT Total: {ot_total}")
+                    # print(f"ND OT Total: {nd_ot_total}")
+        
+                    # print(f"SP Holiday: {sp_holiday}")
+                    # print(f"Reg Holiday: {reg_holiday}")
+                    # print(f"Paid Leave: {paid_leave}")
+                    # print(f"Leave Type: {leave_type}")
+                    # print(f"Rest Day: {restday}")
+                    # print(f"Absent: {absent}")
+                    # print("\n")
 
-                    print(f"Lates: {lates}")
-                    print(f"Undertime: {undertime}")
-                    print(f"Total Hours: {total_hours}")
-                    print(f"ND Total Hours: {nd_total_hours}")
-                    print(f"OT Total: {ot_total}")
-                    print(f"ND OT Total: {nd_ot_total}")
+                    dtr_summary = {
+                        'emp_no':employee.emp_no,
+                        'cutoff_code': cutoff_code,
+                        'shift_name': shift_name,
+                        'business_date': business_date,
+                        'sched_timein': sched_timein,
+                        'sched_timeout': sched_timeout,
+                        'duty_in': duty_in,
+                        'duty_out': duty_out,
+                        
+                        'is_obt': obt,
+                        'is_ua': ua,
 
-                    print(f"Rest Day: {restday}")
-                    print(f"SP Holiday: {sp_holiday}")
-                    print(f"Reg Holiday: {reg_holiday}")
-                    print(f"Paid Leave: {paid_leave}")
-                    print(f"Absent: {absent}")
-                    
-                    
+                        'lunch_out': lunch_out,
+                        'lunch_in': lunch_in,
+                        'overbreak': overbreak,
+                        'adjusted_timein': adjusterd_timein,
+                        'adjusted_timeout': adjusted_timeout,
 
-                    print("\n")
+                        'lates': lates,
+                        'undertime': undertime,
+                        'total_hours': total_hours,
+                        'nd_total_hours': nd_total_hours,
+
+                        'reg_ot_total': ot_total,
+                        'nd_ot_total': nd_ot_total,
+
+                        'is_sp_holiday': sp_holiday,
+                        'is_reg_holiday': reg_holiday,
+                        'is_paid_leave': paid_leave,
+                        'paid_leave_type': leave_type,
+                        'is_sched_restday': restday,
+                        'is_absent': absent,                                                
+                    }
+
+                    dtr_summary_serializer = DTRSummarySerializer(data=dtr_summary)
+                    if dtr_summary_serializer.is_valid(raise_exception=True):
+
+                        if dtr_duty_in.exists() and dtr_duty_out.exists():
+                            dtr_in = dtr_duty_in.first()
+                            dtr_in.is_processed = True
+                            dtr_in.save()
+
+                            dtr_out = dtr_duty_out.first()
+                            dtr_out.is_processed = True
+                            dtr_out.save()
+                        
+                        dtr_summary_serializer.save()
+                    else:
+                        return Response(dtr_summary_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
                 else:
                     return Response({"Schedule Error": f"No Schedule found on employee {employee.emp_no} at business date {start_date.date()}."})
 
-                # break
                 start_date += delta
-        return Response({"Message": "Sample"}, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({"Exception Message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    if exists:
+        exists_serializer = DTRSummarySerializer(exists, many=True)
+        return Response({"Message": "Successfully merge DTR Entries for selected employees. However, there are entries that were skipped because it was already processed and merged", "Existing DTR Summary": exists_serializer.data}, status=status.HTTP_200_OK)
+    return Response({"Message": "Successfully merge DTR Entries for selected employees"}, status=status.HTTP_200_OK)
 
 def merge_dtr_entries(employees, cutoff_code, operation):
     exists = []
