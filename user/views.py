@@ -13,7 +13,7 @@ import secret, jwt
 from datetime import datetime, timedelta, date, time
 
 from user.functionalities.employee_process import upload_csv_file_employee
-from user.functionalities.dtr_process import dtr_logs_upload, merge_dtr_entries, create_dtr_cutoff_summary, new_dtr_logs_upload, new_merge_dtr_entries
+from user.functionalities.dtr_process import dtr_logs_upload, merge_dtr_entries, create_dtr_cutoff_summary, new_dtr_logs_upload, new_merge_dtr_entries, newest_dtr_logs_upload
 from user.functionalities.payroll_process import create_payroll
 
 
@@ -375,7 +375,7 @@ class HolidayView(APIView):
             holiday = get_object_or_404(Holiday, pk=pk)
             holiday_serializer = HolidaySerializer(holiday)
             return Response(holiday_serializer.data, status=status.HTTP_200_OK)
-        holiday = Holiday.objects.all()
+        holiday = Holiday.objects.all().order_by('holiday_date')
         holiday_serializer = HolidaySerializer(holiday, many=True)
         return Response(holiday_serializer.data, status=status.HTTP_200_OK)
 
@@ -1164,7 +1164,7 @@ class TestTSVUploadView(APIView):
             return Response({"message": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)    
         else:
             if tsv_filename.endswith(".tsv"):
-                response = new_dtr_logs_upload(tsv_file)
+                response = newest_dtr_logs_upload(tsv_file)
                 return response
             else:
                 return Response({"Message": "The file you uploaded cannot be processed due to incorrect file extension"}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)                
