@@ -9,6 +9,86 @@ from user.serializers import *
 
 from datetime import datetime, date, timedelta, time
 
+def newest_dtr_logs_upload(tsv_file):
+    try:
+        stream = io.StringIO(tsv_file.read().decode('utf-8'))
+        columns = ['bio_id', 'datetime_bio', 'duty_in', 'duty_out', 'lunch_in', 'lunch_out', 'branch']
+        dframe = pd.read_table(stream, header=None, names=columns)
+        dframe['datetime_bio'] = pd.to_datetime(dframe['datetime_bio'])        
+        dframe['bio_id'] = dframe['bio_id'].astype(int)
+        dframe = dframe.sort_values(['bio_id', 'datetime_bio'])
+
+        schedules = ScheduleDaily.objects.all()
+
+        schedule_df = pd.DataFrame(schedules.values())
+        print(schedule_df)
+
+        return Response({"Message": "Sample"})
+        
+
+    #     ids = grouped_df['bio_id'].unique()
+
+    #     for id in ids:
+    #         select_row = grouped_df[grouped_df['bio_id'] == id]
+    #         employee = Employee.objects.get(bio_id=id)
+    #         exists = []
+
+    #         for i in range(len(select_row)):
+    #             duty_in = select_row.iloc[i]['datetime_bio_min']
+    #             duty_out = select_row.iloc[i]['datetime_bio_max']
+    #             branch = select_row.iloc[i]['branch']
+    #             date = select_row.iloc[i]['date']
+    #             emp_branch = Branch.objects.get(branch_name=branch)                        
+    #             schedule = ScheduleDaily.objects.get(emp_no=employee.emp_no, business_date=date)
+
+    #             dtr_entry_checker = DTR.objects.filter(datetime_bio__gte=duty_in, datetime_bio__lte=duty_out, emp_no=employee.emp_no)
+
+    #             if dtr_entry_checker.exists():
+    #                 exists.append(dtr_entry_checker.first())
+    #                 continue
+
+    #             dtr_in = {
+    #                 'emp_no': employee.emp_no,
+    #                 'bio_id': employee.bio_id,
+    #                 'datetime_bio': duty_in,
+    #                 'flag1_in_out': 0,
+    #                 'entry_type': "DIN",
+    #                 'date_uploaded': datetime.now(),
+    #                 'branch_code': emp_branch.pk,
+    #                 'schedule_daily_code': schedule.pk
+    #             }
+
+    #             dtr_out = {
+    #                 'emp_no': employee.emp_no,
+    #                 'bio_id': employee.bio_id,
+    #                 'datetime_bio': duty_out,
+    #                 'flag1_in_out': 1,
+    #                 'entry_type': "DOUT",
+    #                 'date_uploaded': datetime.now(),
+    #                 'branch_code': emp_branch.pk,
+    #                 'schedule_daily_code': schedule.pk
+    #             }
+
+    #             dtr_in_serializer = DTRSerializer(data=dtr_in)
+    #             dtr_out_serializer = DTRSerializer(data=dtr_out)
+
+    #             if dtr_in_serializer.is_valid():
+    #                 dtr_in_serializer.save()
+    #             else:
+    #                 return Response({"message": "DTR IN", "error": dtr_in_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            
+    #             if dtr_out_serializer.is_valid():
+    #                 dtr_out_serializer.save()
+    #             else:
+    #                 return Response({"message": "DTR OUT", "error": dtr_out_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+    #     if exists:
+    #         serializer = DTRSerializer(exists, many=True)
+    #         return Response({"Message": "Successfully uploaded to DTR database. There are existing logs that was uploaded", "Existing logs": serializer.data}, status=status.HTTP_201_CREATED)
+    #     return Response({"message": "Successfully uploaded to DTR database"}, status=status.HTTP_201_CREATED)
+
+    except Exception as e:
+        return Response({"Overall error": str(e)}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
 def new_dtr_logs_upload(tsv_file):
     try:
         stream = io.StringIO(tsv_file.read().decode('utf-8'))
@@ -289,7 +369,7 @@ def new_merge_dtr_entries(employees, cutoff_code, operation):
                     
                     dtr_duty_in = DTR.objects.filter(emp_no=employee.emp_no, entry_type="DIN", datetime_bio__gte=dtr_date_from, datetime_bio__lte=curr_sched_timeout)
                     # dtr_duty_out = DTR.objects.filter(emp_no=employee.emp_no, entry_type="DOUT", datetime_bio__gte=curr_sched_timein, datetime_bio__lte=dtr_date_to)
-                    dtr_duty_out = DTR.objects.filter(emp_no=employee.emp_no, entry_type="DOUT", datetime_bio__gte=curr_sched_timein, datetime_bio__lte=curr_sched_timein + timedelta(days=1)) # Edit this query if ever another scenario came up with and a dtr entry is not query
+                    dtr_duty_out = DTR.objects.filter(emp_no=employee.emp_no, entry_type="DOUT", datetime_bio__gte=curr_sched_timein, datetime_bio__lt=curr_sched_timein + timedelta(days=1)) # Edit this query if ever another scenario came up with and a dtr entry is not query
                     
                     if dtr_duty_in.exists() and dtr_duty_out.exists():
 
