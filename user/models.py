@@ -26,9 +26,9 @@ HOLIDAY_TYPE = [
 ]
 
 HOLIDAY_LOCATION = [
-    ("city", "City"),
-    ("province", "Province"),
-    ("national", "National"),
+    ("City", "City"),
+    ("Province", "Province"),
+    ("National", "National"),
 ]
 
 APPROVAL_STATUS = [
