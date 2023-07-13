@@ -18,10 +18,16 @@ def newest_dtr_logs_upload(tsv_file):
         dframe['bio_id'] = dframe['bio_id'].astype(int)
         dframe = dframe.sort_values(['bio_id', 'datetime_bio'])
 
-        schedules = ScheduleDaily.objects.all()
+        id = dframe['bio_id'].unique()
+        dates = dframe['datetime_bio'].dt.date.unique()
+        print(dates)
 
-        schedule_df = pd.DataFrame(schedules.values())
+        employees = Employee.objects.filter(bio_id__in=id)        
+        schedules = ScheduleDaily.objects.filter(emp_no__in=employees, business_date__in=dates)
+        schedules_serializer = ScheduleDailyDFSerializer(schedules, many=True)
+        schedule_df = pd.DataFrame(schedules_serializer.data)
         print(schedule_df)
+        
 
         return Response({"Message": "Sample"})
         
