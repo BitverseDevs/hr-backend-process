@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from django.db.models import Q
 
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import  status
@@ -397,11 +398,14 @@ class HolidayView(APIView):
             return Response(holiday_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class OBTView(APIView):
-    def get(self, request, *args, **kwargs):
-        emp_no = request.data['emp_no']
-        if emp_no is not None:
+    def get(self, request, emp_no=None, pk=None, *args, **kwargs):
+        if emp_no is not None and pk is None:
             obt = OBT.objects.filter(emp_no=emp_no)
             obt_serializer = OBTSerializer(obt, many=True)
+            return Response(obt_serializer.data, status=status.HTTP_200_OK)
+        elif emp_no is not None and pk is not None:
+            obt = get_object_or_404(OBT, emp_no=emp_no, pk=pk)
+            obt_serializer = OBTSerializer(obt)
             return Response(obt_serializer.data, status=status.HTTP_200_OK)
         obt = OBT.objects.all()
         obt_serializer = OBTSerializer(obt, many=True)
@@ -415,8 +419,8 @@ class OBTView(APIView):
         else:
             return Response(obt_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
-    def put(self, request, pk=None, *args, **kwargs):
-        obt = get_object_or_404(OBT, pk=pk)
+    def put(self, request,emp_no=None, pk=None, *args, **kwargs):
+        obt = get_object_or_404(OBT, emp_no=emp_no, pk=pk)
         obt_serializer = OBTSerializer(obt, data=request.data)
         if obt_serializer.is_valid(raise_exception=True):
             obt_serializer.save()
@@ -424,12 +428,21 @@ class OBTView(APIView):
         else:
             return Response(obt_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
+class OBTApproverView(APIView):
+    def get(self, request, approver=None, *args, **kwargs):
+        obt = OBT.objects.filter(Q(obt_approver1_empno=approver) | Q(obt_approver2_empno=approver))
+        obt_serializer = OBTSerializer(obt, many=True)
+        return Response(obt_serializer.data, status=status.HTTP_200_OK)
+        
 class OvertimeView(APIView):
-    def get(self, request, *args, **kwargs):
-        emp_no = request.data['emp_no']
-        if emp_no is not None:
+    def get(self, request, emp_no=None, pk=None, *args, **kwargs):
+        if emp_no is not None and pk is None:
             ot = Overtime.objects.filter(emp_no=emp_no)
             ot_serializer = OvertimeSerializer(ot, many=True)
+            return Response(ot_serializer.data, status=status.HTTP_200_OK)
+        elif emp_no is not None and pk is not None:
+            ot = get_object_or_404(Overtime, emp_no=emp_no, pk=pk)
+            ot_serializer = OvertimeSerializer(ot)
             return Response(ot_serializer.data, status=status.HTTP_200_OK)
         ot = Overtime.objects.all()
         ot_serializer = OvertimeSerializer(ot, many=True)
@@ -443,14 +456,20 @@ class OvertimeView(APIView):
         else:
             return Response(ot_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def put(self, request, pk=None, *args, **kwargs):
-        ot = get_object_or_404(Overtime, pk=pk)
+    def put(self, request, emp_no=None, pk=None, *args, **kwargs):
+        ot = get_object_or_404(Overtime, emp_no=emp_no, pk=pk)
         ot_serializer = OvertimeSerializer(ot, data=request.data)
         if ot_serializer.is_valid(raise_exception=True):
             ot_serializer.save()
             return Response(ot_serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(ot_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+class OTApproverView(APIView):
+    def get(self, request, approver=None, *args, **kwargs):
+        ot = Overtime.objects.filter(Q(ot_approver1_empno=approver) | Q(ot_approver2_empno=approver))
+        ot_serializer = OvertimeSerializer(ot, many=True)
+        return Response(ot_serializer.data, status=status.HTTP_200_OK)
         
 class LeaveTypeView(APIView):
     def get(self, request, pk=None, *args, **kwargs):
@@ -480,8 +499,7 @@ class LeaveTypeView(APIView):
             return Response(leave_type_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class LeaveCreditView(APIView):
-    def get(self, request, *args, **kwargs):
-        emp_no = request.data['emp_no']
+    def get(self, request, emp_no=None, *args, **kwargs):
         if emp_no is not None:
             leave_credit = get_object_or_404(LeavesCredit, emp_no=emp_no)
             leave_credit_serializer = GetLeavesCreditSerializer(leave_credit)
@@ -508,10 +526,13 @@ class LeaveCreditView(APIView):
             return Response(leave_credit_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class LeaveView(APIView): # Pending Computation
-    def get(self, request, *args, **kwargs):
-        emp_no = request.data['emp_no']
-        if emp_no is not None:
+    def get(self, request, emp_no=None, pk=None, *args, **kwargs):
+        if emp_no is not None and pk is None:
             leave = Leaves.objects.filter(emp_no=emp_no)
+            leave_serializer = LeavesSerializer(leave, many=True)
+            return Response(leave_serializer.data, status=status.HTTP_200_OK)
+        elif emp_no is not None and pk is not None:
+            leave = get_object_or_404(Leaves, emp_no=emp_no, pk=pk)
             leave_serializer = LeavesSerializer(leave)
             return Response(leave_serializer.data, status=status.HTTP_200_OK)
         leave = Leaves.objects.all()
@@ -526,8 +547,8 @@ class LeaveView(APIView): # Pending Computation
         else:
             return Response(leave_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
-    def put (self, request, pk=None, *args, **kwargs):
-        leave = get_object_or_404(Leaves, pk=pk)
+    def put (self, request, emp_no=None, pk=None, *args, **kwargs):
+        leave = get_object_or_404(Leaves, emp_no=emp_no, pk=pk)
         leave_serializer = LeavesSerializer(leave, data=request.data)
         if leave_serializer.is_valid(raise_exception=True):
             leave_serializer.save()
@@ -535,12 +556,21 @@ class LeaveView(APIView): # Pending Computation
         else:
             return Response(leave_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
+class LeaveApproverView(APIView):
+    def get(self, request, approver=None, *args, **kwargs):
+        leave = Leaves.objects.filter(Q(leave_approver1_empno=approver) | Q(leave_approver2_empno=approver))
+        leave_serializer = LeavesSerializer(leave, many=True)
+        return Response(leave_serializer.data, status=status.HTTP_200_OK)
+        
 class UnaccountedAttendanceView(APIView):
-    def get(self, request, *args, **kwargs):
-        emp_no = request.data['emp_no'] if request.data['emp_no'] else None
-        if emp_no is not None:
+    def get(self, request, emp_no=None, pk=None, *args, **kwargs):    
+        if emp_no is not None and pk is None:
             ua = UnaccountedAttendance.objects.filter(emp_no=emp_no)
             ua_serializer = UnaccountedAttendanceSerializer(ua, many=True)
+            return Response(ua_serializer.data, status=status.HTTP_200_OK)
+        elif emp_no is not None and pk is not None:
+            ua = get_object_or_404(UnaccountedAttendance, emp_no=emp_no, pk=pk)
+            ua_serializer = UnaccountedAttendanceSerializer(ua)
             return Response(ua_serializer.data, status=status.HTTP_200_OK)
         ua = UnaccountedAttendance.objects.all()
         ua_serializer = UnaccountedAttendanceSerializer(ua, many=True)
@@ -554,14 +584,20 @@ class UnaccountedAttendanceView(APIView):
         else:
             return Response(ua_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
-    def put(self, request, pk=None, *args, **kwargs):
-        ua = get_object_or_404(UnaccountedAttendance, pk=pk)
+    def put(self, request, emp_no=None, pk=None, *args, **kwargs):
+        ua = get_object_or_404(UnaccountedAttendance, emp_no=emp_no, pk=pk)
         ua_serializer = UnaccountedAttendanceSerializer(ua, data=request.data)
         if ua_serializer.is_valid(raise_exception=True):
             ua_serializer.save()
             return Response(ua_serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(ua_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+class UnaccountedAttendanceApproverView(APIView):
+    def get(self, request, approver=None, *args, **kwargs):
+        ua = UnaccountedAttendance.objects.filter(Q(ua_approver1_empno=approver) | Q(ua_approver2_empno=approver))
+        ua_serializer = UnaccountedAttendanceSerializer(ua, many=True)
+        return Response(ua_serializer.data, status=status.HTTP_200_OK)
         
 class ScheduleShiftView(APIView):
     def get(self, request, pk=None, *args, **kwargs):
@@ -605,11 +641,14 @@ class ScheduleShiftView(APIView):
         return Response({"Message": f"Schedule Shift ID {pk} successfully deleted"}, status=status.HTTP_204_NO_CONTENT)
 
 class ScheduleDailyView(APIView):
-    def get(self, request, *args, **kwargs):
-        emp_no = request.data['emp_no']
-        if emp_no is not None:
+    def get(self, request, emp_no=None, pk=None, *args, **kwargs):
+        if emp_no is not None and pk is None:
             daily = ScheduleDaily.objects.filter(emp_no=emp_no)
             daily_serializer = GetScheduleDailySerializer(daily, many=True)
+            return Response(daily_serializer.data, status=status.HTTP_200_OK)
+        elif emp_no is not None and pk is not None:
+            daily = get_object_or_404(ScheduleDaily, emp_no=emp_no, pk=pk)
+            daily_serializer = ScheduleDailySerializer(daily)
             return Response(daily_serializer.data, status=status.HTTP_200_OK)
         daily = ScheduleDaily.objects.all()
         daily_serializer = GetScheduleDailySerializer(daily, many=True)
@@ -623,8 +662,8 @@ class ScheduleDailyView(APIView):
         else:
             return Response(daily_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
-    def put(self, request, pk=None, *args, **kwargs):
-        daily = get_object_or_404(ScheduleDaily, pk=pk)
+    def put(self, request, emp_no=None, pk=None, *args, **kwargs):
+        daily = get_object_or_404(ScheduleDaily, emp_no=emp_no, pk=pk)
         daily_serializer = ScheduleDailySerializer(daily, data=request.data)
         if daily_serializer.is_valid(raise_exception=True):
             daily_serializer.save()
