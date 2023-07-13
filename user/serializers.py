@@ -148,6 +148,35 @@ class ScheduleDailySerializer(serializers.ModelSerializer):
         model = ScheduleDaily
         fields = "__all__"
 
+class ScheduleDailyDFSerializer(serializers.ModelSerializer):
+    time_in = serializers.SerializerMethodField()
+    time_out = serializers.SerializerMethodField()
+    bio_id = serializers.SerializerMethodField()
+    class Meta:
+        model = ScheduleDaily
+        fields = ['id', 'time_in', 'time_out', 'business_date', 'emp_no', 'bio_id']
+
+    def get_time_in(self, obj):
+        try:
+            schedule_shift_timein = ScheduleShift.objects.get(pk=obj.schedule_shift_code.pk)
+            return ScheduleShiftSerializer(schedule_shift_timein).data['time_in']
+        except ScheduleShift.DoesNotExist:
+            return None
+        
+    def get_time_out(self, obj):
+        try:
+            schedule_shift_timeout = ScheduleShift.objects.get(pk=obj.schedule_shift_code.pk)
+            return ScheduleShiftSerializer(schedule_shift_timeout).data['time_out']
+        except ScheduleShift.DoesNotExist:
+            return None
+    
+    def get_bio_id(self, obj):
+        try:
+            employee = Employee.objects.get(emp_no=obj.emp_no.emp_no)
+            return EmployeeSerializer(employee).data['bio_id']
+        except Employee.DoesNotExist:
+            return None
+
 class DTRCutoffSerializer(serializers.ModelSerializer):
     class Meta:
         model = DTRCutoff
